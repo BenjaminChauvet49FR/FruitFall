@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">FruitFall</string>
+    <string name="canvasContentDescription">Mini Paint is a simple line drawing app.
+   Drag your fingers to draw. Rotate the phone to clear.</string>
+    <string name="title_activity_fruit_board">FruitBoardActivity</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+</resources>
