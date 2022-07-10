@@ -1,7 +1,6 @@
 package com.example.fruitfall
 
 import android.os.Bundle
-import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
@@ -27,8 +26,15 @@ class MainActivity : AppCompatActivity() {
         val myView: MyCanvasView = MyCanvasView(this)
         c.addView(myView)
 
-        findViewById<Button>(R.id.buttonShuffle).setOnClickListener{
-            //myView.shuffleIndexes()
+
+        findViewById<Button>(R.id.buttonMode4).setOnClickListener {
+            myView.startLevel(4)
+        }
+        findViewById<Button>(R.id.buttonMode6).setOnClickListener {
+            myView.startLevel(6)
+        }
+        findViewById<Button>(R.id.buttonMode8).setOnClickListener {
+            myView.startLevel(8)
         }
 
         //v.setV

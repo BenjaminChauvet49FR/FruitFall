@@ -37,7 +37,14 @@ class MyCanvasView(context: Context) : View(context) {
         BitmapFactory.decodeResource(resources, R.drawable.f8),
     )
 
-    private val gh = GameHandler(bitmapImages.size)
+    private val bitmapImageLightActive = BitmapFactory.decodeResource(resources, R.drawable.light_up)
+    private val bitmapImageLightInactive = BitmapFactory.decodeResource(resources, R.drawable.light_down)
+
+    private val gh = GameHandler(8) //GameHandler(bitmapImages.size)
+
+    public fun startLevel(numberFruits : Int) {
+        gh.shuffleGrid(numberFruits)
+    }
 
     // Set up the paint with which to draw.
     private val paint = Paint().apply { // Great details here : https://developer.android.com/codelabs/advanced-android-kotlin-training-canvas#4
@@ -68,7 +75,9 @@ class MyCanvasView(context: Context) : View(context) {
 
         for (y in 0 until GameHandler.FIELD_YLENGTH) {
             for (x in 0 until GameHandler.FIELD_XLENGTH) {
-                canvas.drawBitmap(bitmapImages[gh.getFruit(x, y)], rectSource, rectDest, paint);
+                if (gh.gth.hasStillFruit(x, y)) {
+                    canvas.drawBitmap(bitmapImages[gh.getFruit(x, y)], rectSource, rectDest, paint);
+                }
                 rectDest.left += Pix.wSpace
                 rectDest.right += Pix.wSpace
             }
@@ -82,19 +91,61 @@ class MyCanvasView(context: Context) : View(context) {
             val frame = Rect(spaceXToPixXLeft(selectedSpaceX), spaceYToPixYUp(selectedSpaceY), spaceXToPixXRight(selectedSpaceX), spaceYToPixYDown(selectedSpaceY))
             canvas.drawRect(frame, paint)
         }
+
+        // Draw the currently swapping fruits
+        val ratioSwap = gh.gth.ratioToCompletionSwap()
+        if (gh.gth.isInSwap()) {
+            val x1 = gh.gth.xSwap1
+            val x2 = gh.gth.xSwap2
+            val y1 = gh.gth.ySwap1
+            val y2 = gh.gth.ySwap2
+            val ratio = gh.gth.ratioToCompletionSwap()
+            // TODO créer des fonctions de pix...
+            rectDest.left = (Pix.xStartSpaces + (x1 + ratio*(x2-x1)) * Pix.wSpace).toInt()
+            rectDest.right = rectDest.left + Pix.wMainSpace
+            rectDest.top = (Pix.yStartSpaces + (y1 + ratio*(y2-y1)) * Pix.hSpace).toInt()
+            rectDest.bottom = rectDest.top + Pix.hMainSpace
+            canvas.drawBitmap(bitmapImages[gh.getFruit(x1, y1)], rectSource, rectDest, paint);
+            rectDest.left = (Pix.xStartSpaces + (x2 + ratio*(x1-x2)) * Pix.wSpace).toInt()
+            rectDest.right = rectDest.left + Pix.wMainSpace
+            rectDest.top = (Pix.yStartSpaces + (y2 + ratio*(y1-y2)) * Pix.hSpace).toInt()
+            rectDest.bottom = rectDest.top + Pix.hMainSpace
+            canvas.drawBitmap(bitmapImages[gh.getFruit(x2, y2)], rectSource, rectDest, paint);
+        }
+
+
+
+
+        // Draw the status light
+        rectDest.left = Pix.xStartActiveLight
+        rectDest.top = Pix.yStartActiveLight
+        rectDest.right = rectDest.left + Pix.wActiveLight
+        rectDest.bottom = rectDest.top + Pix.hActiveLight
+        if (gh.gth.isActive()) {
+            canvas.drawBitmap(bitmapImageLightActive, rectSource, rectDest, paint);
+        } else { // TODO Pour l'instant l'échange incorrect ne laisse pas de temps s'écouler, créer une nouvelle icône...
+            canvas.drawBitmap(bitmapImageLightInactive, rectSource, rectDest, paint);
+        }
+
         invalidate() // At the end of draw... right ? Also, how many FPS ?
+
+        //if (gh != null && gh.gth != null) { // TODO, passer ça à Java
+        if (gh.gth != null) {
+            gh.gth.step(); // TODO Lui donner son propre processus parallèle ? Ou bien laisser dans onDraw ?
+        }
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         pixMotionTouchEventX = event.x
         pixMotionTouchEventY = event.y
-
-        when (event.action) {
-            MotionEvent.ACTION_DOWN -> touchStart()
-            MotionEvent.ACTION_MOVE -> touchMove()
-            MotionEvent.ACTION_UP -> touchUp()
+        if (gh.gth.isActive()) {
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> touchStart()
+                MotionEvent.ACTION_MOVE -> touchMove()
+                MotionEvent.ACTION_UP -> touchUp()
+            }
         }
-        return true
+        return true // TODO il se passe quoi si je le laisse à false ?
     }
 
     private fun touchStart() {
@@ -144,18 +195,20 @@ class MyCanvasView(context: Context) : View(context) {
 
     // True if two different spaces are being selected
     private fun testActionSwap(spaceX : Int, spaceY : Int) {
-        if (isSpaceSelected()) {
-            if (spaceX == selectedSpaceX && spaceY == selectedSpaceY) {
-                return
-            } else if ( ((spaceY == selectedSpaceY) && ((spaceX == selectedSpaceX+1) || (spaceX == selectedSpaceX-1))) ||
+        if (spaceX >= 0 && spaceX < GameHandler.FIELD_XLENGTH && spaceY >= 0 && spaceY < GameHandler.FIELD_YLENGTH) {
+            if (isSpaceSelected()) {
+                if (spaceX == selectedSpaceX && spaceY == selectedSpaceY) {
+                    return
+                } else if ( ((spaceY == selectedSpaceY) && ((spaceX == selectedSpaceX+1) || (spaceX == selectedSpaceX-1))) ||
                     ((spaceX == selectedSpaceX) && ((spaceY == selectedSpaceY+1) || (spaceY == selectedSpaceY-1))) ) {
-                gh.triggerSwap(spaceX, spaceY, selectedSpaceX, selectedSpaceY)
-                alreadySwappedTouchMove = true
+                    gh.inputSwap(spaceX, spaceY, selectedSpaceX, selectedSpaceY)
+                    alreadySwappedTouchMove = true
+                }
+                unselect();
+            } else {
+                selectedSpaceX = spaceX;
+                selectedSpaceY = spaceY;
             }
-            unselect();
-        } else {
-            selectedSpaceX = spaceX;
-            selectedSpaceY = spaceY;
         }
     }
 
