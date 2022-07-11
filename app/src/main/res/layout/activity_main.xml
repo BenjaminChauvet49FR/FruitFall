@@ -25,25 +25,25 @@
                 android:orientation="horizontal">
 
                 <Button
-                    android:id="@+id/buttonMode4"
+                    android:id="@+id/buttonModePrev"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Mode 4" />
+                    android:text="Précédent" />
 
                 <Button
-                    android:id="@+id/buttonMode6"
+                    android:id="@+id/buttonModeRestart"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Mode 6" />
+                    android:text="Redémarrer" />
 
                 <Button
-                    android:id="@+id/buttonMode8"
+                    android:id="@+id/buttonModeNext"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Mode 8" />
+                    android:text="Suivant" />
             </LinearLayout>
 
         </LinearLayout>

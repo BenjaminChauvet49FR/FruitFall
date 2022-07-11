@@ -40,10 +40,10 @@ class MyCanvasView(context: Context) : View(context) {
     private val bitmapImageLightActive = BitmapFactory.decodeResource(resources, R.drawable.light_up)
     private val bitmapImageLightInactive = BitmapFactory.decodeResource(resources, R.drawable.light_down)
 
-    private val gh = GameHandler(8) //GameHandler(bitmapImages.size)
+    private val gh = GameHandler()
 
-    public fun startLevel(numberFruits : Int) {
-        gh.shuffleGrid(numberFruits)
+    fun startLevel() {
+        gh.initializeGrid(LevelManager.levelLists[LevelManager.levelNumber]);
     }
 
     // Set up the paint with which to draw.
@@ -73,6 +73,7 @@ class MyCanvasView(context: Context) : View(context) {
         val rectSource = Rect(0, 0, 64, 64)
         val rectDest = Rect(Pix.xStartSpaces, Pix.yStartSpaces, Pix.xStartSpaces+Pix.wMainSpace, Pix.yStartSpaces+Pix.hMainSpace)
 
+        // Draw the in-place fruits
         for (y in 0 until GameHandler.FIELD_YLENGTH) {
             for (x in 0 until GameHandler.FIELD_XLENGTH) {
                 if (gh.gth.hasStillFruit(x, y)) {
@@ -87,13 +88,42 @@ class MyCanvasView(context: Context) : View(context) {
             rectDest.bottom += Pix.hSpace
         }
 
+        // Draw the falling fruits
+        var xStartFall : Int
+        var yStartFall : Int
+        val ratioFall = gh.gth.ratioToCompletionFall()
+        for (coors in gh.getFallingFruitsCoors()) {
+            xStartFall = coors.x
+            yStartFall = coors.y
+            if (gh.hasFruit(xStartFall, yStartFall) && gh.isNotDestroyedBeforeFall(xStartFall, yStartFall)) {
+                rectDest.left = Pix.xStartSpaces + xStartFall * Pix.wSpace
+                rectDest.right = rectDest.left + Pix.wMainSpace
+                rectDest.top = (Pix.yStartSpaces + (yStartFall + ratioFall) * Pix.hSpace).toInt()
+                rectDest.bottom = rectDest.top + Pix.hMainSpace
+                canvas.drawBitmap(bitmapImages[gh.getFruit(xStartFall, yStartFall)], rectSource, rectDest, paint);
+            }
+        }
+
+        // Draw the spawning fruits
+        var xEndFall : Int
+        var yEndFall : Int
+        for (coors in gh.spawningFruitsCoors) {
+            xEndFall = coors.x
+            yEndFall = coors.y
+            rectDest.left = Pix.xStartSpaces + xEndFall * Pix.wSpace
+            rectDest.right = rectDest.left + Pix.wMainSpace
+            rectDest.top = (Pix.yStartSpaces + (yEndFall + ratioFall -1) * Pix.hSpace).toInt()
+            rectDest.bottom = rectDest.top + Pix.hMainSpace
+            canvas.drawBitmap(bitmapImages[gh.spawn(xEndFall, yEndFall)], rectSource, rectDest, paint);
+        }
+
+        // Draw the cursor
         if (isSpaceSelected()) {
             val frame = Rect(spaceXToPixXLeft(selectedSpaceX), spaceYToPixYUp(selectedSpaceY), spaceXToPixXRight(selectedSpaceX), spaceYToPixYDown(selectedSpaceY))
             canvas.drawRect(frame, paint)
         }
 
         // Draw the currently swapping fruits
-        val ratioSwap = gh.gth.ratioToCompletionSwap()
         if (gh.gth.isInSwap()) {
             val x1 = gh.gth.xSwap1
             val x2 = gh.gth.xSwap2
@@ -145,7 +175,7 @@ class MyCanvasView(context: Context) : View(context) {
                 MotionEvent.ACTION_UP -> touchUp()
             }
         }
-        return true // TODO il se passe quoi si je le laisse à false ?
+        return true // Note : here is why true should be returned... Or it seems https://stackoverflow.com/questions/3756383/what-is-meaning-of-boolean-value-returned-from-an-event-handling-method-in-andro#:~:text=true%20means%20you%20consumed%20the,that%20though%3B%20see%20my%20answer.
     }
 
     private fun touchStart() {
@@ -196,6 +226,9 @@ class MyCanvasView(context: Context) : View(context) {
     // True if two different spaces are being selected
     private fun testActionSwap(spaceX : Int, spaceY : Int) {
         if (spaceX >= 0 && spaceX < GameHandler.FIELD_XLENGTH && spaceY >= 0 && spaceY < GameHandler.FIELD_YLENGTH) {
+            if (!gh.hasSelectionnableFruit(spaceX, spaceY)) {
+                return
+            }
             if (isSpaceSelected()) {
                 if (spaceX == selectedSpaceX && spaceY == selectedSpaceY) {
                     return

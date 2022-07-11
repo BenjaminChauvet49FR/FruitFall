@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        LevelManager.init()
 
 
         //var linearLayout = findViewById<LinearLayout>(R.id.constraintLayoutMain)
@@ -25,21 +26,23 @@ class MainActivity : AppCompatActivity() {
         val c : LinearLayout = findViewById(R.id.canvasLayout)
         val myView: MyCanvasView = MyCanvasView(this)
         c.addView(myView)
+        myView.startLevel()
 
-
-        findViewById<Button>(R.id.buttonMode4).setOnClickListener {
-            myView.startLevel(4)
+        findViewById<Button>(R.id.buttonModePrev).setOnClickListener {
+            if (LevelManager.levelNumber != 0) {
+                LevelManager.levelNumber--;
+                myView.startLevel();
+            }
         }
-        findViewById<Button>(R.id.buttonMode6).setOnClickListener {
-            myView.startLevel(6)
+        findViewById<Button>(R.id.buttonModeRestart).setOnClickListener {
+            myView.startLevel();
         }
-        findViewById<Button>(R.id.buttonMode8).setOnClickListener {
-            myView.startLevel(8)
+        findViewById<Button>(R.id.buttonModeNext).setOnClickListener {
+            if (LevelManager.levelNumber != LevelManager.levelLists.size-1) {
+                LevelManager.levelNumber++;
+                myView.startLevel();
+            }
         }
-
-        //v.setV
-
-
 
     }
 }
