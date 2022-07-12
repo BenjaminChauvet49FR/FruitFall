@@ -4,10 +4,11 @@ import android.content.Context
 import android.graphics.*
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewConfiguration
 import androidx.core.content.res.ResourcesCompat
+import com.example.fruitfall.animations.SpaceAnimation
+import com.example.fruitfall.animations.SpaceAnimationFruitShrinking
+import com.example.fruitfall.level.LevelManager
 import kotlin.math.roundToInt
-import kotlin.random.Random
 
 private const val SPACE_UNDEFINED = -1
 
@@ -16,6 +17,9 @@ class MyCanvasView(context: Context) : View(context) {
     private lateinit var extraBitmap: Bitmap
     private val backgroundColor = ResourcesCompat.getColor(resources, R.color.colorBackground, null)
     private val drawColor = ResourcesCompat.getColor(resources, R.color.colorPaint, null)
+    private val rectSource = Rect(0, 0, 64, 64)
+    private val rectDest = Rect(0, 0, 0, 0)
+    private val rectFrame = Rect(0, 0, 0, 0)
 
     private var pixMotionTouchEventX = 0f
     private var pixMotionTouchEventY = 0f
@@ -37,13 +41,21 @@ class MyCanvasView(context: Context) : View(context) {
         BitmapFactory.decodeResource(resources, R.drawable.f8),
     )
 
+    private fun getBitmapFruitToDrawFromIndex(index : Int) : Bitmap {
+        return bitmapImages[gh.getRandomFruit(index)]
+    }
+
+    private fun getBitmapToDrawFromCoors(x : Int, y : Int) : Bitmap {
+        return bitmapImages[gh.getRandomFruitFromCoors(x, y)]
+    }
+
     private val bitmapImageLightActive = BitmapFactory.decodeResource(resources, R.drawable.light_up)
     private val bitmapImageLightInactive = BitmapFactory.decodeResource(resources, R.drawable.light_down)
 
     private val gh = GameHandler()
 
     fun startLevel() {
-        gh.initializeGrid(LevelManager.levelLists[LevelManager.levelNumber]);
+        gh.initializeGrid(LevelManager.levelLists[LevelManager.levelNumber])
     }
 
     // Set up the paint with which to draw.
@@ -70,61 +82,75 @@ class MyCanvasView(context: Context) : View(context) {
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         canvas.drawBitmap(extraBitmap, 0f, 0f, null)
-        val rectSource = Rect(0, 0, 64, 64)
-        val rectDest = Rect(Pix.xStartSpaces, Pix.yStartSpaces, Pix.xStartSpaces+Pix.wMainSpace, Pix.yStartSpaces+Pix.hMainSpace)
-
-        // Draw the in-place fruits
-        for (y in 0 until GameHandler.FIELD_YLENGTH) {
-            for (x in 0 until GameHandler.FIELD_XLENGTH) {
+        rectDest.set(Pix.xStartSpaces, Pix.yStartSpaces, Pix.xStartSpaces+Pix.wMainSpace, Pix.yStartSpaces+Pix.hMainSpace)
+        var animation : SpaceAnimation?
+        // Draw the in-place fruits or the on-space animations
+        for (y in 0 until Constants.FIELD_YLENGTH) {
+            for (x in 0 until Constants.FIELD_XLENGTH) {
                 if (gh.gth.hasStillFruit(x, y)) {
-                    canvas.drawBitmap(bitmapImages[gh.getFruit(x, y)], rectSource, rectDest, paint);
+                    canvas.drawBitmap(getBitmapToDrawFromCoors(x, y), rectSource, rectDest, paint)
+                } else {
+                    animation = gh.gth.getAnimation(x, y)
+                    if (animation != null && animation.shouldBeDrawn()) {
+                        if (animation is SpaceAnimationFruitShrinking) {
+                            canvas.save() // Note : it should be possible to make all rotations at once.
+                            canvas.rotate(animation.ratio() * Constants.MAX_ANGLE_IN_DEGREES, rectDest.exactCenterX(), rectDest.exactCenterY()) // https://www.tabnine.com/code/java/methods/android.graphics.Canvas/rotate
+                            canvas.drawBitmap(getBitmapFruitToDrawFromIndex(animation.imageFruit),
+                                rectSource, rotatedShrinkedRect(rectDest, animation.ratio()), paint)
+                            canvas.restore()
+                        }
+                        animation.progress()
+                    }
                 }
                 rectDest.left += Pix.wSpace
                 rectDest.right += Pix.wSpace
             }
-            rectDest.left = Pix.xStartSpaces;
-            rectDest.right = Pix.xStartSpaces+Pix.wMainSpace;
+            rectDest.left = Pix.xStartSpaces
+            rectDest.right = Pix.xStartSpaces+Pix.wMainSpace
             rectDest.top += Pix.hSpace
             rectDest.bottom += Pix.hSpace
         }
 
         // Draw the falling fruits
-        var xStartFall : Int
-        var yStartFall : Int
-        val ratioFall = gh.gth.ratioToCompletionFall()
-        for (coors in gh.getFallingFruitsCoors()) {
-            xStartFall = coors.x
-            yStartFall = coors.y
-            if (gh.hasFruit(xStartFall, yStartFall) && gh.isNotDestroyedBeforeFall(xStartFall, yStartFall)) {
-                rectDest.left = Pix.xStartSpaces + xStartFall * Pix.wSpace
+        if (gh.gth.isInFall) {
+            var xStartFall : Int
+            var yStartFall : Int
+            val ratioFall = gh.gth.ratioToCompletionFall()
+            for (coors in gh.fallingFruitsCoors) {
+                xStartFall = coors.x
+                yStartFall = coors.y
+                if (gh.hasFruit(xStartFall, yStartFall) && gh.isNotDestroyedBeforeFall(xStartFall, yStartFall)) {
+                    rectDest.left = Pix.xStartSpaces + xStartFall * Pix.wSpace
+                    rectDest.right = rectDest.left + Pix.wMainSpace
+                    rectDest.top = (Pix.yStartSpaces + (yStartFall + ratioFall) * Pix.hSpace).toInt()
+                    rectDest.bottom = rectDest.top + Pix.hMainSpace
+                    canvas.drawBitmap(getBitmapToDrawFromCoors(xStartFall, yStartFall), rectSource, rectDest, paint)
+                }
+            }
+
+            // Draw the spawning fruits
+            var xEndFall : Int
+            var yEndFall : Int
+            for (coors in gh.spawningFruitsCoors) {
+                xEndFall = coors.x
+                yEndFall = coors.y
+                rectDest.left = Pix.xStartSpaces + xEndFall * Pix.wSpace
                 rectDest.right = rectDest.left + Pix.wMainSpace
-                rectDest.top = (Pix.yStartSpaces + (yStartFall + ratioFall) * Pix.hSpace).toInt()
+                rectDest.top = (Pix.yStartSpaces + (yEndFall + ratioFall -1) * Pix.hSpace).toInt()
                 rectDest.bottom = rectDest.top + Pix.hMainSpace
-                canvas.drawBitmap(bitmapImages[gh.getFruit(xStartFall, yStartFall)], rectSource, rectDest, paint);
+                canvas.drawBitmap(getBitmapFruitToDrawFromIndex(gh.spawn(xEndFall, yEndFall)), rectSource, rectDest, paint)
             }
         }
 
-        // Draw the spawning fruits
-        var xEndFall : Int
-        var yEndFall : Int
-        for (coors in gh.spawningFruitsCoors) {
-            xEndFall = coors.x
-            yEndFall = coors.y
-            rectDest.left = Pix.xStartSpaces + xEndFall * Pix.wSpace
-            rectDest.right = rectDest.left + Pix.wMainSpace
-            rectDest.top = (Pix.yStartSpaces + (yEndFall + ratioFall -1) * Pix.hSpace).toInt()
-            rectDest.bottom = rectDest.top + Pix.hMainSpace
-            canvas.drawBitmap(bitmapImages[gh.spawn(xEndFall, yEndFall)], rectSource, rectDest, paint);
-        }
 
         // Draw the cursor
         if (isSpaceSelected()) {
-            val frame = Rect(spaceXToPixXLeft(selectedSpaceX), spaceYToPixYUp(selectedSpaceY), spaceXToPixXRight(selectedSpaceX), spaceYToPixYDown(selectedSpaceY))
-            canvas.drawRect(frame, paint)
+            rectFrame.set(spaceXToPixXLeft(selectedSpaceX), spaceYToPixYUp(selectedSpaceY), spaceXToPixXRight(selectedSpaceX), spaceYToPixYDown(selectedSpaceY))
+            canvas.drawRect(rectFrame, paint)
         }
 
         // Draw the currently swapping fruits
-        if (gh.gth.isInSwap()) {
+        if (gh.gth.isInSwap) {
             val x1 = gh.gth.xSwap1
             val x2 = gh.gth.xSwap2
             val y1 = gh.gth.ySwap1
@@ -135,12 +161,12 @@ class MyCanvasView(context: Context) : View(context) {
             rectDest.right = rectDest.left + Pix.wMainSpace
             rectDest.top = (Pix.yStartSpaces + (y1 + ratio*(y2-y1)) * Pix.hSpace).toInt()
             rectDest.bottom = rectDest.top + Pix.hMainSpace
-            canvas.drawBitmap(bitmapImages[gh.getFruit(x1, y1)], rectSource, rectDest, paint);
+            canvas.drawBitmap(getBitmapToDrawFromCoors(x1, y1), rectSource, rectDest, paint)
             rectDest.left = (Pix.xStartSpaces + (x2 + ratio*(x1-x2)) * Pix.wSpace).toInt()
             rectDest.right = rectDest.left + Pix.wMainSpace
             rectDest.top = (Pix.yStartSpaces + (y2 + ratio*(y1-y2)) * Pix.hSpace).toInt()
             rectDest.bottom = rectDest.top + Pix.hMainSpace
-            canvas.drawBitmap(bitmapImages[gh.getFruit(x2, y2)], rectSource, rectDest, paint);
+            canvas.drawBitmap(getBitmapToDrawFromCoors(x2, y2), rectSource, rectDest, paint)
         }
 
 
@@ -151,24 +177,36 @@ class MyCanvasView(context: Context) : View(context) {
         rectDest.top = Pix.yStartActiveLight
         rectDest.right = rectDest.left + Pix.wActiveLight
         rectDest.bottom = rectDest.top + Pix.hActiveLight
-        if (gh.gth.isActive()) {
-            canvas.drawBitmap(bitmapImageLightActive, rectSource, rectDest, paint);
+        if (gh.gth.isActive) {
+            canvas.drawBitmap(bitmapImageLightActive, rectSource, rectDest, paint)
         } else { // TODO Pour l'instant l'échange incorrect ne laisse pas de temps s'écouler, créer une nouvelle icône...
-            canvas.drawBitmap(bitmapImageLightInactive, rectSource, rectDest, paint);
+            canvas.drawBitmap(bitmapImageLightInactive, rectSource, rectDest, paint)
         }
 
         invalidate() // At the end of draw... right ? Also, how many FPS ?
 
         //if (gh != null && gh.gth != null) { // TODO, passer ça à Java
         if (gh.gth != null) {
-            gh.gth.step(); // TODO Lui donner son propre processus parallèle ? Ou bien laisser dans onDraw ?
+            gh.gth.step() // TODO Lui donner son propre processus parallèle ? Ou bien laisser dans onDraw ?
         }
     }
+
+    private fun rotatedShrinkedRect(rectDest: Rect, ratio: Float): Rect {
+        // TODO fais la rotation et tu es bon
+        return Rect(
+            (rectDest.left + Pix.wMainSpace*ratio/2).roundToInt(),
+            (rectDest.top + Pix.hMainSpace*ratio/2).roundToInt(),
+            (rectDest.right - Pix.wMainSpace*ratio/2).roundToInt(),
+            (rectDest.bottom - Pix.hMainSpace*ratio/2).roundToInt()
+        )
+
+    }
+
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         pixMotionTouchEventX = event.x
         pixMotionTouchEventY = event.y
-        if (gh.gth.isActive()) {
+        if (gh.gth.isActive) {
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> touchStart()
                 MotionEvent.ACTION_MOVE -> touchMove()
@@ -225,7 +263,7 @@ class MyCanvasView(context: Context) : View(context) {
 
     // True if two different spaces are being selected
     private fun testActionSwap(spaceX : Int, spaceY : Int) {
-        if (spaceX >= 0 && spaceX < GameHandler.FIELD_XLENGTH && spaceY >= 0 && spaceY < GameHandler.FIELD_YLENGTH) {
+        if (spaceX >= 0 && spaceX < Constants.FIELD_XLENGTH && spaceY >= 0 && spaceY < Constants.FIELD_YLENGTH) {
             if (!gh.hasSelectionnableFruit(spaceX, spaceY)) {
                 return
             }
@@ -237,10 +275,10 @@ class MyCanvasView(context: Context) : View(context) {
                     gh.inputSwap(spaceX, spaceY, selectedSpaceX, selectedSpaceY)
                     alreadySwappedTouchMove = true
                 }
-                unselect();
+                unselect()
             } else {
-                selectedSpaceX = spaceX;
-                selectedSpaceY = spaceY;
+                selectedSpaceX = spaceX
+                selectedSpaceY = spaceY
             }
         }
     }

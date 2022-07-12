@@ -1,15 +1,16 @@
 package com.example.fruitfall;
 
 public class GameEnums {
-    enum GAME_STATE {
+    public enum GAME_STATE {
         NORMAL,
         SWAP,
         SWAP_RETURN,
         FALLING,
+        DESTRUCTING_STASIS,
         PAUSED
     }
 
-    enum FALL_DIRECTION {
+    public enum FALL_DIRECTION {
         NONE,
         DOWN,
         DOWN_RIGHT,
@@ -17,7 +18,7 @@ public class GameEnums {
     }
 
     // Space as it is at start
-    enum SPACE_DATA {
+    public enum SPACE_DATA {
         FRUIT,
         EMPTY,
         VOID

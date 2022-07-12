@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
+import com.example.fruitfall.level.LevelManager
 
 // Almost everything was taken from : https://developer.android.com/codelabs/advanced-android-kotlin-training-canvas#2
 // Main exception is "credits here".
