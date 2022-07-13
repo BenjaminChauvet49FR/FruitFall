@@ -2,8 +2,10 @@ package com.example.fruitfall
 
 import android.content.Context
 import android.graphics.*
+import android.os.Build
 import android.view.MotionEvent
 import android.view.View
+import androidx.annotation.RequiresApi
 import androidx.core.content.res.ResourcesCompat
 import com.example.fruitfall.animations.SpaceAnimation
 import com.example.fruitfall.animations.SpaceAnimationFruitShrinking
@@ -40,6 +42,16 @@ class MyCanvasView(context: Context) : View(context) {
         BitmapFactory.decodeResource(resources, R.drawable.f7),
         BitmapFactory.decodeResource(resources, R.drawable.f8),
     )
+
+    // Search for a font on my computer : https://www.pcmag.com/how-to/how-to-manage-your-fonts-in-windows
+    // Font handling : https://developer.android.com/guide/topics/ui/look-and-feel/fonts-in-xml#kotlin
+    @RequiresApi(Build.VERSION_CODES.O)
+    val mainFont = resources.getFont(R.font.georgia)
+    @RequiresApi(Build.VERSION_CODES.O)
+    val scoreFont = resources.getFont(R.font.trebuc)
+    // Trouble met : "Call requires API level 26 (current min is 21): android.content.res.Resources#getFont"
+    // https://stackoverflow.com/questions/20279084/how-android-set-custom-font-in-canvas
+    // Got myself seducted by this : https://medium.com/programming-lite/using-custom-font-as-resources-in-android-app-6331477f8f57 so I dealt with the API.
 
     private fun getBitmapFruitToDrawFromIndex(index : Int) : Bitmap {
         return bitmapImages[gh.getRandomFruit(index)]
@@ -79,11 +91,20 @@ class MyCanvasView(context: Context) : View(context) {
         extraCanvas.drawColor(backgroundColor)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         canvas.drawBitmap(extraBitmap, 0f, 0f, null)
-        rectDest.set(Pix.xStartSpaces, Pix.yStartSpaces, Pix.xStartSpaces+Pix.wMainSpace, Pix.yStartSpaces+Pix.hMainSpace)
+
+        // Draw score
+        paint.setColor(Colours.scoreMain);
+        paint.setTextSize(Pix.hScore);
+        paint.setTypeface(mainFont)
+        paint.setStyle(Paint.Style.FILL)// How to avoid awful outlined texts : https://stackoverflow.com/questions/31877417/android-draw-text-with-solid-background-onto-canvas-to-be-used-as-a-bitmap
+        canvas.drawText("Score : " + gh.getScore(), Pix.xScore, Pix.yScore, paint);
+
         var animation : SpaceAnimation?
+        rectDest.set(Pix.xStartSpaces, Pix.yStartSpaces, Pix.xStartSpaces+Pix.wMainSpace, Pix.yStartSpaces+Pix.hMainSpace)
         // Draw the in-place fruits or the on-space animations
         for (y in 0 until Constants.FIELD_YLENGTH) {
             for (x in 0 until Constants.FIELD_XLENGTH) {
@@ -146,6 +167,8 @@ class MyCanvasView(context: Context) : View(context) {
         // Draw the cursor
         if (isSpaceSelected()) {
             rectFrame.set(spaceXToPixXLeft(selectedSpaceX), spaceYToPixYUp(selectedSpaceY), spaceXToPixXRight(selectedSpaceX), spaceYToPixYDown(selectedSpaceY))
+            paint.setStyle(Paint.Style.STROKE)
+            paint.setColor(Colours.frameRect)
             canvas.drawRect(rectFrame, paint)
         }
 
@@ -183,6 +206,22 @@ class MyCanvasView(context: Context) : View(context) {
             canvas.drawBitmap(bitmapImageLightInactive, rectSource, rectDest, paint)
         }
 
+        // Draw scores on the field
+        if (gh.gth.shouldDrawScore()) {
+            paint.setColor(Colours.frameRect);
+            paint.setTextSize(Pix.hScoreSpace);
+            paint.setTypeface(scoreFont)
+            paint.setStyle(Paint.Style.FILL_AND_STROKE)
+            for (coors in this.gh.contributingSpacesScore) {
+                val x = coors.x;
+                val y = coors.y;
+                canvas.drawText("+" + this.gh.scoreSpace(x, y),
+                    (Pix.xStartSpaces + x * Pix.wSpace).toFloat(),
+                    (Pix.yStartSpaces + y * Pix.hSpace + Pix.hScoreSpace),
+                    paint);
+            }
+        }
+
         invalidate() // At the end of draw... right ? Also, how many FPS ?
 
         //if (gh != null && gh.gth != null) { // TODO, passer ça à Java
@@ -192,7 +231,6 @@ class MyCanvasView(context: Context) : View(context) {
     }
 
     private fun rotatedShrinkedRect(rectDest: Rect, ratio: Float): Rect {
-        // TODO fais la rotation et tu es bon
         return Rect(
             (rectDest.left + Pix.wMainSpace*ratio/2).roundToInt(),
             (rectDest.top + Pix.hMainSpace*ratio/2).roundToInt(),

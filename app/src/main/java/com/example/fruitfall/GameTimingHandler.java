@@ -9,6 +9,7 @@ public class GameTimingHandler {
     private int xSwap1, xSwap2, ySwap1, ySwap2;
     private GameEnums.GAME_STATE gameState;
     private int frameCount;
+    private int frameScore;
     private GameHandler gh;
 
     private SpaceAnimation[][] animations = new SpaceAnimation[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
@@ -56,6 +57,7 @@ public class GameTimingHandler {
 
     public void startDestruction() {
         frameCount = 0;
+        frameScore = 0;
         int x, y;
         for(SpaceCoors coors : this.gh.getdestroyedFruitsCoors()) {
             x = coors.x;
@@ -94,6 +96,7 @@ public class GameTimingHandler {
         }
         if (this.gameState == GameEnums.GAME_STATE.DESTRUCTING_STASIS) {
             this.frameCount++;
+            this.frameScore++;
             if (this.frameCount == Constants.NUMBER_FRAMES_DESTRUCTION) {
                 this.gh.triggerDestruction();
             }
@@ -101,6 +104,7 @@ public class GameTimingHandler {
         }
         if (this.gameState == GameEnums.GAME_STATE.FALLING) {
             this.frameCount++;
+            this.frameScore++;
             if (this.frameCount == Constants.NUMBER_FRAMES_FALL) {
                 this.gh.triggerUnstableCheck();
             }
@@ -128,6 +132,9 @@ public class GameTimingHandler {
     public float ratioToCompletionFall() {
         return (float)this.frameCount / Constants.NUMBER_FRAMES_FALL;
     }
+    public float ratioToScore() {
+        return (float)this.frameScore / Constants.NUMBER_FRAMES_SCORE;
+    }
     public int getXSwap1() { return this.xSwap1; }
     public int getXSwap2() { return this.xSwap2; }
     public int getYSwap1() { return this.ySwap1; }
@@ -143,6 +150,11 @@ public class GameTimingHandler {
                         this.gh.isNotDestroyedBeforeFall(x, y)
         );
     }
+    public boolean shouldDrawScore() {
+        return (this.gameState == GameEnums.GAME_STATE.DESTRUCTING_STASIS || this.gameState == GameEnums.GAME_STATE.FALLING) &&
+                (frameScore < Constants.NUMBER_FRAMES_SCORE);
+    }
+
 
     public SpaceAnimation getAnimation(int x, int y) {
         return this.animations[y][x];

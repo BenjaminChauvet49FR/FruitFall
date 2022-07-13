@@ -11,6 +11,7 @@ public class GameHandler {
 
     public static final int VOID = -1;
     public static final int EMPTY_FRUIT = -2;
+    private static final int DUMMY_IMPOSSIBLE_SCORE = 0;
     private int fruitsNumber;
     private int[][] arrayFruit;
     private Checker alignedFruitsChecker = new Checker(Constants.FIELD_XLENGTH, Constants.FIELD_YLENGTH); // Can ONLY contain coordinates of spaces with fruits
@@ -22,9 +23,13 @@ public class GameHandler {
     private SpaceCoors[][] arrayTeleporterDestination = new SpaceCoors[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
     private SpaceCoors[][] arrayTeleporterSource = new SpaceCoors[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
     private int[][] arrayFutureFruits = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
+    private IntChecker scoreDestructionFallChecker = new IntChecker(Constants.FIELD_XLENGTH,Constants.FIELD_YLENGTH, DUMMY_IMPOSSIBLE_SCORE);
     private IntChecker spawnFruitsChecker = new IntChecker(Constants.FIELD_XLENGTH, Constants.FIELD_YLENGTH, EMPTY_FRUIT);
     private final int RESOURCES_NUMBER_FRUITS = 8;
     private int[] randomIndex = new int[RESOURCES_NUMBER_FRUITS];
+    private int score;
+    private int comboCoefficient;
+    private int destroyedFruitsThisMove;
 
     public GameTimingHandler gth;  // TODO le passer en privé et le rendre accessible par getters...
 
@@ -92,9 +97,7 @@ public class GameHandler {
                 }
             }
         } else {
-            if (gotAlignment(x, 0, x, 1, x, 2)){
-                return true;
-            }
+            return gotAlignment(x, 0, x, 1, x, 2);
         }
         return false;
     }
@@ -139,8 +142,17 @@ public class GameHandler {
     // Initialization
 
     public void initializeGrid(LevelData ld) {
-        this.alignedFruitsChecker.clear();
-        this.spawnFruitsChecker.clear();
+        // Clear everything !
+        alignedFruitsChecker.clear();
+        toBeDestroyedFruitsChecker.clear();
+        fallingFruitsChecker.clear();
+        movedSinceLastStableChecker.clear();
+        movedSinceLastUnstableChecker.clear();
+        scoreDestructionFallChecker.clear();
+        spawnFruitsChecker.clear();
+        this.score = 0;
+        this.refreshScores();
+
         int x, y;
         int currentFruit;
         Random rand = new Random();
@@ -294,8 +306,11 @@ public class GameHandler {
         int x, y;
         this.toBeDestroyedFruitsChecker.clear();
         this.alignedFruitsChecker.clear();
+        this.scoreDestructionFallChecker.clear(); // Don't reinitialize the jackpot count, please ;)
 
         // Check for destruction
+        this.destroyedFruitsThisMove = 0;
+        // TODO shuffle the order of destruction, or reorder it by reading order.
         for (SpaceCoors coors : this.movedSinceLastStableChecker.getList()) {
             x = coors.x;
             y = coors.y;
@@ -303,10 +318,12 @@ public class GameHandler {
         }
         this.movedSinceLastStableChecker.clear();
 
-        // Decide which fruits should fall and be spawned
         if (this.toBeDestroyedFruitsChecker.getList().isEmpty()) {
+            // Nothing new destroyed : move on.
+            this.refreshScores();
             this.gth.endAllFalls();
         } else {
+            // Decide which fruits should fall and be spawned
             for (SpaceCoors coors : this.toBeDestroyedFruitsChecker.getList()) {
                 this.handleNewFallingFruitsAndPotentiallySpawn(coors.x, coors.y);
             }
@@ -332,10 +349,8 @@ public class GameHandler {
         // TODO glissement diagonal. Ca va être drôle.
 
         // Spawn
-        if (coorsHead != null) {
-            if (this.shouldSpawnFruit(coorsHead.x, coorsHead.y)) {
-                this.spawnFruit(coorsHead.x, coorsHead.y);
-            }
+        if (this.shouldSpawnFruit(coorsHead.x, coorsHead.y)) {
+            this.spawnFruit(coorsHead.x, coorsHead.y);
         }
     }
 
@@ -343,18 +358,26 @@ public class GameHandler {
     Put fruits caused by alignment into destruction line.
     Create new ones, too.
     */
+    // TODO inexact : there may be very long alignments.
     private void testAndAlertAboutDestroyedAndCreatedFruits(int x, int y) {
         // Add to the "this.listDestroyedFruits".
         int formerAlignedLength = this.alignedFruitsChecker.getList().size();
         this.testAndAlertAboutAlignedFruitsAroundSpace(x, y);
         SpaceCoors coorsND; // Newly destroyed
         int xND, yND;
+        int scoreAmount;
         for (int i = formerAlignedLength ; i < this.alignedFruitsChecker.getList().size() ; i++) {
             // TODO : If too funky, create new fruit.
             coorsND = this.alignedFruitsChecker.getList().get(i);
             xND = coorsND.x;
             yND = coorsND.y;
-            this.toBeDestroyedFruitsChecker.add(xND, yND); // Note : may be redundant with alignedFruitsChecker, or not.
+            if (this.toBeDestroyedFruitsChecker.add(xND, yND)) {
+                this.destroyedFruitsThisMove++;
+                // Add score
+                scoreAmount = ((this.destroyedFruitsThisMove + 2) / 3) * (this.comboCoefficient);
+                this.scoreDestructionFallChecker.add(xND, yND, scoreAmount);
+                this.score += scoreAmount;
+            }
         }
     }
 
@@ -422,7 +445,7 @@ public class GameHandler {
         if (newFall) {
             this.gth.startFall();
         } else {
-            // TODO raise the combo count by one
+            this.comboCoefficient++;
             this.performStableCheck();
         }
     }
@@ -464,6 +487,11 @@ public class GameHandler {
         }
     }
 
+    private void refreshScores() {
+        this.scoreDestructionFallChecker.clear();
+        this.comboCoefficient = 1;
+    }
+
     // ------------
     // Getters for drawing
 
@@ -484,7 +512,7 @@ public class GameHandler {
         return (this.spawnFruitsChecker.get(x, y));
     }
 
-    // List of (x, y) spaces with fruits that are falling from (x, y) to the next space (usually x, y+1)
+    // List of (x, y) spaces with fruits that are spawning into
     public List<SpaceCoors> getSpawningFruitsCoors() {
         return this.spawnFruitsChecker.getList();
     }
@@ -495,6 +523,18 @@ public class GameHandler {
 
     public int getRandomFruitFromCoors(int x, int y) {
         return this.randomIndex[this.arrayFruit[y][x]];
+    }
+
+    public int getScore() {
+        return this.score;
+    }
+
+    public int scoreSpace(int x, int y) {
+        return (this.scoreDestructionFallChecker.get(x, y));
+    }
+
+    public List<SpaceCoors> getContributingSpacesScore() {
+        return this.scoreDestructionFallChecker.getList();
     }
 
     // ------------

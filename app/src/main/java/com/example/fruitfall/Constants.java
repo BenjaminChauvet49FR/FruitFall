@@ -1,6 +1,7 @@
 package com.example.fruitfall;
 
 public class Constants {
+    public static int NUMBER_FRAMES_SCORE = 40;
     public static int NUMBER_FRAMES_SWAP = 20;
     public static int NUMBER_FRAMES_FALL = 15; // Basis : 15 frames for fall
     public static int NUMBER_FRAMES_DESTRUCTION = 10;
