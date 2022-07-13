@@ -7,6 +7,7 @@ import android.view.MotionEvent
 import android.view.View
 import androidx.annotation.RequiresApi
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.content.res.ResourcesCompat.getColor
 import com.example.fruitfall.animations.SpaceAnimation
 import com.example.fruitfall.animations.SpaceAnimationFruitShrinking
 import com.example.fruitfall.level.LevelManager
@@ -17,9 +18,15 @@ private const val SPACE_UNDEFINED = -1
 class MyCanvasView(context: Context) : View(context) {
     private lateinit var extraCanvas: Canvas
     private lateinit var extraBitmap: Bitmap
-    private val backgroundColor = ResourcesCompat.getColor(resources, R.color.colorBackground, null)
-    private val drawColor = ResourcesCompat.getColor(resources, R.color.colorPaint, null)
-    private val rectSource = Rect(0, 0, 64, 64)
+    private val colorBG = ResourcesCompat.getColor(resources, R.color.background, null)
+    private val colorTextMain = ResourcesCompat.getColor(resources, R.color.textMain, null)
+    private val colorFrameRect = ResourcesCompat.getColor(resources, R.color.frameRect, null)
+    private val colorScoreSpace = ResourcesCompat.getColor(resources, R.color.scoreSpace, null)
+    private val colorTitle = ResourcesCompat.getColor(resources, R.color.title, null)
+
+
+    private val rectSource = Rect(0, 0, Pix.resourceSide, Pix.resourceSide)
+    private val rectSourceVariable = Rect(0, 0, Pix.resourceSide, Pix.resourceSide)
     private val rectDest = Rect(0, 0, 0, 0)
     private val rectFrame = Rect(0, 0, 0, 0)
 
@@ -63,6 +70,7 @@ class MyCanvasView(context: Context) : View(context) {
 
     private val bitmapImageLightActive = BitmapFactory.decodeResource(resources, R.drawable.light_up)
     private val bitmapImageLightInactive = BitmapFactory.decodeResource(resources, R.drawable.light_down)
+    private val bitmapImageLightPenalty = BitmapFactory.decodeResource(resources, R.drawable.light_comeback)
 
     private val gh = GameHandler()
 
@@ -72,7 +80,6 @@ class MyCanvasView(context: Context) : View(context) {
 
     // Set up the paint with which to draw.
     private val paint = Paint().apply { // Great details here : https://developer.android.com/codelabs/advanced-android-kotlin-training-canvas#4
-        color = drawColor
         // Smooths out edges of what is drawn without affecting shape.
         isAntiAlias = true
         // Dithering affects how colors with higher-precision than the device are down-sampled.
@@ -88,7 +95,7 @@ class MyCanvasView(context: Context) : View(context) {
         if (::extraBitmap.isInitialized) extraBitmap.recycle() // If not for this, memory leak !
         extraBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         extraCanvas = Canvas(extraBitmap)
-        extraCanvas.drawColor(backgroundColor)
+        extraCanvas.drawColor(colorBG)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -96,12 +103,20 @@ class MyCanvasView(context: Context) : View(context) {
         super.onDraw(canvas)
         canvas.drawBitmap(extraBitmap, 0f, 0f, null)
 
-        // Draw score
-        paint.setColor(Colours.scoreMain);
-        paint.setTextSize(Pix.hScore);
+        // Draw variables
+        paint.setColor(colorTextMain);
+        paint.setTextSize(Pix.hText);
         paint.setTypeface(mainFont)
         paint.setStyle(Paint.Style.FILL)// How to avoid awful outlined texts : https://stackoverflow.com/questions/31877417/android-draw-text-with-solid-background-onto-canvas-to-be-used-as-a-bitmap
         canvas.drawText("Score : " + gh.getScore(), Pix.xScore, Pix.yScore, paint);
+        canvas.drawText("Temps : " + gh.gth.getTimeToDisplay(), Pix.xTime, Pix.yTime, paint);
+        canvas.drawText("F : " + gh.getFruits(), Pix.xCommand1, Pix.yCommand1, paint);
+        paint.setColor(colorTitle);
+        canvas.drawText(gh.getTitle(), Pix.xTitle, Pix.yTitle, paint);
+
+
+
+        // Draw level name
 
         var animation : SpaceAnimation?
         rectDest.set(Pix.xStartSpaces, Pix.yStartSpaces, Pix.xStartSpaces+Pix.wMainSpace, Pix.yStartSpaces+Pix.hMainSpace)
@@ -134,18 +149,30 @@ class MyCanvasView(context: Context) : View(context) {
 
         // Draw the falling fruits
         if (gh.gth.isInFall) {
+            var fruit : Bitmap
             var xStartFall : Int
             var yStartFall : Int
+            var outCoors : SpaceCoors?
             val ratioFall = gh.gth.ratioToCompletionFall()
+            val antiRatioFall = 1 - ratioFall
+            val pixYSplitImgSrc = (Pix.resourceSide * antiRatioFall).toInt()
+            val pixYSplitImgDst = (Pix.hMainSpace * ratioFall).toInt()
             for (coors in gh.fallingFruitsCoors) {
                 xStartFall = coors.x
                 yStartFall = coors.y
                 if (gh.hasFruit(xStartFall, yStartFall) && gh.isNotDestroyedBeforeFall(xStartFall, yStartFall)) {
-                    rectDest.left = Pix.xStartSpaces + xStartFall * Pix.wSpace
-                    rectDest.right = rectDest.left + Pix.wMainSpace
-                    rectDest.top = (Pix.yStartSpaces + (yStartFall + ratioFall) * Pix.hSpace).toInt()
-                    rectDest.bottom = rectDest.top + Pix.hMainSpace
-                    canvas.drawBitmap(getBitmapToDrawFromCoors(xStartFall, yStartFall), rectSource, rectDest, paint)
+                    outCoors = gh.getDestination(xStartFall, yStartFall)
+                    if (outCoors != null) { // Fruit in teleportation
+                        fruit = getBitmapToDrawFromCoors(xStartFall, yStartFall)
+                        drawTopFruitInBotSpace(coors.x, coors.y, fruit, pixYSplitImgSrc, pixYSplitImgDst, canvas)
+                        drawBotFruitInTopSpace(outCoors.x, outCoors.y, fruit, pixYSplitImgSrc, pixYSplitImgDst, canvas)
+                    } else { // Fruit without teleportation
+                        rectDest.left = pixXLeftMainSpace(xStartFall)
+                        rectDest.right = rectDest.left + Pix.wMainSpace
+                        rectDest.top = pixYUpMainSpace(yStartFall + ratioFall)
+                        rectDest.bottom = rectDest.top + Pix.hMainSpace
+                        canvas.drawBitmap(getBitmapToDrawFromCoors(xStartFall, yStartFall), rectSource, rectDest, paint)
+                    }
                 }
             }
 
@@ -155,11 +182,7 @@ class MyCanvasView(context: Context) : View(context) {
             for (coors in gh.spawningFruitsCoors) {
                 xEndFall = coors.x
                 yEndFall = coors.y
-                rectDest.left = Pix.xStartSpaces + xEndFall * Pix.wSpace
-                rectDest.right = rectDest.left + Pix.wMainSpace
-                rectDest.top = (Pix.yStartSpaces + (yEndFall + ratioFall -1) * Pix.hSpace).toInt()
-                rectDest.bottom = rectDest.top + Pix.hMainSpace
-                canvas.drawBitmap(getBitmapFruitToDrawFromIndex(gh.spawn(xEndFall, yEndFall)), rectSource, rectDest, paint)
+                drawBotFruitInTopSpace(xEndFall, yEndFall, getBitmapFruitToDrawFromIndex(gh.spawn(xEndFall, yEndFall)), pixYSplitImgSrc, pixYSplitImgDst, canvas)
             }
         }
 
@@ -168,7 +191,7 @@ class MyCanvasView(context: Context) : View(context) {
         if (isSpaceSelected()) {
             rectFrame.set(spaceXToPixXLeft(selectedSpaceX), spaceYToPixYUp(selectedSpaceY), spaceXToPixXRight(selectedSpaceX), spaceYToPixYDown(selectedSpaceY))
             paint.setStyle(Paint.Style.STROKE)
-            paint.setColor(Colours.frameRect)
+            paint.setColor(colorFrameRect)
             canvas.drawRect(rectFrame, paint)
         }
 
@@ -179,15 +202,14 @@ class MyCanvasView(context: Context) : View(context) {
             val y1 = gh.gth.ySwap1
             val y2 = gh.gth.ySwap2
             val ratio = gh.gth.ratioToCompletionSwap()
-            // TODO créer des fonctions de pix...
-            rectDest.left = (Pix.xStartSpaces + (x1 + ratio*(x2-x1)) * Pix.wSpace).toInt()
+            rectDest.left = pixXLeftMainSpace(x1 + ratio*(x2-x1))  
             rectDest.right = rectDest.left + Pix.wMainSpace
-            rectDest.top = (Pix.yStartSpaces + (y1 + ratio*(y2-y1)) * Pix.hSpace).toInt()
+            rectDest.top = pixYUpMainSpace((y1 + ratio*(y2-y1)) )
             rectDest.bottom = rectDest.top + Pix.hMainSpace
             canvas.drawBitmap(getBitmapToDrawFromCoors(x1, y1), rectSource, rectDest, paint)
-            rectDest.left = (Pix.xStartSpaces + (x2 + ratio*(x1-x2)) * Pix.wSpace).toInt()
+            rectDest.left = pixXLeftMainSpace(x2 + ratio*(x1-x2))
             rectDest.right = rectDest.left + Pix.wMainSpace
-            rectDest.top = (Pix.yStartSpaces + (y2 + ratio*(y1-y2)) * Pix.hSpace).toInt()
+            rectDest.top = pixYUpMainSpace(y2 + ratio*(y1-y2))
             rectDest.bottom = rectDest.top + Pix.hMainSpace
             canvas.drawBitmap(getBitmapToDrawFromCoors(x2, y2), rectSource, rectDest, paint)
         }
@@ -202,13 +224,15 @@ class MyCanvasView(context: Context) : View(context) {
         rectDest.bottom = rectDest.top + Pix.hActiveLight
         if (gh.gth.isActive) {
             canvas.drawBitmap(bitmapImageLightActive, rectSource, rectDest, paint)
-        } else { // TODO Pour l'instant l'échange incorrect ne laisse pas de temps s'écouler, créer une nouvelle icône...
+        } else if (gh.gth.isActivePenalty) {
+            canvas.drawBitmap(bitmapImageLightPenalty, rectSource, rectDest, paint)
+        } else {
             canvas.drawBitmap(bitmapImageLightInactive, rectSource, rectDest, paint)
         }
 
         // Draw scores on the field
         if (gh.gth.shouldDrawScore()) {
-            paint.setColor(Colours.frameRect);
+            paint.setColor(colorScoreSpace);
             paint.setTextSize(Pix.hScoreSpace);
             paint.setTypeface(scoreFont)
             paint.setStyle(Paint.Style.FILL_AND_STROKE)
@@ -237,9 +261,41 @@ class MyCanvasView(context: Context) : View(context) {
             (rectDest.right - Pix.wMainSpace*ratio/2).roundToInt(),
             (rectDest.bottom - Pix.hMainSpace*ratio/2).roundToInt()
         )
-
     }
 
+    private fun drawTopFruitInBotSpace(xSpaceTarget : Int, ySpaceTarget : Int, image : Bitmap, pixYSplitImgSrc : Int, pixYSplitImgDst : Int, canvas : Canvas) {
+        rectDest.left = pixXLeftMainSpace(xSpaceTarget)
+        rectDest.right = rectDest.left + Pix.wMainSpace
+        rectDest.top = pixYUpMainSpace(ySpaceTarget) + pixYSplitImgDst
+        rectDest.bottom = pixYUpMainSpace(ySpaceTarget + 1)
+        rectSourceVariable.top = 0
+        rectSourceVariable.bottom = pixYSplitImgSrc
+        canvas.drawBitmap(image, rectSourceVariable, rectDest, paint)
+    }
+    
+    private fun drawBotFruitInTopSpace(xSpaceTarget : Int, ySpaceTarget : Int, image : Bitmap, pixYSplitImgSrc : Int, pixYSplitImgDst : Int, canvas : Canvas) {
+        rectDest.left = pixXLeftMainSpace(xSpaceTarget)
+        rectDest.right = rectDest.left + Pix.wMainSpace
+        rectDest.top = pixYUpMainSpace(ySpaceTarget)
+        rectDest.bottom = rectDest.top + pixYSplitImgDst
+        rectSourceVariable.top = pixYSplitImgSrc
+        rectSourceVariable.bottom = Pix.resourceSide
+        canvas.drawBitmap(image, rectSourceVariable, rectDest, paint)
+    }
+
+    // Draw pix
+    private fun pixXLeftMainSpace(x : Float) : Int {
+        return Pix.xStartSpaces + (x * Pix.wSpace).toInt()
+    }
+    private fun pixYUpMainSpace(y : Float) : Int {
+        return Pix.yStartSpaces + (y * Pix.hSpace).toInt()
+    }
+    private fun pixXLeftMainSpace(x : Int) : Int {
+        return Pix.xStartSpaces + (x * Pix.wSpace)
+    }
+    private fun pixYUpMainSpace(y : Int) : Int {
+        return Pix.yStartSpaces + (y * Pix.hSpace)
+    }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         pixMotionTouchEventX = event.x
@@ -274,6 +330,7 @@ class MyCanvasView(context: Context) : View(context) {
 
     }
 
+    // Tactile pix
     private fun pixXToSpaceX(pixX : Float): Int {
         return ((pixX.toDouble()-Pix.wGap/2-Pix.xStartSpaces)/Pix.wSpace).toInt()
     }

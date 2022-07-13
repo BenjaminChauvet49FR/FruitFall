@@ -4,6 +4,7 @@ package com.example.fruitfall;
 import com.example.fruitfall.level.LevelData;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
@@ -20,8 +21,8 @@ public class GameHandler {
     private Checker movedSinceLastStableChecker = new Checker(Constants.FIELD_XLENGTH, Constants.FIELD_YLENGTH);
     private Checker movedSinceLastUnstableChecker = new Checker(Constants.FIELD_XLENGTH, Constants.FIELD_YLENGTH);
     private boolean[][] arrayShouldFruitsBeSpawned = new boolean[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
-    private SpaceCoors[][] arrayTeleporterDestination = new SpaceCoors[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
-    private SpaceCoors[][] arrayTeleporterSource = new SpaceCoors[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
+    private SpaceCoors[][] arrayTeleporterCorrespondingExit = new SpaceCoors[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH]; // IMPORTANT : "out" array contains coors of corresponding "in" and vice-versa.
+    private SpaceCoors[][] arrayTeleporterCorrespondingEntrance = new SpaceCoors[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
     private int[][] arrayFutureFruits = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
     private IntChecker scoreDestructionFallChecker = new IntChecker(Constants.FIELD_XLENGTH,Constants.FIELD_YLENGTH, DUMMY_IMPOSSIBLE_SCORE);
     private IntChecker spawnFruitsChecker = new IntChecker(Constants.FIELD_XLENGTH, Constants.FIELD_YLENGTH, EMPTY_FRUIT);
@@ -30,6 +31,8 @@ public class GameHandler {
     private int score;
     private int comboCoefficient;
     private int destroyedFruitsThisMove;
+    private int collectedFruits;
+    private String title;
 
     public GameTimingHandler gth;  // TODO le passer en privé et le rendre accessible par getters...
 
@@ -116,6 +119,13 @@ public class GameHandler {
     SOMETHING IS SUPPOSED TO FALL
      */
     private SpaceCoors getCoorsFruitRightAbove(int x, int y) {
+        SpaceCoors supposedSource = this.arrayTeleporterCorrespondingEntrance[y][x];
+        if (supposedSource != null) {
+            if (!this.hasFruit(supposedSource.x, supposedSource.y)) {
+                return null;
+            }
+            return supposedSource;
+        }
         if (y == 0) {
             return null;
         }
@@ -129,6 +139,10 @@ public class GameHandler {
     SOMETHING IS SUPPOSED TO FALL
      */
     private SpaceCoors getCoorsFruitRightBelow(int x, int y) {
+        SpaceCoors supposedDest = this.arrayTeleporterCorrespondingExit[y][x];
+        if (supposedDest != null) {
+            return supposedDest;
+        }
         if (y == Constants.FIELD_YLENGTH-1) {
             return null;
         }
@@ -151,14 +165,18 @@ public class GameHandler {
         scoreDestructionFallChecker.clear();
         spawnFruitsChecker.clear();
         this.score = 0;
-        this.refreshScores();
+        this.collectedFruits = 0;
+        this.comboCoefficient = 1;
 
         int x, y;
         int currentFruit;
         Random rand = new Random();
 
-        // Read data for fruits
+        // Read data for everything
         this.fruitsNumber = ld.getFruitColours();
+        this.title = ld.getTitle();
+
+        // Read data for fruits
         int[] arrayNTI = new int[RESOURCES_NUMBER_FRUITS]; // NTI = not taken indexes
         int i;
         for (i = 0 ; i < RESOURCES_NUMBER_FRUITS ; i++) {
@@ -209,13 +227,28 @@ public class GameHandler {
                         testAndAlertAboutAlignedFruits(x, y, x, y-1, x, y-2);
                     }
                     // Spawn
-                    this.arrayShouldFruitsBeSpawned[y][x] = ((y == 0) || (this.arrayFruit[y-1][x] == VOID));
+                    this.arrayShouldFruitsBeSpawned[y][x] = (((y == 0) || (this.arrayFruit[y-1][x] == VOID)) && (this.arrayTeleporterCorrespondingEntrance[y][x] == null));
                 } else {
                     // Not a space ; still need to initialize arrays.
                     this.arrayFruit[y][x] = VOID;
                     this.arrayShouldFruitsBeSpawned[y][x] = false;
                 }
             }
+        }
+        
+        // Teleportings !
+        for (y = 0 ; y < Constants.FIELD_YLENGTH ; y++) {
+            for (x = 0; x < Constants.FIELD_XLENGTH; x++) {
+                this.arrayTeleporterCorrespondingEntrance[y][x] = null;
+                this.arrayTeleporterCorrespondingExit[y][x] = null;
+            }
+        }
+        SpaceCoors coorsIn, coorsOut;
+        for (i = 0 ; i < ld.getTeleportersSource().size() ; i++) {
+            coorsIn = ld.getTeleportersSource().get(i);
+            coorsOut = ld.getTeleportersDestination().get(i);
+            this.arrayTeleporterCorrespondingEntrance[coorsOut.y][coorsOut.x] = new SpaceCoors(coorsIn.x, coorsIn.y);
+            this.arrayTeleporterCorrespondingExit[coorsIn.y][coorsIn.x] = new SpaceCoors(coorsOut.x, coorsOut.y);
         }
 
         // Make sure there are no aligned fruits at start !
@@ -320,7 +353,8 @@ public class GameHandler {
 
         if (this.toBeDestroyedFruitsChecker.getList().isEmpty()) {
             // Nothing new destroyed : move on.
-            this.refreshScores();
+            this.comboCoefficient = 1;
+            this.scoreDestructionFallChecker.clear();
             this.gth.endAllFalls();
         } else {
             // Decide which fruits should fall and be spawned
@@ -377,6 +411,7 @@ public class GameHandler {
                 scoreAmount = ((this.destroyedFruitsThisMove + 2) / 3) * (this.comboCoefficient);
                 this.scoreDestructionFallChecker.add(xND, yND, scoreAmount);
                 this.score += scoreAmount;
+                this.collectedFruits++;
             }
         }
     }
@@ -487,11 +522,6 @@ public class GameHandler {
         }
     }
 
-    private void refreshScores() {
-        this.scoreDestructionFallChecker.clear();
-        this.comboCoefficient = 1;
-    }
-
     // ------------
     // Getters for drawing
 
@@ -501,6 +531,9 @@ public class GameHandler {
 
     public boolean isNotDestroyedBeforeFall(int x, int y) {
         return (!this.toBeDestroyedFruitsChecker.get(x, y));
+    }
+    public SpaceCoors getDestination(int x, int y) {
+        return this.arrayTeleporterCorrespondingExit[y][x];
     }
 
     // List of (x, y) spaces with fruits that are falling from (x, y) to the next space (usually x, y+1)
@@ -527,6 +560,14 @@ public class GameHandler {
 
     public int getScore() {
         return this.score;
+    }
+
+    public int getFruits() {
+        return this.collectedFruits;
+    }
+
+    public String getTitle() {
+        return this.title;
     }
 
     public int scoreSpace(int x, int y) {

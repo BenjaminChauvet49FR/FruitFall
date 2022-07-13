@@ -11,21 +11,34 @@ public class LevelManager {
     public static List<LevelData> levelLists;
     public static int levelNumber;
 
+    private static int xLD =  Constants.FIELD_XLENGTH; // LD = length default
+    private static int yLD =  Constants.FIELD_XLENGTH;
+
     public static void init() {
         levelNumber = 0;
         levelLists = new ArrayList<>();
-        levelLists.add(new LevelData(generateClassicArray(Constants.FIELD_XLENGTH-1, Constants.FIELD_YLENGTH-1), 4));
-        levelLists.add(new LevelData(generateClassicArray(Constants.FIELD_XLENGTH, Constants.FIELD_YLENGTH), 5));
-        levelLists.add(new LevelData(generateClassicArray(Constants.FIELD_XLENGTH, Constants.FIELD_YLENGTH), 6));
-        levelLists.add(new LevelData(generateClassicArray(Constants.FIELD_XLENGTH, Constants.FIELD_YLENGTH), 8));
-        levelLists.add(new LevelData(generateClassicArray(Constants.FIELD_XLENGTH, Constants.FIELD_YLENGTH), 5, integerListFromString("12")) );
-        GameEnums.SPACE_DATA[][] splitArrayVert = generateClassicArray(Constants.FIELD_XLENGTH, Constants.FIELD_YLENGTH);
-        addSpaces(splitArrayVert, GameEnums.SPACE_DATA.VOID, 5, 0, 5, 9);
-        levelLists.add(new LevelData(splitArrayVert, 5));
+
+        GameEnums.SPACE_DATA[][] customArray = new GameEnums.SPACE_DATA[yLD][xLD];
+        refreshArray(customArray, xLD, yLD);
+        addSpaces(customArray, GameEnums.SPACE_DATA.VOID, 5, 0, 5, yLD-1);
+        LevelData myLevel000 = new LevelData(customArray, 5, "Terrain splité");
+        myLevel000.addTeleporters(0, yLD-1, 6, 0, 2);
+        myLevel000.addTeleporters(3, yLD-1, 8, 0, 2);
+
+        refreshArray(customArray,xLD, yLD);
+        addSpaces(customArray, GameEnums.SPACE_DATA.VOID, 3, 3, 6, 6);
+        LevelData myLevel001 = new LevelData(customArray, 5, "Terrain qui spawne au milieu");
+
+        levelLists.add(myLevel000);
+        levelLists.add(myLevel001);
+        levelLists.add(new LevelData(refreshArray(customArray,xLD-1, yLD-1), 4, "4 fruits"));
+        levelLists.add(new LevelData(refreshArray(customArray,xLD, yLD), 5, "5 fruits"));
+        levelLists.add(new LevelData(refreshArray(customArray,xLD, yLD), 6, "6 fruits"));
+        levelLists.add(new LevelData(refreshArray(customArray,xLD, yLD), 8, "8 fruits"));
+        levelLists.add(new LevelData(refreshArray(customArray,xLD, yLD), 5, "5 fruits dont 2 imposés", integerListFromString("12")));
     }
 
-    private static GameEnums.SPACE_DATA[][] generateClassicArray(int xLength, int yLength) {
-        GameEnums.SPACE_DATA[][] theArray = new GameEnums.SPACE_DATA[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
+    private static GameEnums.SPACE_DATA[][] refreshArray(GameEnums.SPACE_DATA[][] theArray, int xLength, int yLength) {
         int x, y;
         for (y = 0 ; y < yLength ; y++) {
             for (x = 0 ; x < xLength ; x++) {

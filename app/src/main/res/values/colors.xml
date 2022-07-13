@@ -8,6 +8,9 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <color name="colorBackground">#FFFF5500</color>
-    <color name="colorPaint">#FFFFEB3B</color>
+    <color name="background">#FF00FFFF</color>
+    <color name="frameRect">#FF440088</color>
+    <color name="scoreSpace">#FF0000FF</color>
+    <color name="textMain">#FF000000</color>
+    <color name="title">#440044</color>
 </resources>

@@ -11,6 +11,7 @@ public class GameTimingHandler {
     private int frameCount;
     private int frameScore;
     private GameHandler gh;
+    private long frameTotalCount;
 
     private SpaceAnimation[][] animations = new SpaceAnimation[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
 
@@ -22,6 +23,7 @@ public class GameTimingHandler {
     public void init() {
         this.gameState = GameEnums.GAME_STATE.NORMAL;
         this.frameCount = 0;
+        this.frameTotalCount = 0;
         this.clearSwap();
     }
 
@@ -89,6 +91,7 @@ public class GameTimingHandler {
         }
         if (this.gameState == GameEnums.GAME_STATE.SWAP_RETURN) {
             this.frameCount++;
+            this.frameTotalCount++;
             if (this.frameCount == Constants.NUMBER_FRAMES_SWAP) {
                 this.gh.triggerBackSwap(this.xSwap1, this.ySwap1, this.xSwap2, this.ySwap2);
             }
@@ -110,6 +113,10 @@ public class GameTimingHandler {
             }
             return;
         }
+        if (this.gameState == GameEnums.GAME_STATE.NORMAL) {
+            this.frameTotalCount++;
+            return;
+        }
     }
 
     // For drawing
@@ -117,6 +124,9 @@ public class GameTimingHandler {
     // States
     public boolean isActive() {
         return this.gameState == GameEnums.GAME_STATE.NORMAL;
+    }
+    public boolean isActivePenalty() {
+        return this.gameState == GameEnums.GAME_STATE.SWAP_RETURN;
     }
     public boolean isInSwap() {
         return (this.gameState == GameEnums.GAME_STATE.SWAP) || (this.gameState == GameEnums.GAME_STATE.SWAP_RETURN);
@@ -159,4 +169,5 @@ public class GameTimingHandler {
     public SpaceAnimation getAnimation(int x, int y) {
         return this.animations[y][x];
     }
+    public long getTimeToDisplay() {return this.frameTotalCount / 60;} // TODO handle time for real ! (with SecureDate ?)
 }
