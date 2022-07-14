@@ -15,6 +15,7 @@ public class LevelData {
     private List<SpaceCoors> inFallTeleporters;
     private List<SpaceCoors> outFallTeleporters;
     private String name;
+    private GameEnums.SPACE_DATA[] topRowSpawn;
 
     public LevelData(GameEnums.SPACE_DATA[][] _spaceData, int _fruitNumber, String name) {
         this(_spaceData, _fruitNumber, name, null);
@@ -29,6 +30,14 @@ public class LevelData {
                 this.spaceData[y][x] = _spaceData[y][x];
             }
         }
+
+        // Top row
+        this.topRowSpawn = new GameEnums.SPACE_DATA[Constants.FIELD_XLENGTH];
+        for (x = 0 ; x < Constants.FIELD_XLENGTH ; x++) {
+            this.topRowSpawn[x] = GameEnums.SPACE_DATA.VOID_SPAWN;
+        }
+
+
         this.fruitNumber = _fruitNumber;
         this.forcedIndexes = _forcedIndexes;
         this.inFallTeleporters = new ArrayList<>();
@@ -68,5 +77,16 @@ public class LevelData {
     }
 
     public String getTitle() { return this.name; }
+
+    public GameEnums.SPACE_DATA getTopRowSpawn(int x) {
+        return topRowSpawn[x];
+    }
+
+    public void preventSpawn(List<Integer> xNoS) {
+        for (int i : xNoS) {
+            this.topRowSpawn[i] = GameEnums.SPACE_DATA.VOID;
+        }
+    }
+
 
 }

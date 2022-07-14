@@ -4,7 +4,9 @@ import com.example.fruitfall.Constants;
 import com.example.fruitfall.GameEnums;
 import com.example.fruitfall.GameHandler;
 
+import java.sql.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class LevelManager {
@@ -27,10 +29,16 @@ public class LevelManager {
 
         refreshArray(customArray,xLD, yLD);
         addSpaces(customArray, GameEnums.SPACE_DATA.VOID, 3, 3, 6, 6);
+        LevelData myLevel002 = new LevelData(customArray, 5, "Terrain qui est vide au milieu");
+        addSpaces(customArray, GameEnums.SPACE_DATA.VOID_SPAWN, 3, 6, 6, 6);
         LevelData myLevel001 = new LevelData(customArray, 5, "Terrain qui spawne au milieu");
-
+        refreshArray(customArray, xLD-1, yLD);
+        LevelData myLevel003 = new LevelData(customArray, 5, "Terrain avec 3 colonnes vides");
+        myLevel003.preventSpawn(Arrays.asList(0, 4, 8));
         levelLists.add(myLevel000);
         levelLists.add(myLevel001);
+        levelLists.add(myLevel002);
+        levelLists.add(myLevel003);
         levelLists.add(new LevelData(refreshArray(customArray,xLD-1, yLD-1), 4, "4 fruits"));
         levelLists.add(new LevelData(refreshArray(customArray,xLD, yLD), 5, "5 fruits"));
         levelLists.add(new LevelData(refreshArray(customArray,xLD, yLD), 6, "6 fruits"));

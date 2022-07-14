@@ -21,7 +21,15 @@ public class GameEnums {
     public enum SPACE_DATA {
         FRUIT,
         EMPTY,
-        VOID
+        VOID,
+        VOID_SPAWN
+    }
+
+    public enum FRUITS_POWER {
+        HORIZONTAL_LIGHTNING,
+        VERTICAL_LIGHTNING,
+        FIRE,
+        NONE
     }
 
 }

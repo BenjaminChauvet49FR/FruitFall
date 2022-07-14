@@ -11,4 +11,5 @@ public class Constants {
     public static int FIELD_XLENGTH = 10;
 
     public static int MAX_ANGLE_IN_DEGREES = 480;
+    public static int NOT_A_FRUIT = -1;
 }
