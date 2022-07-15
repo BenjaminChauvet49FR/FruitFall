@@ -64,13 +64,34 @@ class MyCanvasView(context: Context) : View(context) {
         return bitmapImages[gh.getRandomFruit(index)]
     }
 
-    private fun getBitmapToDrawFromCoors(x : Int, y : Int) : Bitmap {
-        return bitmapImages[gh.getRandomFruitFromCoors(x, y)]
+    private fun drawSpaceContent(x : Int, y : Int, canvas : Canvas, rectSource : Rect, rectDest : Rect, paint : Paint) {
+        if (gh.hasFruit(x, y)) {
+            val fruitImage = bitmapImages[gh.getRandomFruitFromCoors(x, y)]
+            canvas.drawBitmap(fruitImage, rectSource, rectDest, paint)
+            val power = gh.getFruitPowerFromCoors(x, y)
+            var powerImage : Bitmap? = null
+            if (power == GameEnums.FRUITS_POWER.FIRE) {
+                powerImage = bitmapImageFire
+            } else if (power == GameEnums.FRUITS_POWER.HORIZONTAL_LIGHTNING) {
+                powerImage = bitmapImageLightH
+            } else if (power == GameEnums.FRUITS_POWER.VERTICAL_LIGHTNING) {
+                powerImage = bitmapImageLightV
+            }
+            if (powerImage != null) {
+                canvas.drawBitmap(powerImage, rectSource, rectDest, paint)
+            }
+        } else if (gh.hasOmegaSphere(x, y)) {
+            canvas.drawBitmap(bitmapImageSphereOmega, rectSource, rectDest, paint)
+        }
     }
 
     private val bitmapImageLightActive = BitmapFactory.decodeResource(resources, R.drawable.light_up)
     private val bitmapImageLightInactive = BitmapFactory.decodeResource(resources, R.drawable.light_down)
     private val bitmapImageLightPenalty = BitmapFactory.decodeResource(resources, R.drawable.light_comeback)
+    private val bitmapImageFire= BitmapFactory.decodeResource(resources, R.drawable.on_fire)
+    private val bitmapImageLightH = BitmapFactory.decodeResource(resources, R.drawable.lightning_h)
+    private val bitmapImageLightV = BitmapFactory.decodeResource(resources, R.drawable.lightning_v)
+    private val bitmapImageSphereOmega = BitmapFactory.decodeResource(resources, R.drawable.sphere_omega)
 
     private val gh = GameHandler()
 
@@ -114,17 +135,13 @@ class MyCanvasView(context: Context) : View(context) {
         paint.setColor(colorTitle);
         canvas.drawText(gh.getTitle(), Pix.xTitle, Pix.yTitle, paint);
 
-
-
-        // Draw level name
-
         var animation : SpaceAnimation?
         rectDest.set(Pix.xStartSpaces, Pix.yStartSpaces, Pix.xStartSpaces+Pix.wMainSpace, Pix.yStartSpaces+Pix.hMainSpace)
-        // Draw the in-place fruits or the on-space animations
+        // Draw the in-place fallElts or the on-space animations
         for (y in 0 until Constants.FIELD_YLENGTH) {
             for (x in 0 until Constants.FIELD_XLENGTH) {
-                if (gh.gth.hasStillFruit(x, y)) {
-                    canvas.drawBitmap(getBitmapToDrawFromCoors(x, y), rectSource, rectDest, paint)
+                if (gh.gth.hasStillSpace(x, y)) {
+                    this.drawSpaceContent(x, y, canvas, rectSource, rectDest, paint)
                 } else {
                     animation = gh.gth.getAnimation(x, y)
                     if (animation != null && animation.shouldBeDrawn()) {
@@ -147,9 +164,8 @@ class MyCanvasView(context: Context) : View(context) {
             rectDest.bottom += Pix.hSpace
         }
 
-        // Draw the falling fruits
+        // Draw the falling elements
         if (gh.gth.isInFall) {
-            var fruit : Bitmap
             var xStartFall : Int
             var yStartFall : Int
             var outCoors : SpaceCoors?
@@ -157,21 +173,20 @@ class MyCanvasView(context: Context) : View(context) {
             val antiRatioFall = 1 - ratioFall
             val pixYSplitImgSrc = (Pix.resourceSide * antiRatioFall).toInt()
             val pixYSplitImgDst = (Pix.hMainSpace * ratioFall).toInt()
-            for (coors in gh.fallingFruitsCoors) {
+            for (coors in gh.fallingEltsCoors) {
                 xStartFall = coors.x
                 yStartFall = coors.y
-                if (gh.hasFruit(xStartFall, yStartFall) && gh.isNotDestroyedBeforeFall(xStartFall, yStartFall)) {
+                if (gh.isNotDestroyedBeforeFall(xStartFall, yStartFall)) {
                     outCoors = gh.getDestination(xStartFall, yStartFall)
-                    if (outCoors != null) { // Fruit in teleportation
-                        fruit = getBitmapToDrawFromCoors(xStartFall, yStartFall)
-                        drawTopFruitInBotSpace(coors.x, coors.y, fruit, pixYSplitImgSrc, pixYSplitImgDst, canvas)
-                        drawBotFruitInTopSpace(outCoors.x, outCoors.y, fruit, pixYSplitImgSrc, pixYSplitImgDst, canvas)
-                    } else { // Fruit without teleportation
+                    if (outCoors != null) { // FallElt in teleportation
+                        drawTopImageInBotSpace(xStartFall, yStartFall, coors.x, coors.y, pixYSplitImgSrc, pixYSplitImgDst, canvas)
+                        drawBotImageInTopSpace(xStartFall, yStartFall, outCoors.x, outCoors.y, pixYSplitImgSrc, pixYSplitImgDst, canvas)
+                    } else { // FallElt without teleportation
                         rectDest.left = pixXLeftMainSpace(xStartFall)
                         rectDest.right = rectDest.left + Pix.wMainSpace
                         rectDest.top = pixYUpMainSpace(yStartFall + ratioFall)
                         rectDest.bottom = rectDest.top + Pix.hMainSpace
-                        canvas.drawBitmap(getBitmapToDrawFromCoors(xStartFall, yStartFall), rectSource, rectDest, paint)
+                        this.drawSpaceContent(xStartFall, yStartFall, canvas, rectSource, rectDest, paint)
                     }
                 }
             }
@@ -182,7 +197,7 @@ class MyCanvasView(context: Context) : View(context) {
             for (coors in gh.spawningFruitsCoors) {
                 xEndFall = coors.x
                 yEndFall = coors.y
-                drawBotFruitInTopSpace(xEndFall, yEndFall, getBitmapFruitToDrawFromIndex(gh.spawn(xEndFall, yEndFall)), pixYSplitImgSrc, pixYSplitImgDst, canvas)
+                drawBotFruitInSpawnSpace(xEndFall, yEndFall, getBitmapFruitToDrawFromIndex(gh.spawn(xEndFall, yEndFall)), pixYSplitImgSrc, pixYSplitImgDst, canvas)
             }
         }
 
@@ -206,12 +221,12 @@ class MyCanvasView(context: Context) : View(context) {
             rectDest.right = rectDest.left + Pix.wMainSpace
             rectDest.top = pixYUpMainSpace((y1 + ratio*(y2-y1)) )
             rectDest.bottom = rectDest.top + Pix.hMainSpace
-            canvas.drawBitmap(getBitmapToDrawFromCoors(x1, y1), rectSource, rectDest, paint)
+            this.drawSpaceContent(x1, y1, canvas, rectSource, rectDest, paint)
             rectDest.left = pixXLeftMainSpace(x2 + ratio*(x1-x2))
             rectDest.right = rectDest.left + Pix.wMainSpace
             rectDest.top = pixYUpMainSpace(y2 + ratio*(y1-y2))
             rectDest.bottom = rectDest.top + Pix.hMainSpace
-            canvas.drawBitmap(getBitmapToDrawFromCoors(x2, y2), rectSource, rectDest, paint)
+            this.drawSpaceContent(x2, y2, canvas, rectSource, rectDest, paint)
         }
 
 
@@ -263,17 +278,28 @@ class MyCanvasView(context: Context) : View(context) {
         )
     }
 
-    private fun drawTopFruitInBotSpace(xSpaceTarget : Int, ySpaceTarget : Int, image : Bitmap, pixYSplitImgSrc : Int, pixYSplitImgDst : Int, canvas : Canvas) {
+    private fun drawTopImageInBotSpace(xSpaceToDraw : Int, ySpaceToDraw : Int, xSpaceTarget : Int, ySpaceTarget : Int, pixYSplitImgSrc : Int, pixYSplitImgDst : Int, canvas : Canvas) {
         rectDest.left = pixXLeftMainSpace(xSpaceTarget)
         rectDest.right = rectDest.left + Pix.wMainSpace
         rectDest.top = pixYUpMainSpace(ySpaceTarget) + pixYSplitImgDst
         rectDest.bottom = pixYUpMainSpace(ySpaceTarget + 1)
         rectSourceVariable.top = 0
         rectSourceVariable.bottom = pixYSplitImgSrc
-        canvas.drawBitmap(image, rectSourceVariable, rectDest, paint)
+        drawSpaceContent(xSpaceToDraw, ySpaceToDraw, canvas, rectSourceVariable, rectDest, paint)
     }
-    
-    private fun drawBotFruitInTopSpace(xSpaceTarget : Int, ySpaceTarget : Int, image : Bitmap, pixYSplitImgSrc : Int, pixYSplitImgDst : Int, canvas : Canvas) {
+
+    private fun drawBotImageInTopSpace(xSpaceToDraw : Int, ySpaceToDraw : Int, xSpaceTarget : Int, ySpaceTarget : Int, pixYSplitImgSrc : Int, pixYSplitImgDst : Int, canvas : Canvas) {
+        rectDest.left = pixXLeftMainSpace(xSpaceTarget)
+        rectDest.right = rectDest.left + Pix.wMainSpace
+        rectDest.top = pixYUpMainSpace(ySpaceTarget)
+        rectDest.bottom = rectDest.top + pixYSplitImgDst
+        rectSourceVariable.top = pixYSplitImgSrc
+        rectSourceVariable.bottom = Pix.resourceSide
+        drawSpaceContent(xSpaceToDraw, ySpaceToDraw, canvas, rectSourceVariable, rectDest, paint)
+    }
+
+    // Note : it should be possible to factorize this with the previous !
+    private fun drawBotFruitInSpawnSpace(xSpaceTarget : Int, ySpaceTarget : Int, image : Bitmap, pixYSplitImgSrc : Int, pixYSplitImgDst : Int, canvas : Canvas) {
         rectDest.left = pixXLeftMainSpace(xSpaceTarget)
         rectDest.right = rectDest.left + Pix.wMainSpace
         rectDest.top = pixYUpMainSpace(ySpaceTarget)
@@ -359,7 +385,7 @@ class MyCanvasView(context: Context) : View(context) {
     // True if two different spaces are being selected
     private fun testActionSwap(spaceX : Int, spaceY : Int) {
         if (spaceX >= 0 && spaceX < Constants.FIELD_XLENGTH && spaceY >= 0 && spaceY < Constants.FIELD_YLENGTH) {
-            if (!gh.hasSelectionnableFruit(spaceX, spaceY)) {
+            if (!gh.isClickable(spaceX, spaceY)) {
                 return
             }
             if (isSpaceSelected()) {

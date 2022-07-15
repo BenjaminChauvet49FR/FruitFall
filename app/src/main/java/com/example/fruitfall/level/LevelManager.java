@@ -19,8 +19,10 @@ public class LevelManager {
     public static void init() {
         levelNumber = 0;
         levelLists = new ArrayList<>();
-
         GameEnums.SPACE_DATA[][] customArray = new GameEnums.SPACE_DATA[yLD][xLD];
+
+        levelLists.add(new LevelData(refreshArray(customArray,xLD-1, yLD-1), 4, "4 fruits"));
+
         refreshArray(customArray, xLD, yLD);
         addSpaces(customArray, GameEnums.SPACE_DATA.VOID, 5, 0, 5, yLD-1);
         LevelData myLevel000 = new LevelData(customArray, 5, "Terrain splité");
@@ -39,7 +41,6 @@ public class LevelManager {
         levelLists.add(myLevel001);
         levelLists.add(myLevel002);
         levelLists.add(myLevel003);
-        levelLists.add(new LevelData(refreshArray(customArray,xLD-1, yLD-1), 4, "4 fruits"));
         levelLists.add(new LevelData(refreshArray(customArray,xLD, yLD), 5, "5 fruits"));
         levelLists.add(new LevelData(refreshArray(customArray,xLD, yLD), 6, "6 fruits"));
         levelLists.add(new LevelData(refreshArray(customArray,xLD, yLD), 8, "8 fruits"));

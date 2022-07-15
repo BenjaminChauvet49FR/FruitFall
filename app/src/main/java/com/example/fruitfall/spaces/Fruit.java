@@ -33,4 +33,7 @@ public class Fruit extends SpaceFiller {
     public boolean canFall() {
         return true;
     }
+
+    @Override
+    public GameEnums.FRUITS_POWER getPower() {return this.power;}
 }

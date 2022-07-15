@@ -61,7 +61,7 @@ public class GameTimingHandler {
         frameCount = 0;
         frameScore = 0;
         int x, y;
-        for(SpaceCoors coors : this.gh.getdestroyedFruitsCoors()) {
+        for(SpaceCoors coors : this.gh.getTrulyDestroyedFruitsCoors()) {
             x = coors.x;
             y = coors.y;
             this.animations[y][x] = new SpaceAnimationFruitShrinking(this.gh.getFruit(x, y));
@@ -142,20 +142,16 @@ public class GameTimingHandler {
     public float ratioToCompletionFall() {
         return (float)this.frameCount / Constants.NUMBER_FRAMES_FALL;
     }
-    public float ratioToScore() {
-        return (float)this.frameScore / Constants.NUMBER_FRAMES_SCORE;
-    }
+
     public int getXSwap1() { return this.xSwap1; }
     public int getXSwap2() { return this.xSwap2; }
     public int getYSwap1() { return this.ySwap1; }
     public int getYSwap2() { return this.ySwap2; }
 
-    public boolean hasStillFruit(int x, int y) {
+    public boolean hasStillSpace(int x, int y) {
         return (
                 ((x != this.xSwap1) || (y != this.ySwap1)) &&
                         ((x != this.xSwap2) || (y != this.ySwap2)) &&
-                        (this.gh.getFruit(x, y) != GameHandler.VOID) &&
-                        (this.gh.getFruit(x, y) != GameHandler.EMPTY_FRUIT) &&
                         (this.gameState == GameEnums.GAME_STATE.DESTRUCTING_STASIS || this.gh.isNotFallingFruit(x, y)) &&
                         this.gh.isNotDestroyedBeforeFall(x, y)
         );
