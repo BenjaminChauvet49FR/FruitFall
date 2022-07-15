@@ -29,6 +29,16 @@ public class GameEnums {
         HORIZONTAL_LIGHTNING,
         VERTICAL_LIGHTNING,
         FIRE,
+        NONE,
+    }
+
+    public enum WHICH_SWAP {
+        FRUIT_FRUIT,
+        FRUIT_OMEGA,
+        FIRE_FIRE,
+        FIRE_ELECTRIC,
+        ELECTRIC_ELECTRIC,
+        INVALID,
         NONE
     }
 

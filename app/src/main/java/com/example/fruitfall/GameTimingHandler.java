@@ -1,7 +1,10 @@
 package com.example.fruitfall;
 
 import com.example.fruitfall.animations.SpaceAnimation;
+import com.example.fruitfall.animations.SpaceAnimationFire;
 import com.example.fruitfall.animations.SpaceAnimationFruitShrinking;
+import com.example.fruitfall.animations.SpaceAnimationLightning;
+import com.example.fruitfall.animations.SpaceAnimationOmegaSphere;
 
 public class GameTimingHandler {
 
@@ -57,15 +60,43 @@ public class GameTimingHandler {
         this.gameState = GameEnums.GAME_STATE.FALLING;
     }
 
-    public void startDestruction() {
+    public void startDestruction(boolean alignedFruits) {
         frameCount = 0;
         frameScore = 0;
-        int x, y;
+        int x, y, fruitId;
         for(SpaceCoors coors : this.gh.getTrulyDestroyedFruitsCoors()) {
             x = coors.x;
             y = coors.y;
-            this.animations[y][x] = new SpaceAnimationFruitShrinking(this.gh.getFruit(x, y));
+            fruitId = this.gh.getFruit(x, y);
+            if (fruitId != Constants.NOT_A_FRUIT) {
+                if (alignedFruits) {
+                    this.animations[y][x] = new SpaceAnimationFruitShrinking(fruitId, false);
+                } else {
+                    this.animations[y][x] = new SpaceAnimationFruitShrinking(fruitId, true);
+                }
+            } else if (this.gh.hasOmegaSphere(x, y)) {
+                this.animations[y][x] = new SpaceAnimationOmegaSphere();
+            }
         }
+        GameEnums.FRUITS_POWER power;
+        for (SpaceCoors coors : this.gh.getListToBeActivatedSpecialFruits()) {
+            x = coors.x;
+            y = coors.y;
+            power = this.gh.getFruitPowerFromCoors(x, y);
+            if (power == GameEnums.FRUITS_POWER.FIRE) {
+                this.animations[y][x] = new SpaceAnimationFire();
+            }
+            if (power == GameEnums.FRUITS_POWER.HORIZONTAL_LIGHTNING) {
+                this.animations[y][x] = new SpaceAnimationLightning(true);
+            }
+            if (power == GameEnums.FRUITS_POWER.VERTICAL_LIGHTNING) {
+                this.animations[y][x] = new SpaceAnimationLightning(false);
+            }
+            if (gh.hasOmegaSphere(x, y)) {
+                // TODO chercher toutes les sphères détruites de cette couleur ?
+            }
+        }
+        // TODO démarrer les destructions pour les fruits spéciaux
         this.gameState = GameEnums.GAME_STATE.DESTRUCTING_STASIS;
     }
 
