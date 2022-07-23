@@ -5,12 +5,15 @@ import android.widget.Button
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import com.example.fruitfall.level.LevelManager
+import org.junit.runner.RunWith
 
 // Almost everything was taken from : https://developer.android.com/codelabs/advanced-android-kotlin-training-canvas#2
 // Main exception is "credits here".
 // Also, I wasted some time in MyCanvasView by putting Bitmap.createBitmap in the wrong place. I had to download the main code to realize my foul.
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+
+
         super.onCreate(savedInstanceState)
         LevelManager.init()
 
@@ -25,7 +28,7 @@ class MainActivity : AppCompatActivity() {
         // https://stackoverflow.com/questions/10410616/how-to-add-custom-view-to-the-layout
         // Now I can separate views and layouts
         val c : LinearLayout = findViewById(R.id.canvasLayout)
-        val myView: MyCanvasView = MyCanvasView(this)
+        val myView = MyCanvasView(this)
         c.addView(myView)
         myView.startLevel()
 

@@ -41,8 +41,8 @@ class MyCanvasView(context: Context) : View(context) {
 
     private var alreadySwappedTouchMove = false
     //private var touchTolerance = ViewConfiguration.get(context).scaledTouchSlop
-    
-    private val bitmapImages : Array<Bitmap> = arrayOf(
+
+    private var bitmapImages : Array<Bitmap> = arrayOf(
         BitmapFactory.decodeResource(resources, R.drawable.f1),
         BitmapFactory.decodeResource(resources, R.drawable.f2),
         BitmapFactory.decodeResource(resources, R.drawable.f3),
@@ -52,6 +52,10 @@ class MyCanvasView(context: Context) : View(context) {
         BitmapFactory.decodeResource(resources, R.drawable.f7),
         BitmapFactory.decodeResource(resources, R.drawable.f8),
     )
+
+    public fun getBitmapImages() :  Array<Bitmap> {
+        return bitmapImages
+    }
 
     // Search for a font on my computer : https://www.pcmag.com/how-to/how-to-manage-your-fonts-in-windows
     // Font handling : https://developer.android.com/guide/topics/ui/look-and-feel/fonts-in-xml#kotlin
@@ -68,33 +72,16 @@ class MyCanvasView(context: Context) : View(context) {
     }
 
     private fun drawSpaceContent(x : Int, y : Int, canvas : Canvas, rectSource : Rect, rectDest : Rect, paint : Paint) {
-        if (gh.hasFruit(x, y)) {
-            val fruitImage = bitmapImages[gh.getRandomFruitFromCoors(x, y)]
-            canvas.drawBitmap(fruitImage, rectSource, rectDest, paint)
-            val power = gh.getFruitPowerFromCoors(x, y)
-            var powerImage : Bitmap? = null
-            if (power == GameEnums.FRUITS_POWER.FIRE) {
-                powerImage = bitmapImageFire
-            } else if (power == GameEnums.FRUITS_POWER.HORIZONTAL_LIGHTNING) {
-                powerImage = bitmapImageLightH
-            } else if (power == GameEnums.FRUITS_POWER.VERTICAL_LIGHTNING) {
-                powerImage = bitmapImageLightV
-            }
-            if (powerImage != null) {
-                canvas.drawBitmap(powerImage, rectSource, rectDest, paint)
-            }
-        } else if (gh.hasOmegaSphere(x, y)) {
-            canvas.drawBitmap(bitmapImageSphereOmega, rectSource, rectDest, paint)
-        }
+        gh.getSpace(x, y).paintStill(this, canvas, rectSource, rectDest, paint);
     }
 
-    private val bitmapImageLightActive = BitmapFactory.decodeResource(resources, R.drawable.light_up)
-    private val bitmapImageLightInactive = BitmapFactory.decodeResource(resources, R.drawable.light_down)
-    private val bitmapImageLightPenalty = BitmapFactory.decodeResource(resources, R.drawable.light_comeback)
-    private val bitmapImageFire= BitmapFactory.decodeResource(resources, R.drawable.on_fire)
-    private val bitmapImageLightH = BitmapFactory.decodeResource(resources, R.drawable.lightning_h)
-    private val bitmapImageLightV = BitmapFactory.decodeResource(resources, R.drawable.lightning_v)
-    private val bitmapImageSphereOmega = BitmapFactory.decodeResource(resources, R.drawable.sphere_omega)
+    val bitmapImageLightActive = BitmapFactory.decodeResource(resources, R.drawable.light_up)
+    val bitmapImageLightInactive = BitmapFactory.decodeResource(resources, R.drawable.light_down)
+    val bitmapImageLightPenalty = BitmapFactory.decodeResource(resources, R.drawable.light_comeback)
+    val bitmapImageFire= BitmapFactory.decodeResource(resources, R.drawable.on_fire)
+    val bitmapImageLightH = BitmapFactory.decodeResource(resources, R.drawable.lightning_h)
+    val bitmapImageLightV = BitmapFactory.decodeResource(resources, R.drawable.lightning_v)
+    val bitmapImageSphereOmega = BitmapFactory.decodeResource(resources, R.drawable.sphere_omega)
 
     private val gh = GameHandler()
 
@@ -477,4 +464,20 @@ class MyCanvasView(context: Context) : View(context) {
     private fun isSpaceSelected() : Boolean {
         return (selectedSpaceX != SPACE_UNDEFINED)
     }
+
+    /*companion object {
+        @kotlin.jvm.JvmField
+        var bitmapImages: Array<Bitmap> = arrayOf(
+        BitmapFactory.decodeResource(resources, R.drawable.f1),
+        BitmapFactory.decodeResource(resources, R.drawable.f2),
+        BitmapFactory.decodeResource(resources, R.drawable.f3),
+        BitmapFactory.decodeResource(resources, R.drawable.f4),
+        BitmapFactory.decodeResource(resources, R.drawable.f5),
+        BitmapFactory.decodeResource(resources, R.drawable.f6),
+        BitmapFactory.decodeResource(resources, R.drawable.f7),
+        BitmapFactory.decodeResource(resources, R.drawable.f8),
+        )
+    }*/ // NOte :
+        // Objectif : passer le paint aux méthodes de cases au lieu de faire des "instanceof" à répétition !
+        // Difficultés rencontrées : j'ai essayé de transformer ça en Java. J'ai essayé avec "companion". Puis je me suis rendu compte que je pouvais passer cet objet en view en paramètre et c'est comme ça que j'ai continué mais ça n'a pas l'air d'être la bonne solution. Bon...
 }

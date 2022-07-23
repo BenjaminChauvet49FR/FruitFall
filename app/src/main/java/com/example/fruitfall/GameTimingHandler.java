@@ -1,5 +1,9 @@
 package com.example.fruitfall;
 
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
+
 import com.example.fruitfall.animations.SpaceAnimation;
 import com.example.fruitfall.animations.SpaceAnimationFire;
 import com.example.fruitfall.animations.SpaceAnimationFruitShrinking;
@@ -112,6 +116,7 @@ public class GameTimingHandler {
     public void endSwap() { this.gameState = GameEnums.GAME_STATE.NORMAL; }
 
     // Transitions : step
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public void step() {
         if (this.gameState == GameEnums.GAME_STATE.SWAP) {
             this.frameCount++;

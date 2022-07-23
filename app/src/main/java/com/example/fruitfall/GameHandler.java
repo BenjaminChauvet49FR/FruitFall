@@ -38,8 +38,8 @@ public class GameHandler {
     private IntChecker horizAlignmentChecker = new IntChecker(Constants.FIELD_XLENGTH, Constants.FIELD_YLENGTH, 0);
     private IntChecker vertAlignmentChecker = new IntChecker(Constants.FIELD_XLENGTH, Constants.FIELD_YLENGTH, 0);
 
-    private final int RESOURCES_NUMBER_FRUITS = 8;
-    private int[] randomIndex = new int[RESOURCES_NUMBER_FRUITS];
+    private static final int RESOURCES_NUMBER_FRUITS = 8;
+    public static int[] gameIndexToImageIndex = new int[RESOURCES_NUMBER_FRUITS];
     private int score;
     private int thisMoveComboCoefficient;
     private int thisMoveFruitsDestroyedByFall;
@@ -65,6 +65,10 @@ public class GameHandler {
 
     public int getFruit(int x, int y) {
         return this.arrayField[y][x].getFruit();
+    }
+
+    public SpaceFiller getSpace(int x, int y) {
+        return this.arrayField[y][x];
     }
 
     // Precondition : x,y supposed to be a fruit
@@ -224,7 +228,7 @@ public class GameHandler {
         // Forced part
         if (ld.getForcedIndexes() != null) {
             for (Integer indexSelected : ld.getForcedIndexes()) {
-                this.randomIndex[numberChosen] = indexSelected;
+                this.gameIndexToImageIndex[numberChosen] = indexSelected;
                 arrayNTI[indexSelected] = -1;
                 numberChosen++;
             }
@@ -245,7 +249,7 @@ public class GameHandler {
                 indexSelected++;
             }
             indexSelected--;
-            this.randomIndex[numberChosen] = arrayNTI[indexSelected];
+            this.gameIndexToImageIndex[numberChosen] = arrayNTI[indexSelected];
             arrayNTI[indexSelected] = -1;
             numberChosen++;
         }
@@ -489,7 +493,7 @@ public class GameHandler {
     private void destroyBySpecialFruit(int x, int y, List<SpaceCoors> newList) {
         if (this.hasFruit(x, y) || this.hasOmegaSphere(x, y)) {
             if (this.toBeDestroyedFruitsChecker.add(x, y)) {
-                if ((this.arrayField[y][x].getPower() != GameEnums.FRUITS_POWER.NONE) || (this.arrayField[y][x] instanceof OmegaSphere)) {
+                if ((this.arrayField[y][x].getPower() != GameEnums.FRUITS_POWER.NONE) || (this.hasOmegaSphere(x, y))) {
                     newList.add(new SpaceCoors(x, y));
                 }
                 this.scoreDestructionSpecialChecker.add(x, y, 1);
@@ -907,11 +911,11 @@ public class GameHandler {
     }
 
     public int getRandomFruit(int indexFieldFruit) {
-        return this.randomIndex[indexFieldFruit];
+        return this.gameIndexToImageIndex[indexFieldFruit];
     }
 
     public int getRandomFruitFromCoors(int x, int y) {
-        return this.randomIndex[this.arrayField[y][x].getFruit()];
+        return this.gameIndexToImageIndex[this.arrayField[y][x].getFruit()];
     }
 
     public GameEnums.FRUITS_POWER getFruitPowerFromCoors(int x, int y) {
@@ -948,7 +952,7 @@ public class GameHandler {
 
     public boolean hasOmegaSphere(int x, int y) {
         return (this.arrayField[y][x] instanceof OmegaSphere);
-    }
+    } // TODO changer "Omega" en pouvuoir ?
 
     // ------------
     // Getter for input
