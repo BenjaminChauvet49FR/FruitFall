@@ -26,6 +26,7 @@ public class Pix {
     public static float yTitle = yAfterSpaces + hText*(float)1.2;
 
     public static float hScoreSpace = hText;
+    public static float hLockDuration = hText * (float)1.2;
     public static int wActiveLight = 22;
     public static int hActiveLight = 22;
 

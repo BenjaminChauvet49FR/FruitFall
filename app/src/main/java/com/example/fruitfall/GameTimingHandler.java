@@ -8,7 +8,10 @@ import com.example.fruitfall.animations.SpaceAnimation;
 import com.example.fruitfall.animations.SpaceAnimationFire;
 import com.example.fruitfall.animations.SpaceAnimationFruitShrinking;
 import com.example.fruitfall.animations.SpaceAnimationLightning;
+import com.example.fruitfall.animations.SpaceAnimationLockDuration;
 import com.example.fruitfall.animations.SpaceAnimationOmegaSphere;
+
+import java.util.List;
 
 public class GameTimingHandler {
 
@@ -75,7 +78,7 @@ public class GameTimingHandler {
             if (fruitId != Constants.NOT_A_FRUIT) {
                 if (alignedFruits) {
                     this.animations[y][x] = new SpaceAnimationFruitShrinking(fruitId, false);
-                } else {
+                } else { // TODO Oops ! When a fruit is destroyed on this space, it overrides the previous animation. How to correct this ?
                     this.animations[y][x] = new SpaceAnimationFruitShrinking(fruitId, true);
                 }
             } else if (this.gh.hasOmegaSphere(x, y)) {
@@ -102,6 +105,14 @@ public class GameTimingHandler {
         }
         // TODO démarrer les destructions pour les fruits spéciaux
         this.gameState = GameEnums.GAME_STATE.DESTRUCTING_STASIS;
+    }
+
+    public void startDestructionLocks(List<SpaceCoors> newlyDestroyed) {
+        for (SpaceCoors coors : newlyDestroyed) {
+            this.animations[coors.y][coors.x] = new SpaceAnimationLockDuration();
+        }
+        frameCount = 0;
+        this.gameState = GameEnums.GAME_STATE.DESTRUCTING_LOCKS;
     }
 
     // Transitions : stop
@@ -148,6 +159,12 @@ public class GameTimingHandler {
                 this.gh.triggerUnstableCheck();
             }
             return;
+        }
+        if (this.gameState == GameEnums.GAME_STATE.DESTRUCTING_LOCKS) {
+            this.frameCount++;
+            if (this.frameCount == Constants.NUMBER_FRAMES_DESTRUCTION_FORDELAYEDLOCK) {
+                this.gh.triggerUnstableCheck();
+            }
         }
         if (this.gameState == GameEnums.GAME_STATE.NORMAL) {
             this.frameTotalCount++;

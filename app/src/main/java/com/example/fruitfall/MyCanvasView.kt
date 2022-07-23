@@ -25,6 +25,7 @@ class MyCanvasView(context: Context) : View(context) {
     private val colorTitle = ResourcesCompat.getColor(resources, R.color.title, null)
     private val colorAnimationLightning = ResourcesCompat.getColor(resources, R.color.animationLightning, null)
     private val colorAnimationFire = ResourcesCompat.getColor(resources, R.color.animationFire, null)
+    val colorLockDuration = ResourcesCompat.getColor(resources, R.color.colorLockDuration, null)
 
 
     private val rectSource = Rect(0, 0, Pix.resourceSide, Pix.resourceSide)
@@ -82,6 +83,7 @@ class MyCanvasView(context: Context) : View(context) {
     val bitmapImageLightH = BitmapFactory.decodeResource(resources, R.drawable.lightning_h)
     val bitmapImageLightV = BitmapFactory.decodeResource(resources, R.drawable.lightning_v)
     val bitmapImageSphereOmega = BitmapFactory.decodeResource(resources, R.drawable.sphere_omega)
+    val bitmapImageLocking = BitmapFactory.decodeResource(resources, R.drawable.locking)
 
     private val gh = GameHandler()
 
@@ -148,10 +150,9 @@ class MyCanvasView(context: Context) : View(context) {
                                 rectSource, rotatedShrinkedRect(rectDest, animation.ratio()), paint)
                         }
 
-                    } else if (animation is SpaceAnimationOmegaSphere) {
+                    } else if (animation is SpaceAnimationFading) {
                         paint.alpha = (255*(1-animation.ratio())).toInt()
-                        canvas.drawBitmap(bitmapImageSphereOmega,
-                            rectSource, rectDest, paint)
+                        gh.getSpace(x, y).paintStill(this, canvas, rectSource, rectDest, paint)
                         paint.alpha = 255
                     } else if (animation is SpaceAnimationLightning) {
                         paint.setColor(colorAnimationLightning)

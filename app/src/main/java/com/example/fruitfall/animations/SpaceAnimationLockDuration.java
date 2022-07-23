@@ -2,9 +2,9 @@ package com.example.fruitfall.animations;
 
 import com.example.fruitfall.Constants;
 
-public class SpaceAnimationOmegaSphere extends SpaceAnimationFading {
+public class SpaceAnimationLockDuration extends SpaceAnimationFading {
 
-    public SpaceAnimationOmegaSphere() {
+    public SpaceAnimationLockDuration() {
         super(Constants.NUMBER_FRAMES_DESTRUCTION_FORANIM);
     }
 

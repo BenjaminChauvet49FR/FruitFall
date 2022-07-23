@@ -2,21 +2,18 @@ package com.example.fruitfall;
 
 
 import android.os.Build;
-import android.widget.Space;
 
 import androidx.annotation.RequiresApi;
 
 import com.example.fruitfall.level.LevelData;
 import com.example.fruitfall.spaces.EmptySpace;
 import com.example.fruitfall.spaces.Fruit;
+import com.example.fruitfall.spaces.DelayedLock;
 import com.example.fruitfall.spaces.OmegaSphere;
 import com.example.fruitfall.spaces.SpaceFiller;
 import com.example.fruitfall.spaces.VoidSpace;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
@@ -47,13 +44,17 @@ public class GameHandler {
     private String title;
 
     private int omegaDestructionIdFruit = Constants.NOT_A_FRUIT;
-    private int omegaDestructionXSphere = -1;
-    private int omegaDestructionYSphere = -1;
+    private int omegaDestructionXSphere = Constants.NOT_A_SPACE_COOR;
+    private int omegaDestructionYSphere = Constants.NOT_A_SPACE_COOR;
+    private int phaseCount;
     private GameEnums.WHICH_SWAP swap = GameEnums.WHICH_SWAP.NONE;
 
     public GameTimingHandler gth;  // TODO le passer en privé et le rendre accessible par getters...
     private List<SpaceCoors> listToBeActivatedSpecialFruits = new ArrayList<>();
     private List<SpaceCoors> listToBeActivatedOmegaSpheres = new ArrayList<>();
+    
+    private List<SpaceCoors> listDelayedLocks = new ArrayList<>();
+    private int countRemainingLocks;
 
     public GameHandler() {
         this.arrayField = new SpaceFiller[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
@@ -206,11 +207,14 @@ public class GameHandler {
         spawnFruitsChecker.clear();
         horizAlignmentChecker.clear();
         vertAlignmentChecker.clear();
+        listDelayedLocks.clear();
         this.score = 0;
         this.collectedFruits = 0;
         this.thisMoveComboCoefficient = 1;
         this.thisMoveFruitsDestroyedByFall = 0;
-
+        this.phaseCount = 0;
+        this.countRemainingLocks = 0;
+        
         int x, y;
         Random rand = new Random();
 
@@ -257,9 +261,11 @@ public class GameHandler {
 
         // Read data for array
         boolean shouldGainSpawn;
+        GameEnums.SPACE_DATA data;
         for (y = 0 ; y < Constants.FIELD_YLENGTH ; y++) {
             for (x = 0; x < Constants.FIELD_XLENGTH; x++) {
-                if (ld.getData(x, y) == GameEnums.SPACE_DATA.FRUIT) {
+                data = ld.getData(x, y);
+                if (data == GameEnums.SPACE_DATA.FRUIT) {
                     // Generate fruit
                     this.arrayField[y][x] = new Fruit(rand.nextInt(this.fruitsNumber));
                     if (x >= 2) {
@@ -276,6 +282,11 @@ public class GameHandler {
                         shouldGainSpawn = (ld.getData(x, y-1) == GameEnums.SPACE_DATA.VOID_SPAWN);
                     }
                     this.arrayShouldFruitsBeSpawned[y][x] = shouldGainSpawn;
+                } else if (data == GameEnums.SPACE_DATA.DELAYED_LOCK_LENGTH1 || data == GameEnums.SPACE_DATA.DELAYED_LOCK_LENGTH2 ||
+                        data == GameEnums.SPACE_DATA.DELAYED_LOCK_LENGTH3 || data == GameEnums.SPACE_DATA.DELAYED_LOCK_LENGTH4 ) {
+                    this.arrayField[y][x] = new DelayedLock(ld.getLockDuration(data));
+                    this.countRemainingLocks++;
+                    this.listDelayedLocks.add(new SpaceCoors(x, y));
                 } else {
                     // Not a space able to handle fruits ; still need to initialize arrays.
                     this.arrayField[y][x] = new VoidSpace();
@@ -384,8 +395,15 @@ public class GameHandler {
         boolean leftMargin1, leftMargin2, upMargin1, upMargin2, rightMargin1, rightMargin2, downMargin1, downMargin2;
         boolean goForDestructionAgain = false;
         if (!this.listToBeActivatedSpecialFruits.isEmpty()) {
+
             // Count each fruit for Omega spheres
+            // The most present one gets destroyed first, etc...
+            // In case of a swap, the id of the stripped fruit is artificially boosted so it is ranked first !
             int[] countRemainingFruits = new int[this.fruitsNumber];
+            if (this.omegaDestructionIdFruit != Constants.NOT_A_FRUIT) {
+                countRemainingFruits[this.omegaDestructionIdFruit] = Constants.DUMMY_BOOST_FRUIT_COUNT;
+                this.omegaDestructionIdFruit = Constants.NOT_A_FRUIT;
+            }
             for (y = 0 ; y < Constants.FIELD_YLENGTH ; y++) {
                 for (x = 0; x < Constants.FIELD_XLENGTH; x++) {
                     fruit = this.getFruit(x, y);
@@ -652,11 +670,46 @@ public class GameHandler {
             // Nothing new destroyed : move on.
             this.thisMoveComboCoefficient = 1;
             this.thisMoveFruitsDestroyedByFall = 0;
-            this.gth.endAllFalls();
+            this.triggerNextPhaseAfterStableCheck();
         } else {
             // Destruction time !
             this.fullyCheckFallingElementsInStableCheck();
             this.gth.startDestruction(isAlignment);
+        }
+    }
+    
+    private void performLockDiscount() {
+        int x, y;
+        List<SpaceCoors> newlyDestroyed = new ArrayList<>();
+        if (this.countRemainingLocks > 0) {
+            for (SpaceCoors coors : this.listDelayedLocks) {
+                x = coors.x;
+                y = coors.y;
+                if (this.arrayField[y][x] instanceof DelayedLock) {
+                    DelayedLock delayedLock = (DelayedLock) (this.arrayField[y][x]);
+                    delayedLock.decreaseCount();
+                    if (delayedLock.getCount() == 0) {
+                        this.toBeDestroyedFruitsChecker.add(x, y);
+                        newlyDestroyed.add(new SpaceCoors(x, y));
+                    }
+                }
+            }
+            if (!newlyDestroyed.isEmpty()) {
+                this.gth.startDestructionLocks(newlyDestroyed);
+                return;
+            }
+        }
+        this.triggerNextPhaseAfterStableCheck();
+    }
+    
+    private void triggerNextPhaseAfterStableCheck() {
+        this.phaseCount++; // Note : phaseCount should only be started here
+        switch(this.phaseCount) {
+            case 1 : this.performLockDiscount(); break;
+            case 2 :
+                this.gth.endAllFalls();
+                this.phaseCount = 0;
+            break;
         }
     }
 

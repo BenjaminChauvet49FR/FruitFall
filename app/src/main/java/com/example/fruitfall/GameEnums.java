@@ -7,6 +7,7 @@ public class GameEnums {
         SWAP_RETURN,
         FALLING,
         DESTRUCTING_STASIS,
+        DESTRUCTING_LOCKS,
         PAUSED
     }
 
@@ -22,7 +23,11 @@ public class GameEnums {
         FRUIT,
         EMPTY,
         VOID,
-        VOID_SPAWN
+        VOID_SPAWN,
+        DELAYED_LOCK_LENGTH1,
+        DELAYED_LOCK_LENGTH2,
+        DELAYED_LOCK_LENGTH3,
+        DELAYED_LOCK_LENGTH4,
     }
 
     public enum FRUITS_POWER {

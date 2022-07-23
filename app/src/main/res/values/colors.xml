@@ -12,6 +12,7 @@
     <color name="frameRect">#FF440088</color>
     <color name="scoreFallSpace">#FF0000FF</color>
     <color name="scoreDestructionSpace">#FF440000</color>
+    <color name="colorLockDuration">#FF440000</color>
     <color name="textMain">#FF000000</color>
     <color name="title">#440044</color>
     <color name="animationFire">#ff0000</color>
