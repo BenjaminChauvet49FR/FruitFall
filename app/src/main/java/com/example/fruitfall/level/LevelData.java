@@ -6,9 +6,12 @@ import com.example.fruitfall.Constants;
 import com.example.fruitfall.GameEnums;
 import com.example.fruitfall.SpaceCoors;
 import com.example.fruitfall.exceptions.IncorrectStringException;
+import com.example.fruitfall.introductions.Transition;
+import com.example.fruitfall.introductions.TransitionManager;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class LevelData {
     private int fruitNumber;
@@ -20,6 +23,7 @@ public class LevelData {
     private List<SpaceCoors> outFallTeleporters;
     private String name;
     private GameEnums.SPACE_DATA[] topRowSpawn;
+    private String charsForTransition;
 
     public int getFruitColours() {
         return this.fruitNumber;
@@ -77,6 +81,8 @@ public class LevelData {
                 case 'l' : interpretStringLockLength(token.substring(1));
                     break;
                 case 't' : interpretStringTeleporters(token.substring(1));
+                    break;
+                case 'i' : this.charsForTransition = (token.substring(1));
                     break;
                 default : interpretStringClassic(token);
                     break;
@@ -184,6 +190,14 @@ public class LevelData {
             case DELAYED_LOCK_LENGTH4: return this.locksDuration.get(3);
             default : return 1;
         }
+    }
+
+    public Transition getTransition() {
+        if (this.charsForTransition == null || this.charsForTransition.isEmpty()) {
+            return TransitionManager.getTransitionFromChar('X');
+        }
+        int i = new Random().nextInt(charsForTransition.length());
+        return TransitionManager.getTransitionFromChar(charsForTransition.charAt(i));
     }
 
 }

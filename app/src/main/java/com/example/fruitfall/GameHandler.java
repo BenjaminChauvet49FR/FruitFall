@@ -81,6 +81,10 @@ public class GameHandler {
         return (this.arrayField[y][x] instanceof Fruit);
     }
 
+    public boolean isASpace(int x, int y) {
+        return (this.arrayField[y][x].isASpace());
+    }
+
     private GameEnums.WHICH_SWAP getSwapNature(int x1, int y1, int x2, int y2) {
         if (this.hasOmegaSphere(x1, y1) && this.hasFruit(x2, y2)) {
             this.omegaDestructionIdFruit = this.getFruit(x2, y2);
@@ -359,6 +363,10 @@ public class GameHandler {
 
     // ----------------------------
     // End of transitions
+
+    public void triggerWelcoming() {
+        this.gth.startGame();
+    }
 
     public void triggerSwap(int x1, int y1, int x2, int y2) {
         this.gth.stopSwap();

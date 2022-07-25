@@ -9,6 +9,10 @@ import androidx.annotation.RequiresApi
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.content.res.ResourcesCompat.getColor
 import com.example.fruitfall.animations.*
+import com.example.fruitfall.introductions.Transition
+import com.example.fruitfall.introductions.TransitionRandom
+import com.example.fruitfall.introductions.TransitionUpward12121
+import com.example.fruitfall.level.LevelData
 import com.example.fruitfall.level.LevelManager
 import kotlin.math.roundToInt
 
@@ -25,6 +29,8 @@ class MyCanvasView(context: Context) : View(context) {
     private val colorTitle = ResourcesCompat.getColor(resources, R.color.title, null)
     private val colorAnimationLightning = ResourcesCompat.getColor(resources, R.color.animationLightning, null)
     private val colorAnimationFire = ResourcesCompat.getColor(resources, R.color.animationFire, null)
+    private val colorBGSpaces = arrayOf(ResourcesCompat.getColor(resources, R.color.spaceBG1, null), ResourcesCompat.getColor(resources, R.color.spaceBG2, null))
+    private val colorBGSpaceFrame = ResourcesCompat.getColor(resources, R.color.spaceBGFrame, null)
     val colorLockDuration = ResourcesCompat.getColor(resources, R.color.colorLockDuration, null)
 
 
@@ -38,7 +44,7 @@ class MyCanvasView(context: Context) : View(context) {
     private var pixMotionTouchEventY = 0f
     private var selectedSpaceX = SPACE_UNDEFINED
     private var selectedSpaceY = SPACE_UNDEFINED
-
+    private var introTransition : Transition = TransitionRandom()
 
     private var alreadySwappedTouchMove = false
     //private var touchTolerance = ViewConfiguration.get(context).scaledTouchSlop
@@ -88,7 +94,9 @@ class MyCanvasView(context: Context) : View(context) {
     private val gh = GameHandler()
 
     fun startLevel() {
-        gh.initializeGrid(LevelManager.levelLists[LevelManager.levelNumber])
+        val ld : LevelData = LevelManager.levelLists[LevelManager.levelNumber]
+        introTransition = ld.getTransition();
+        gh.initializeGrid(ld)
     }
 
     // Set up the paint with which to draw.
@@ -100,7 +108,7 @@ class MyCanvasView(context: Context) : View(context) {
         style = Paint.Style.STROKE // default: FILL
         strokeJoin = Paint.Join.ROUND // default: MITER
         strokeCap = Paint.Cap.ROUND // default: BUTT
-        strokeWidth = Pix.selectionFrame // default: Hairline-width (really thin)
+        strokeWidth = Pix.backgroundFrame // default: Hairline-width (really thin)
     }
 
     override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {
@@ -127,73 +135,101 @@ class MyCanvasView(context: Context) : View(context) {
         paint.setColor(colorTitle);
         canvas.drawText(gh.getTitle(), Pix.xTitle, Pix.yTitle, paint);
 
-        var animation : SpaceAnimation?
-        var ratio : Float
-        rectDest.set(Pix.xStartSpaces, Pix.yStartSpaces, Pix.xStartSpaces+Pix.wMainSpace, Pix.yStartSpaces+Pix.hMainSpace)
-        // Draw the in-place fallElts or the on-space animations
-        for (y in 0 until Constants.FIELD_YLENGTH) {
-            for (x in 0 until Constants.FIELD_XLENGTH) {
-                if (gh.gth.hasStillSpace(x, y)) {
-                    this.drawSpaceContent(x, y, canvas, rectSource, rectDest, paint)
-                }
-                animation = gh.gth.getAnimation(x, y)
-                if (animation != null && animation.shouldBeDrawn()) {
-                    if (animation is SpaceAnimationFruitShrinking) { // TODO this type-by-type logic and images...
-                        if (animation.isAlsoRotating()) {
-                            canvas.save() // Note : it should be possible to make all rotations at once.
-                            canvas.rotate(animation.ratio() * Constants.MAX_ANGLE_IN_DEGREES, rectDest.exactCenterX(), rectDest.exactCenterY()) // https://www.tabnine.com/code/java/methods/android.graphics.Canvas/rotate
-                            canvas.drawBitmap(getBitmapFruitToDrawFromIndex(animation.imageFruit),
-                                rectSource, rotatedShrinkedRect(rectDest, animation.ratio()), paint)
-                            canvas.restore()
-                        } else {
-                            canvas.drawBitmap(getBitmapFruitToDrawFromIndex(animation.imageFruit),
-                                rectSource, rotatedShrinkedRect(rectDest, animation.ratio()), paint)
-                        }
-
-                    } else if (animation is SpaceAnimationFading) {
-                        paint.alpha = (255*(1-animation.ratio())).toInt()
-                        gh.getSpace(x, y).paintStill(this, canvas, rectSource, rectDest, paint)
-                        paint.alpha = 255
-                    } else if (animation is SpaceAnimationLightning) {
-                        paint.setColor(colorAnimationLightning)
-                        ratio = animation.ratio()
-                        if (animation.horizontal) {
-                            rectAnim.set(
-                                pixXLeftMainSpace(0),//x-((x+1)*ratio)),
-                                pixYUpMainSpace(y), //(y + 0.5 * ratio).toFloat()), TODO revoir les animations
-                                pixXRightMainSpace(Constants.FIELD_XLENGTH-1),//x+(Constants.FIELD_XLENGTH-x)*ratio),
-                                pixYDownMainSpace(y)//(y - 0.5 * ratio).toFloat())
-                            )
-                        } else {
-                            rectAnim.set(
-                                pixXLeftMainSpace(x),//(x + 0.5 * ratio).toFloat()),
-                                pixYUpMainSpace(0),//y-((y+1)*ratio) ),
-                                pixXRightMainSpace(x),//(x - 0.5 * ratio).toFloat()),
-                                pixYDownMainSpace(Constants.FIELD_YLENGTH-1)//y+(Constants.FIELD_YLENGTH-y)*ratio)
-                            )
-                        }
-                        canvas.drawRect(rectAnim, paint)
-                    } else if (animation is SpaceAnimationFire) {
-                        paint.setColor(colorAnimationFire)
-                        rectAnim.set(pixXLeftMainSpace(x -2), pixYUpMainSpace(y), pixXRightMainSpace(x +2), pixYDownMainSpace(y ))
-                        canvas.drawRect(rectAnim, paint)
-                        rectAnim.set(pixXLeftMainSpace(x -1), pixYUpMainSpace(y-1), pixXRightMainSpace(x +1), pixYDownMainSpace(y +1))
-                        canvas.drawRect(rectAnim, paint)
-                        rectAnim.set(pixXLeftMainSpace(x ), pixYUpMainSpace(y-2), pixXRightMainSpace(x ), pixYDownMainSpace(y +2))
-                        canvas.drawRect(rectAnim, paint)
-                    }
-                    animation.progress()
-                }
-                rectDest.left += Pix.wSpace
-                rectDest.right += Pix.wSpace
-            }
-            rectDest.left = Pix.xStartSpaces
-            rectDest.right = Pix.xStartSpaces+Pix.wMainSpace
-            rectDest.top += Pix.hSpace
-            rectDest.bottom += Pix.hSpace
+        // Draw the status light
+        rectDest.left = Pix.xStartActiveLight
+        rectDest.top = Pix.yStartActiveLight
+        rectDest.right = rectDest.left + Pix.wActiveLight
+        rectDest.bottom = rectDest.top + Pix.hActiveLight
+        if (gh.gth.isActive) {
+            canvas.drawBitmap(bitmapImageLightActive, rectSource, rectDest, paint)
+        } else if (gh.gth.isActivePenalty) {
+            canvas.drawBitmap(bitmapImageLightPenalty, rectSource, rectDest, paint)
+        } else {
+            canvas.drawBitmap(bitmapImageLightInactive, rectSource, rectDest, paint)
         }
 
-        // Draw the falling elements
+        if (gh.gth.isInIntro()) {
+            drawProgressiveCheckerboard(canvas)
+        } else {
+            drawAllSpaceContents(canvas)
+            drawFallingSpaces(canvas)
+            drawCursor(canvas)
+            drawSwap(canvas)
+            drawScoresOnField(canvas)
+        }
+        invalidate() // At the end of draw... right ? Also, how many FPS ?
+
+        //if (gh != null && gh.gth != null) { // TODO, passer ça à Java
+        if (gh.gth != null) {
+            gh.gth.step() // TODO Lui donner son propre processus parallèle ? Ou bien laisser dans onDraw ?
+        }
+    }
+
+    // Draw scores on the field
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun drawScoresOnField(canvas: Canvas) {
+        if (gh.gth.shouldDrawScore()) {
+            paint.setColor(colorScoreFallSpace);
+            paint.setTextSize(Pix.hScoreSpace);
+            paint.setTypeface(scoreFont)
+            paint.setStyle(Paint.Style.FILL_AND_STROKE)
+            for (coors in this.gh.contributingSpacesScoreFall) {
+                val x = coors.x;
+                val y = coors.y;
+                canvas.drawText("+" + this.gh.scoreFallSpace(x, y),
+                    pixXLeftMainSpace(x).toFloat(),
+                    pixYUpMainSpace(y) + Pix.hScoreSpace,
+                    paint);
+            }
+            paint.setColor(colorScoreDestructionSpace);
+            paint.setTextSize(Pix.hScoreSpace);
+            paint.setTypeface(scoreFont)
+            paint.setStyle(Paint.Style.FILL_AND_STROKE)
+            for (coors in this.gh.contributingSpacesScoreDestructionSpecial) {
+                val x = coors.x;
+                val y = coors.y;
+                canvas.drawText("+" + this.gh.scoreDestructionSpecialSpace(x, y),
+                    pixXLeftMainSpace(x).toFloat(),
+                    pixYUpMainSpace(y) + Pix.hScoreSpace,
+                    paint);
+            }
+        }
+    }
+
+    // Draw the currently swapping fruits
+    private fun drawSwap(canvas: Canvas) {
+        if (gh.gth.isInSwap) {
+            val x1 = gh.gth.xSwap1
+            val x2 = gh.gth.xSwap2
+            val y1 = gh.gth.ySwap1
+            val y2 = gh.gth.ySwap2
+            val ratio = gh.gth.ratioToCompletionSwap()
+            rectDest.left = pixXLeftMainSpace(x1 + ratio*(x2-x1))
+            rectDest.right = rectDest.left + Pix.wMainSpace
+            rectDest.top = pixYUpMainSpace((y1 + ratio*(y2-y1)) )
+            rectDest.bottom = rectDest.top + Pix.hMainSpace
+            this.drawSpaceContent(x1, y1, canvas, rectSource, rectDest, paint)
+            rectDest.left = pixXLeftMainSpace(x2 + ratio*(x1-x2))
+            rectDest.right = rectDest.left + Pix.wMainSpace
+            rectDest.top = pixYUpMainSpace(y2 + ratio*(y1-y2))
+            rectDest.bottom = rectDest.top + Pix.hMainSpace
+            this.drawSpaceContent(x2, y2, canvas, rectSource, rectDest, paint)
+        }
+    }
+
+    // Draw the cursor
+    private fun drawCursor(canvas: Canvas) {
+        if (isSpaceSelected()) {
+            paint.strokeWidth = Pix.selectionFrame
+            rectFrame.set(spaceXToPixXLeft(selectedSpaceX), spaceYToPixYUp(selectedSpaceY), spaceXToPixXRight(selectedSpaceX), spaceYToPixYDown(selectedSpaceY))
+            paint.setStyle(Paint.Style.STROKE)
+            paint.setColor(colorFrameRect)
+            canvas.drawRect(rectFrame, paint)
+        }
+    }
+
+    // Draw the falling elements
+    private fun drawFallingSpaces(canvas: Canvas) {
         if (gh.gth.isInFall) {
             var xStartFall : Int
             var yStartFall : Int
@@ -229,85 +265,137 @@ class MyCanvasView(context: Context) : View(context) {
                 drawBotFruitInSpawnSpace(xEndFall, yEndFall, getBitmapFruitToDrawFromIndex(gh.spawn(xEndFall, yEndFall)), pixYSplitImgSrc, pixYSplitImgDst, canvas)
             }
         }
+    }
 
-
-        // Draw the cursor
-        if (isSpaceSelected()) {
-            rectFrame.set(spaceXToPixXLeft(selectedSpaceX), spaceYToPixYUp(selectedSpaceY), spaceXToPixXRight(selectedSpaceX), spaceYToPixYDown(selectedSpaceY))
-            paint.setStyle(Paint.Style.STROKE)
-            paint.setColor(colorFrameRect)
-            canvas.drawRect(rectFrame, paint)
-        }
-
-        // Draw the currently swapping fruits
-        if (gh.gth.isInSwap) {
-            val x1 = gh.gth.xSwap1
-            val x2 = gh.gth.xSwap2
-            val y1 = gh.gth.ySwap1
-            val y2 = gh.gth.ySwap2
-            val ratio = gh.gth.ratioToCompletionSwap()
-            rectDest.left = pixXLeftMainSpace(x1 + ratio*(x2-x1))  
-            rectDest.right = rectDest.left + Pix.wMainSpace
-            rectDest.top = pixYUpMainSpace((y1 + ratio*(y2-y1)) )
-            rectDest.bottom = rectDest.top + Pix.hMainSpace
-            this.drawSpaceContent(x1, y1, canvas, rectSource, rectDest, paint)
-            rectDest.left = pixXLeftMainSpace(x2 + ratio*(x1-x2))
-            rectDest.right = rectDest.left + Pix.wMainSpace
-            rectDest.top = pixYUpMainSpace(y2 + ratio*(y1-y2))
-            rectDest.bottom = rectDest.top + Pix.hMainSpace
-            this.drawSpaceContent(x2, y2, canvas, rectSource, rectDest, paint)
-        }
-
-
-
-
-        // Draw the status light
-        rectDest.left = Pix.xStartActiveLight
-        rectDest.top = Pix.yStartActiveLight
-        rectDest.right = rectDest.left + Pix.wActiveLight
-        rectDest.bottom = rectDest.top + Pix.hActiveLight
-        if (gh.gth.isActive) {
-            canvas.drawBitmap(bitmapImageLightActive, rectSource, rectDest, paint)
-        } else if (gh.gth.isActivePenalty) {
-            canvas.drawBitmap(bitmapImageLightPenalty, rectSource, rectDest, paint)
-        } else {
-            canvas.drawBitmap(bitmapImageLightInactive, rectSource, rectDest, paint)
-        }
-
-        // Draw scores on the field
-        if (gh.gth.shouldDrawScore()) {
-            paint.setColor(colorScoreFallSpace);
-            paint.setTextSize(Pix.hScoreSpace);
-            paint.setTypeface(scoreFont)
-            paint.setStyle(Paint.Style.FILL_AND_STROKE)
-            for (coors in this.gh.contributingSpacesScoreFall) {
-                val x = coors.x;
-                val y = coors.y;
-                canvas.drawText("+" + this.gh.scoreFallSpace(x, y),
-                    pixXLeftMainSpace(x).toFloat(),
-                    pixYUpMainSpace(y) + Pix.hScoreSpace,
-                    paint);
+    private fun drawProgressiveCheckerboard(canvas : Canvas) {
+        // Note : checkerboard spaces must match field areas
+        paint.strokeWidth = Pix.backgroundFrame
+        val pixStartLeft = Pix.xStartField
+        val pixStartRight = pixStartLeft+Pix.wSpace-1
+        var progressiveIntro : Float
+        var desiredThreshold : Float
+        rectDest.left = pixStartLeft
+        rectDest.right = pixStartRight
+        rectDest.top = Pix.yStartField
+        rectDest.bottom = rectDest.top+Pix.hSpace-1
+        val rectVar = Rect(0, 0, 0, 0)
+        var ghostSquare : Int
+        for (y in 0 until Constants.FIELD_YLENGTH) {
+            for (x in 0 until Constants.FIELD_XLENGTH) {
+                if (gh.isASpace(x, y)) {
+                    desiredThreshold = introTransition.getProgressThreshold(x, y);
+                    progressiveIntro = gh.gth.ratioProgressiveIntroSpaces(desiredThreshold)
+                    ghostSquare = ((1-progressiveIntro)*Pix.ghostSquareMargin).toInt()
+                    rectVar.set(rectDest.left - ghostSquare, rectDest.top - ghostSquare, rectDest.right + ghostSquare, rectDest.bottom + ghostSquare)
+                    paint.setColor(colorBGSpaces[(x + y) % 2])
+                    paint.setStyle(Paint.Style.FILL)
+                    paint.alpha = (255.0*progressiveIntro).toInt() // Important : must be placed AFTER setColor otherwise it is returned to 255
+                    canvas.drawRect(rectVar, paint)
+                    paint.setColor(colorBGSpaceFrame)
+                    paint.setStyle(Paint.Style.STROKE)
+                    paint.alpha = (255.0*progressiveIntro).toInt()
+                    canvas.drawRect(rectVar, paint)
+                    if (gh.gth.shouldDrawSpaceContentProgessiveIntro(desiredThreshold)) {
+                        this.drawSpaceContent(x, y, canvas, rectSource, rectDest, paint)
+                    }
+                }
+                rectDest.left += Pix.wSpace
+                rectDest.right += Pix.wSpace
             }
-            paint.setColor(colorScoreDestructionSpace);
-            paint.setTextSize(Pix.hScoreSpace);
-            paint.setTypeface(scoreFont)
-            paint.setStyle(Paint.Style.FILL_AND_STROKE)
-            for (coors in this.gh.contributingSpacesScoreDestructionSpecial) {
-                val x = coors.x;
-                val y = coors.y;
-                canvas.drawText("+" + this.gh.scoreDestructionSpecialSpace(x, y),
-                    pixXLeftMainSpace(x).toFloat(),
-                    pixYUpMainSpace(y) + Pix.hScoreSpace,
-                    paint);
-            }
+            rectDest.left = pixStartLeft
+            rectDest.right = pixStartRight
+            rectDest.top += Pix.hSpace
+            rectDest.bottom += Pix.hSpace
         }
+        paint.alpha = 255
+    }
 
+    // Draw the in-place elements or the on-space animations
+    private fun drawAllSpaceContents(canvas : Canvas) {
+        paint.strokeWidth = Pix.backgroundFrame
+        var animation : SpaceAnimation?
+        var ratio : Float
+        val pixXStart1 = Pix.xStartSpaces
+        val pixYStart1 = Pix.yStartSpaces
+        val pixXStart2 = Pix.xStartField
+        val pixYStart2 = Pix.yStartField
+        rectDest.set(pixXStart1, pixYStart1, pixXStart1+Pix.wMainSpace, pixYStart1+Pix.hMainSpace)
+        val rectDestSpace = Rect(pixXStart2, pixYStart2, pixXStart2+Pix.wSpace, pixYStart2+ Pix.hSpace)
+        for (y in 0 until Constants.FIELD_YLENGTH) {
+            for (x in 0 until Constants.FIELD_XLENGTH) {
+                if (gh.isASpace(x, y)) {
+                    // Warning C/P : from draw checkerboard
+                    paint.setColor(colorBGSpaces[(x + y) % 2])
+                    paint.setStyle(Paint.Style.FILL)
+                    canvas.drawRect(rectDestSpace, paint)
+                    paint.setColor(colorBGSpaceFrame)
+                    paint.setStyle(Paint.Style.STROKE)
+                    canvas.drawRect(rectDestSpace, paint)
+                }
+                if (gh.gth.hasStillSpace(x, y)) {
+                    this.drawSpaceContent(x, y, canvas, rectSource, rectDest, paint)
+                }
+                animation = gh.gth.getAnimation(x, y)
+                if (animation != null && animation.shouldBeDrawn()) {
+                    if (animation is SpaceAnimationFruitShrinking) { // TODO this type-by-type logic and images...
+                        if (animation.isAlsoRotating()) {
+                            canvas.save() // Note : it should be possible to make all rotations at once.
+                            canvas.rotate(animation.ratio() * Constants.MAX_ANGLE_IN_DEGREES, rectDest.exactCenterX(), rectDest.exactCenterY()) // https://www.tabnine.com/code/java/methods/android.graphics.Canvas/rotate
+                            canvas.drawBitmap(getBitmapFruitToDrawFromIndex(animation.imageFruit),
+                                rectSource, rotatedShrinkedRect(rectDest, animation.ratio()), paint)
+                            canvas.restore()
+                        } else {
+                            canvas.drawBitmap(getBitmapFruitToDrawFromIndex(animation.imageFruit),
+                                rectSource, rotatedShrinkedRect(rectDest, animation.ratio()), paint)
+                        }
 
-        invalidate() // At the end of draw... right ? Also, how many FPS ?
-
-        //if (gh != null && gh.gth != null) { // TODO, passer ça à Java
-        if (gh.gth != null) {
-            gh.gth.step() // TODO Lui donner son propre processus parallèle ? Ou bien laisser dans onDraw ?
+                    } else if (animation is SpaceAnimationFading) {
+                        paint.alpha = (255*(1-animation.ratio())).toInt()
+                        gh.getSpace(x, y).paintStill(this, canvas, rectSource, rectDest, paint)
+                        paint.alpha = 255 // TODO : alpha to correct
+                    } else if (animation is SpaceAnimationLightning) {
+                        paint.setColor(colorAnimationLightning)
+                        ratio = animation.ratio()
+                        if (animation.horizontal) {
+                            rectAnim.set(
+                                pixXLeftMainSpace(0),//x-((x+1)*ratio)),
+                                pixYUpMainSpace(y), //(y + 0.5 * ratio).toFloat()), TODO revoir les animations
+                                pixXRightMainSpace(Constants.FIELD_XLENGTH-1),//x+(Constants.FIELD_XLENGTH-x)*ratio),
+                                pixYDownMainSpace(y)//(y - 0.5 * ratio).toFloat())
+                            )
+                        } else {
+                            rectAnim.set(
+                                pixXLeftMainSpace(x),//(x + 0.5 * ratio).toFloat()),
+                                pixYUpMainSpace(0),//y-((y+1)*ratio) ),
+                                pixXRightMainSpace(x),//(x - 0.5 * ratio).toFloat()),
+                                pixYDownMainSpace(Constants.FIELD_YLENGTH-1)//y+(Constants.FIELD_YLENGTH-y)*ratio)
+                            )
+                        }
+                        canvas.drawRect(rectAnim, paint)
+                    } else if (animation is SpaceAnimationFire) {
+                        paint.setColor(colorAnimationFire)
+                        rectAnim.set(pixXLeftMainSpace(x -2), pixYUpMainSpace(y), pixXRightMainSpace(x +2), pixYDownMainSpace(y ))
+                        canvas.drawRect(rectAnim, paint)
+                        rectAnim.set(pixXLeftMainSpace(x -1), pixYUpMainSpace(y-1), pixXRightMainSpace(x +1), pixYDownMainSpace(y +1))
+                        canvas.drawRect(rectAnim, paint)
+                        rectAnim.set(pixXLeftMainSpace(x ), pixYUpMainSpace(y-2), pixXRightMainSpace(x ), pixYDownMainSpace(y +2))
+                        canvas.drawRect(rectAnim, paint)
+                    }
+                    animation.progress()
+                }
+                rectDest.left += Pix.wSpace
+                rectDest.right += Pix.wSpace
+                rectDestSpace.left += Pix.wSpace
+                rectDestSpace.right += Pix.wSpace
+            }
+            rectDest.left = pixXStart1
+            rectDest.right = pixXStart1+Pix.wMainSpace
+            rectDest.top += Pix.hSpace
+            rectDest.bottom += Pix.hSpace
+            rectDestSpace.left = pixXStart2
+            rectDestSpace.right = pixXStart2+Pix.wSpace
+            rectDestSpace.top += Pix.hSpace
+            rectDestSpace.bottom += Pix.hSpace
         }
     }
 
@@ -412,27 +500,27 @@ class MyCanvasView(context: Context) : View(context) {
 
     // Tactile pix
     private fun pixXToSpaceX(pixX : Float): Int {
-        return ((pixX.toDouble()-Pix.wGap/2-Pix.xStartSpaces)/Pix.wSpace).toInt()
+        return ((pixX.toDouble()-Pix.wGap/2-Pix.xStartField)/Pix.wSpace).toInt()
     }
 
     private fun pixYToSpaceY(pixY : Float): Int {
-        return ( (pixY.toDouble()-Pix.hGap/2-Pix.yStartSpaces)/Pix.hSpace).toInt()
+        return ( (pixY.toDouble()-Pix.hGap/2-Pix.yStartField)/Pix.hSpace).toInt()
     }
 
     private fun spaceXToPixXLeft(spaceX : Int) : Int {
-        return Pix.xStartSpaces + Pix.wSpace * spaceX
+        return Pix.xStartField + Pix.wSpace * spaceX
     }
 
     private fun spaceXToPixXRight(spaceX : Int) : Int {
-        return Pix.xStartSpaces + Pix.wSpace * (spaceX + 1) - Pix.wGap
+        return Pix.xStartField + Pix.wSpace * (spaceX + 1) - Pix.wGap
     }
 
     private fun spaceYToPixYUp(spaceY : Int) : Int {
-        return Pix.yStartSpaces + Pix.hSpace * spaceY
+        return Pix.yStartField + Pix.hSpace * spaceY
     }
 
     private fun spaceYToPixYDown(spaceY : Int) : Int {
-        return Pix.yStartSpaces + Pix.hSpace * (spaceY + 1) - Pix.wGap
+        return Pix.yStartField + Pix.hSpace * (spaceY + 1) - Pix.wGap
     }
 
 

@@ -3,12 +3,16 @@ package com.example.fruitfall;
 public class Pix {
     public static int xStartSpaces = 22;
     public static int yStartSpaces = 84;
-    public static int wMainSpace = 60;
-    public static int hMainSpace = 60;
     public static int wGap = 4;
     public static int hGap = 4;
+    public static int xStartField = xStartSpaces-wGap/2;
+    public static int yStartField = yStartSpaces-hGap/2;
+    public static int wMainSpace = 60;
+    public static int hMainSpace = 60;
+
     public static int wSpace = wMainSpace + wGap;
     public static int hSpace = hMainSpace + hGap;
+    public static int ghostSquareMargin = wSpace/2;
     public static int xAfterSpaces = xStartSpaces + Constants.FIELD_XLENGTH * wSpace - wGap; // (xAfterSpaces, yAfterSpaces NOT within X)
     public static int yAfterSpaces = yStartSpaces + Constants.FIELD_YLENGTH * hSpace - hGap;
 
@@ -31,6 +35,7 @@ public class Pix {
     public static int hActiveLight = 22;
 
     public static float selectionFrame = 4f;
+    public static float backgroundFrame = 1f;
 
     public static int resourceSide = 64;
 }

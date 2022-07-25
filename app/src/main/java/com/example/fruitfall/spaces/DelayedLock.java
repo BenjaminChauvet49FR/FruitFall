@@ -39,6 +39,7 @@ public class DelayedLock extends SpaceFiller {
         canvas.drawBitmap(view.getBitmapImageLocking(), rectSource, rectDestination, paint);
         paint.setColor(view.getColorLockDuration());
         paint.setTextSize(Pix.hLockDuration);
+        paint.setStyle(Paint.Style.FILL_AND_STROKE);
         canvas.drawText(String.valueOf(this.count),
                 rectDestination.left + 2,
                 rectDestination.bottom - Pix.hMainSpace/2, // rectDestination = where the space needs to be drawn

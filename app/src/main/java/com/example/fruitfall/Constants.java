@@ -4,6 +4,11 @@ public class Constants {
     public static final int NUMBER_FRAMES_SCORE = 20;
     public static final int NUMBER_FRAMES_SWAP = 16;
     public static final int NUMBER_FRAMES_FALL = 8;
+    public static final int NUMBER_FRAMES_INTRODUCTION_SPACES_ONLY = 60; // 10;
+    public static final float RATIO_FRAMES_GHOST_INTRODUCTION = (float)0.2;
+    public static final int NUMBER_FRAMES_INTRODUCTION_GHOST = Math.max(1, Math.round(NUMBER_FRAMES_INTRODUCTION_SPACES_ONLY *RATIO_FRAMES_GHOST_INTRODUCTION));
+    public static final int NUMBER_FRAMES_INTRODUCTION_FLEX_FRUIT = Math.max(1, Math.round(NUMBER_FRAMES_INTRODUCTION_SPACES_ONLY *RATIO_FRAMES_GHOST_INTRODUCTION));
+    public static final int NUMBER_FRAMES_INTRODUCTION_TOTAL = NUMBER_FRAMES_INTRODUCTION_SPACES_ONLY + NUMBER_FRAMES_INTRODUCTION_FLEX_FRUIT;
     public static final int NUMBER_FRAMES_DESTRUCTION = 8;
     public static final int NUMBER_FRAMES_DESTRUCTION_FORDELAYEDLOCK = 100;
     public static final int NUMBER_FRAMES_DESTRUCTION_FORANIM = 100;

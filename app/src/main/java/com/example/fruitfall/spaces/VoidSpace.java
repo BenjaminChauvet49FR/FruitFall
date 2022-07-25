@@ -19,4 +19,7 @@ public class VoidSpace extends SpaceFiller {
     public void paintStill(MyCanvasView view, Canvas canvas, Rect rectSource, Rect rectDestination, Paint paint) {
 
     }
+
+    public boolean isASpace() { return false; }
+
 }

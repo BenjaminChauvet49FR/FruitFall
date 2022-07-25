@@ -10,6 +10,9 @@
 
     <color name="background">#FF00FFFF</color>
     <color name="frameRect">#FF440088</color>
+    <color name="spaceBG1">#FFF8FFFF</color>
+    <color name="spaceBG2">#FFFCF8FF</color>
+    <color name="spaceBGFrame">#FF440088</color>
     <color name="scoreFallSpace">#FF0000FF</color>
     <color name="scoreDestructionSpace">#FF440000</color>
     <color name="colorLockDuration">#FF440000</color>

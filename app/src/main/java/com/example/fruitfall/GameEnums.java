@@ -2,6 +2,7 @@ package com.example.fruitfall;
 
 public class GameEnums {
     public enum GAME_STATE {
+        INTRODUCTION,
         NORMAL,
         SWAP,
         SWAP_RETURN,

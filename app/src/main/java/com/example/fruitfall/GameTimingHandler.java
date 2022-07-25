@@ -31,7 +31,7 @@ public class GameTimingHandler {
 
     // Init
     public void init() {
-        this.gameState = GameEnums.GAME_STATE.NORMAL;
+        this.gameState = GameEnums.GAME_STATE.INTRODUCTION;
         this.frameCount = 0;
         this.frameTotalCount = 0;
         this.clearSwap();
@@ -44,6 +44,10 @@ public class GameTimingHandler {
     }
 
     // Transitions : start
+    public void startGame() {
+        this.gameState = GameEnums.GAME_STATE.NORMAL;
+    }
+
     public void startSwap(int x1, int y1, int x2, int y2) {
         this.gameState = GameEnums.GAME_STATE.SWAP;
         this.frameCount = 0;
@@ -129,6 +133,10 @@ public class GameTimingHandler {
     // Transitions : step
     @RequiresApi(api = Build.VERSION_CODES.N)
     public void step() {
+        if (this.gameState == GameEnums.GAME_STATE.NORMAL) {
+            this.frameTotalCount++;
+            return;
+        }
         if (this.gameState == GameEnums.GAME_STATE.SWAP) {
             this.frameCount++;
             if (this.frameCount == Constants.NUMBER_FRAMES_SWAP) {
@@ -166,8 +174,11 @@ public class GameTimingHandler {
                 this.gh.triggerUnstableCheck();
             }
         }
-        if (this.gameState == GameEnums.GAME_STATE.NORMAL) {
-            this.frameTotalCount++;
+        if (this.gameState == GameEnums.GAME_STATE.INTRODUCTION) {
+            this.frameCount++;
+            if (this.frameCount == Constants.NUMBER_FRAMES_INTRODUCTION_TOTAL) {
+                this.gh.triggerWelcoming();
+            }
             return;
         }
     }
@@ -187,6 +198,8 @@ public class GameTimingHandler {
     public boolean isInFall() {
         return (this.gameState == GameEnums.GAME_STATE.FALLING);
     }
+    public boolean isInIntro() { return (this.gameState == GameEnums.GAME_STATE.INTRODUCTION); }
+
 
     // Other
     public float ratioToCompletionSwap() {
@@ -194,6 +207,27 @@ public class GameTimingHandler {
     }
     public float ratioToCompletionFall() {
         return (float)this.frameCount / Constants.NUMBER_FRAMES_FALL;
+    }
+
+    // How it works : an affine-by-pieces method worth 0 before, climbing from 0 to 1, then worth 1
+    // Works with rfi above !
+    public float ratioProgressiveIntroSpaces(float desiredRatio) {
+        // RFAI is 0.3 : time goes to 0 to 1 (always), full time goes to 0.3 to 1,
+        // We desire 0.8 : window of opportunity is between 0.5 and 0.8
+        float firstFrame = desiredRatio*(Constants.NUMBER_FRAMES_INTRODUCTION_SPACES_ONLY-Constants.NUMBER_FRAMES_INTRODUCTION_GHOST);
+        int numberFrames = Constants.NUMBER_FRAMES_INTRODUCTION_GHOST;
+        float currentFrameRelativeTo1st = this.frameCount - firstFrame;
+        if (currentFrameRelativeTo1st < 0) {
+            return 0;
+        }
+        if (currentFrameRelativeTo1st > numberFrames) {
+            return 1;
+        }
+        return currentFrameRelativeTo1st/numberFrames;
+    }
+
+    public boolean shouldDrawSpaceContentProgessiveIntro(float desiredRatio) {
+        return this.frameCount > desiredRatio*(Constants.NUMBER_FRAMES_INTRODUCTION_SPACES_ONLY-Constants.NUMBER_FRAMES_INTRODUCTION_GHOST) + Constants.NUMBER_FRAMES_INTRODUCTION_GHOST + Constants.NUMBER_FRAMES_INTRODUCTION_FLEX_FRUIT;
     }
 
     public int getXSwap1() { return this.xSwap1; }
