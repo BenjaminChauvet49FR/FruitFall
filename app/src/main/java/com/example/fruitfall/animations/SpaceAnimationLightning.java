@@ -1,28 +1,52 @@
 package com.example.fruitfall.animations;
 
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Rect;
+
 import com.example.fruitfall.Constants;
+import com.example.fruitfall.MyCanvasView;
+import com.example.fruitfall.Pix;
 
 public class SpaceAnimationLightning extends SpaceAnimation {
 
     boolean isHorizontal;
-    int maxCoor1, maxCoor2; // TODO lorsqu'on aura des fruits bloqués
+    int extremeCoor1, extremeCoor2;
 
-    public SpaceAnimationLightning(boolean isHorizontal) {
-        super(Constants.NUMBER_FRAMES_ANIMATION_LIGHT);
+    public SpaceAnimationLightning(int x, int y, boolean isHorizontal) {
+        super(x, y, Constants.NUMBER_FRAMES_ANIMATION_LIGHTNING);
         this.isHorizontal = isHorizontal;
+        this.needRecenter = false;
+        extremeCoor1 = 0;
+        if (this.isHorizontal) {
+            extremeCoor2 = Constants.FIELD_XLENGTH-1;
+        } else {
+            extremeCoor2 = Constants.FIELD_YLENGTH-1;
+        }
     }
 
-    public boolean getHorizontal() {
-        return this.isHorizontal;
-    }
+    @Override
+    protected void drawProtected(MyCanvasView view, Canvas canvas, Rect rectSource, Rect rectDestination, Paint paint) {
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(view.getColorAnimationLightning());
+        float ratio = ratio();
+        float ratioSpeed = (float) Math.min(1.0, ratio * 1.4);
+        if (this.isHorizontal) {
+            rectDestination.set(
+                    Pix.pixXLeftMainSpace((float)(x-((x+0.25-extremeCoor1)*ratioSpeed))),
+                    Pix.pixYUpMainSpace((float) (y + 0.35 * ratio)),
+                    Pix.pixXRightMainSpace((float)(x+(extremeCoor2+0.25-x)*ratioSpeed)),
+                    Pix.pixYDownMainSpace((float) (y - 0.35 * ratio))
+            );
+        } else {
+            rectDestination.set(
+                    Pix.pixXLeftMainSpace((float)(x + 0.35 * ratio)),
+                    Pix.pixYUpMainSpace((float)(y-((y+0.25-extremeCoor1)*ratioSpeed)) ),
+                    Pix.pixXRightMainSpace((float)(x - 0.35 * ratio)),
+                    Pix.pixYDownMainSpace((float)(y+(extremeCoor2+0.25-y)*ratioSpeed))
 
-    public int getMaxCoor() {
-        return Constants.FIELD_YLENGTH;
-        // TODO C'est du remplissage
+            );
+        }
+        canvas.drawRect(rectDestination, paint);
     }
-
-    public int getMinCoor() {
-        return 0;
-    }
-
 }

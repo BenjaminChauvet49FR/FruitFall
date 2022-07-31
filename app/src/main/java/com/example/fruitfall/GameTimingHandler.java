@@ -11,6 +11,7 @@ import com.example.fruitfall.animations.SpaceAnimationLightning;
 import com.example.fruitfall.animations.SpaceAnimationLockDuration;
 import com.example.fruitfall.animations.SpaceAnimationOmegaSphere;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class GameTimingHandler {
@@ -22,8 +23,8 @@ public class GameTimingHandler {
     private int frameScore;
     private GameHandler gh;
     private long frameTotalCount;
-
-    private SpaceAnimation[][] animations = new SpaceAnimation[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
+    private List<SpaceAnimation> spaceAnimationList;
+    private List<SpaceAnimation> spaceAnimationFruitDestroyedList;
 
     public GameTimingHandler(GameHandler gh) {
         this.gh = gh;
@@ -35,6 +36,8 @@ public class GameTimingHandler {
         this.frameCount = 0;
         this.frameTotalCount = 0;
         this.clearSwap();
+        this.spaceAnimationList = new ArrayList<>();
+        this.spaceAnimationFruitDestroyedList = new ArrayList<>();
     }
 
     // Misc
@@ -81,12 +84,12 @@ public class GameTimingHandler {
             fruitId = this.gh.getFruit(x, y);
             if (fruitId != Constants.NOT_A_FRUIT) {
                 if (alignedFruits) {
-                    this.animations[y][x] = new SpaceAnimationFruitShrinking(fruitId, false);
-                } else { // TODO Oops ! When a fruit is destroyed on this space, it overrides the previous animation. How to correct this ?
-                    this.animations[y][x] = new SpaceAnimationFruitShrinking(fruitId, true);
+                    this.spaceAnimationFruitDestroyedList.add(new SpaceAnimationFruitShrinking(x, y, fruitId, false));
+                } else {
+                    this.spaceAnimationFruitDestroyedList.add(new SpaceAnimationFruitShrinking(x, y, fruitId, true));
                 }
             } else if (this.gh.hasOmegaSphere(x, y)) {
-                this.animations[y][x] = new SpaceAnimationOmegaSphere();
+                this.spaceAnimationFruitDestroyedList.add(new SpaceAnimationOmegaSphere(x, y));
             }
         }
         GameEnums.FRUITS_POWER power;
@@ -95,13 +98,13 @@ public class GameTimingHandler {
             y = coors.y;
             power = this.gh.getFruitPowerFromCoors(x, y);
             if (power == GameEnums.FRUITS_POWER.FIRE) {
-                this.animations[y][x] = new SpaceAnimationFire();
+                this.spaceAnimationList.add(new SpaceAnimationFire(x, y));
             }
             if (power == GameEnums.FRUITS_POWER.HORIZONTAL_LIGHTNING) {
-                this.animations[y][x] = new SpaceAnimationLightning(true);
+                this.spaceAnimationList.add(new SpaceAnimationLightning(x, y, true));
             }
             if (power == GameEnums.FRUITS_POWER.VERTICAL_LIGHTNING) {
-                this.animations[y][x] = new SpaceAnimationLightning(false);
+                this.spaceAnimationList.add(new SpaceAnimationLightning(x, y, false));
             }
             if (gh.hasOmegaSphere(x, y)) {
                 // TODO chercher toutes les sphères détruites de cette couleur ?
@@ -113,7 +116,7 @@ public class GameTimingHandler {
 
     public void startDestructionLocks(List<SpaceCoors> newlyDestroyed) {
         for (SpaceCoors coors : newlyDestroyed) {
-            this.animations[coors.y][coors.x] = new SpaceAnimationLockDuration();
+            this.spaceAnimationList.add(new SpaceAnimationLockDuration(coors.x, coors.y));
         }
         frameCount = 0;
         this.gameState = GameEnums.GAME_STATE.DESTRUCTING_LOCKS;
@@ -248,9 +251,25 @@ public class GameTimingHandler {
                 (frameScore < Constants.NUMBER_FRAMES_SCORE);
     }
 
-
-    public SpaceAnimation getAnimation(int x, int y) {
-        return this.animations[y][x];
-    }
     public long getTimeToDisplay() {return this.frameTotalCount / 60;} // TODO handle time for real ! (with SecureDate ?)
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public List<SpaceAnimation> getAnimations2List() {
+        int l = this.spaceAnimationList.size();
+        if (l > Constants.MAX_ANIMATIONS) {
+            this.spaceAnimationList.removeIf(spaceAnimation -> !spaceAnimation.shouldBeDrawn());
+        }
+        return this.spaceAnimationList;
+
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public List<SpaceAnimation> getAnimations1List() {
+        int l = this.spaceAnimationFruitDestroyedList.size();
+        if (l > Constants.MAX_ANIMATIONS) {
+            this.spaceAnimationFruitDestroyedList.removeIf(spaceAnimation -> !spaceAnimation.shouldBeDrawn());
+        }
+        return this.spaceAnimationFruitDestroyedList;
+
+    }
 }

@@ -11,13 +11,14 @@ public class Constants {
     public static final int NUMBER_FRAMES_INTRODUCTION_TOTAL = NUMBER_FRAMES_INTRODUCTION_SPACES_ONLY + NUMBER_FRAMES_INTRODUCTION_FLEX_FRUIT;
     public static final int NUMBER_FRAMES_DESTRUCTION = 8;
     public static final int NUMBER_FRAMES_DESTRUCTION_FORDELAYEDLOCK = 100;
-    public static final int NUMBER_FRAMES_DESTRUCTION_FORANIM = 100;
-    public static final int NUMBER_FRAMES_ANIMATION_LIGHT = 100;
+    public static final int NUMBER_FRAMES_DESTRUCTION_FORANIM = 45;
+    public static final int NUMBER_FRAMES_ANIMATION_LIGHTNING = 45;
 
     public static final int FIELD_YLENGTH = 10;
     public static final int FIELD_XLENGTH = 10;
 
     public static final int MAX_ANGLE_IN_DEGREES = 480;
+    public static final int MAX_ANIMATIONS = 480;
     public static final int NOT_A_FRUIT = -1;
     public static final int NOT_A_SPACE_COOR = -1;
 

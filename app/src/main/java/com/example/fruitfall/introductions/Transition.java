@@ -2,6 +2,8 @@ package com.example.fruitfall.introductions;
 
 import com.example.fruitfall.Constants;
 
+import java.util.List;
+
 public abstract class Transition {
 
     // array of values between 0 and 1;
@@ -33,4 +35,22 @@ public abstract class Transition {
         return this.spaces[y][x];
     }
 
+    // NOTE : utilitary method
+    // randSource values are supposed to be in strictly ascending order.
+    // randTarget must have the same length as randSource.
+    protected float affineTransformation(float randNumber, List<Float> randSource, List<Float> randTarget) {
+        int last = randSource.size()-1;
+        if (randNumber <= randSource.get(0)) {
+            return randTarget.get(0);
+        }
+        if (randNumber > randSource.get(last)) {
+            return randTarget.get(last);
+        }
+        for (int i = 0 ; i < last ; i++) { // TODO : okay for return within for loop ? (and several returns in general ?)
+            if (randNumber > randSource.get(i)) {
+                return randTarget.get(i) + (randTarget.get(i+1)-randTarget.get(i))*(randNumber- randSource.get(i))/(randSource.get(i+1) - randSource.get(i));
+            }
+        }
+        return randTarget.get(last); // TODO : make exception ?
+    }
 }

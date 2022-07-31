@@ -38,4 +38,30 @@ public class Pix {
     public static float backgroundFrame = 1f;
 
     public static int resourceSide = 64;
+
+    // Draw pix
+    public static int pixXLeftMainSpace(float x) {
+        return Pix.xStartSpaces + (int)(x * Pix.wSpace); // Note : must return an int ?
+    }
+    public static int pixYUpMainSpace(float y) {
+        return Pix.yStartSpaces + (int)(y * Pix.hSpace);
+    }
+    public static int pixXRightMainSpace(float x) {
+        return pixXLeftMainSpace(x) + Pix.wMainSpace;
+    }
+    public static int pixYDownMainSpace(float y) {
+        return pixYUpMainSpace(y) + Pix.hMainSpace;
+    }
+    public static int pixXLeftMainSpace(int x) {
+        return Pix.xStartSpaces + (x * Pix.wSpace);
+    }
+    public static int pixYUpMainSpace(int y) {
+        return Pix.yStartSpaces + (y * Pix.hSpace);
+    }
+    public static int pixXRightMainSpace(int x) {
+        return pixXLeftMainSpace(x) + Pix.wMainSpace;
+    }
+    public static int pixYDownMainSpace(int y) {
+        return pixYUpMainSpace(y) + Pix.hMainSpace;
+    }
 }

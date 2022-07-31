@@ -27,8 +27,8 @@ class MyCanvasView(context: Context) : View(context) {
     private val colorScoreFallSpace = ResourcesCompat.getColor(resources, R.color.scoreFallSpace, null)
     private val colorScoreDestructionSpace = ResourcesCompat.getColor(resources, R.color.scoreDestructionSpace, null)
     private val colorTitle = ResourcesCompat.getColor(resources, R.color.title, null)
-    private val colorAnimationLightning = ResourcesCompat.getColor(resources, R.color.animationLightning, null)
-    private val colorAnimationFire = ResourcesCompat.getColor(resources, R.color.animationFire, null)
+    val colorAnimationLightning = ResourcesCompat.getColor(resources, R.color.animationLightning, null)
+    val colorAnimationFire = ResourcesCompat.getColor(resources, R.color.animationFire, null)
     private val colorBGSpaces = arrayOf(ResourcesCompat.getColor(resources, R.color.spaceBG1, null), ResourcesCompat.getColor(resources, R.color.spaceBG2, null))
     private val colorBGSpaceFrame = ResourcesCompat.getColor(resources, R.color.spaceBGFrame, null)
     val colorLockDuration = ResourcesCompat.getColor(resources, R.color.colorLockDuration, null)
@@ -74,7 +74,7 @@ class MyCanvasView(context: Context) : View(context) {
     // https://stackoverflow.com/questions/20279084/how-android-set-custom-font-in-canvas
     // Got myself seducted by this : https://medium.com/programming-lite/using-custom-font-as-resources-in-android-app-6331477f8f57 so I dealt with the API.
 
-    private fun getBitmapFruitToDrawFromIndex(index : Int) : Bitmap {
+    public fun getBitmapFruitToDrawFromIndex(index : Int) : Bitmap {
         return bitmapImages[gh.getRandomFruit(index)]
     }
 
@@ -152,9 +152,11 @@ class MyCanvasView(context: Context) : View(context) {
             drawProgressiveCheckerboard(canvas)
         } else {
             drawAllSpaceContents(canvas)
+            drawSpaceAnimations(canvas, gh.gth.animations1List)// TODO devrait être dessiné APRES les cases et AVANT les contenus dans l'idéal.
             drawFallingSpaces(canvas)
             drawCursor(canvas)
             drawSwap(canvas)
+            drawSpaceAnimations(canvas, gh.gth.animations2List)
             drawScoresOnField(canvas)
         }
         invalidate() // At the end of draw... right ? Also, how many FPS ?
@@ -177,8 +179,8 @@ class MyCanvasView(context: Context) : View(context) {
                 val x = coors.x;
                 val y = coors.y;
                 canvas.drawText("+" + this.gh.scoreFallSpace(x, y),
-                    pixXLeftMainSpace(x).toFloat(),
-                    pixYUpMainSpace(y) + Pix.hScoreSpace,
+                    Pix.pixXLeftMainSpace(x).toFloat(),
+                    Pix.pixYUpMainSpace(y) + Pix.hScoreSpace,
                     paint);
             }
             paint.setColor(colorScoreDestructionSpace);
@@ -189,8 +191,8 @@ class MyCanvasView(context: Context) : View(context) {
                 val x = coors.x;
                 val y = coors.y;
                 canvas.drawText("+" + this.gh.scoreDestructionSpecialSpace(x, y),
-                    pixXLeftMainSpace(x).toFloat(),
-                    pixYUpMainSpace(y) + Pix.hScoreSpace,
+                    Pix.pixXLeftMainSpace(x).toFloat(),
+                    Pix.pixYUpMainSpace(y) + Pix.hScoreSpace,
                     paint);
             }
         }
@@ -204,14 +206,14 @@ class MyCanvasView(context: Context) : View(context) {
             val y1 = gh.gth.ySwap1
             val y2 = gh.gth.ySwap2
             val ratio = gh.gth.ratioToCompletionSwap()
-            rectDest.left = pixXLeftMainSpace(x1 + ratio*(x2-x1))
+            rectDest.left = Pix.pixXLeftMainSpace(x1 + ratio*(x2-x1))
             rectDest.right = rectDest.left + Pix.wMainSpace
-            rectDest.top = pixYUpMainSpace((y1 + ratio*(y2-y1)) )
+            rectDest.top = Pix.pixYUpMainSpace((y1 + ratio*(y2-y1)) )
             rectDest.bottom = rectDest.top + Pix.hMainSpace
             this.drawSpaceContent(x1, y1, canvas, rectSource, rectDest, paint)
-            rectDest.left = pixXLeftMainSpace(x2 + ratio*(x1-x2))
+            rectDest.left = Pix.pixXLeftMainSpace(x2 + ratio*(x1-x2))
             rectDest.right = rectDest.left + Pix.wMainSpace
-            rectDest.top = pixYUpMainSpace(y2 + ratio*(y1-y2))
+            rectDest.top = Pix.pixYUpMainSpace(y2 + ratio*(y1-y2))
             rectDest.bottom = rectDest.top + Pix.hMainSpace
             this.drawSpaceContent(x2, y2, canvas, rectSource, rectDest, paint)
         }
@@ -247,9 +249,9 @@ class MyCanvasView(context: Context) : View(context) {
                         drawTopImageInBotSpace(xStartFall, yStartFall, coors.x, coors.y, pixYSplitImgSrc, pixYSplitImgDst, canvas)
                         drawBotImageInTopSpace(xStartFall, yStartFall, outCoors.x, outCoors.y, pixYSplitImgSrc, pixYSplitImgDst, canvas)
                     } else { // FallElt without teleportation
-                        rectDest.left = pixXLeftMainSpace(xStartFall)
+                        rectDest.left = Pix.pixXLeftMainSpace(xStartFall)
                         rectDest.right = rectDest.left + Pix.wMainSpace
-                        rectDest.top = pixYUpMainSpace(yStartFall + ratioFall)
+                        rectDest.top = Pix.pixYUpMainSpace(yStartFall + ratioFall)
                         rectDest.bottom = rectDest.top + Pix.hMainSpace
                         this.drawSpaceContent(xStartFall, yStartFall, canvas, rectSource, rectDest, paint)
                     }
@@ -335,54 +337,6 @@ class MyCanvasView(context: Context) : View(context) {
                 if (gh.gth.hasStillSpace(x, y)) {
                     this.drawSpaceContent(x, y, canvas, rectSource, rectDest, paint)
                 }
-                animation = gh.gth.getAnimation(x, y)
-                if (animation != null && animation.shouldBeDrawn()) {
-                    if (animation is SpaceAnimationFruitShrinking) { // TODO this type-by-type logic and images...
-                        if (animation.isAlsoRotating()) {
-                            canvas.save() // Note : it should be possible to make all rotations at once.
-                            canvas.rotate(animation.ratio() * Constants.MAX_ANGLE_IN_DEGREES, rectDest.exactCenterX(), rectDest.exactCenterY()) // https://www.tabnine.com/code/java/methods/android.graphics.Canvas/rotate
-                            canvas.drawBitmap(getBitmapFruitToDrawFromIndex(animation.imageFruit),
-                                rectSource, rotatedShrinkedRect(rectDest, animation.ratio()), paint)
-                            canvas.restore()
-                        } else {
-                            canvas.drawBitmap(getBitmapFruitToDrawFromIndex(animation.imageFruit),
-                                rectSource, rotatedShrinkedRect(rectDest, animation.ratio()), paint)
-                        }
-
-                    } else if (animation is SpaceAnimationFading) {
-                        paint.alpha = (255*(1-animation.ratio())).toInt()
-                        gh.getSpace(x, y).paintStill(this, canvas, rectSource, rectDest, paint)
-                        paint.alpha = 255 // TODO : alpha to correct
-                    } else if (animation is SpaceAnimationLightning) {
-                        paint.setColor(colorAnimationLightning)
-                        ratio = animation.ratio()
-                        if (animation.horizontal) {
-                            rectAnim.set(
-                                pixXLeftMainSpace(0),//x-((x+1)*ratio)),
-                                pixYUpMainSpace(y), //(y + 0.5 * ratio).toFloat()), TODO revoir les animations
-                                pixXRightMainSpace(Constants.FIELD_XLENGTH-1),//x+(Constants.FIELD_XLENGTH-x)*ratio),
-                                pixYDownMainSpace(y)//(y - 0.5 * ratio).toFloat())
-                            )
-                        } else {
-                            rectAnim.set(
-                                pixXLeftMainSpace(x),//(x + 0.5 * ratio).toFloat()),
-                                pixYUpMainSpace(0),//y-((y+1)*ratio) ),
-                                pixXRightMainSpace(x),//(x - 0.5 * ratio).toFloat()),
-                                pixYDownMainSpace(Constants.FIELD_YLENGTH-1)//y+(Constants.FIELD_YLENGTH-y)*ratio)
-                            )
-                        }
-                        canvas.drawRect(rectAnim, paint)
-                    } else if (animation is SpaceAnimationFire) {
-                        paint.setColor(colorAnimationFire)
-                        rectAnim.set(pixXLeftMainSpace(x -2), pixYUpMainSpace(y), pixXRightMainSpace(x +2), pixYDownMainSpace(y ))
-                        canvas.drawRect(rectAnim, paint)
-                        rectAnim.set(pixXLeftMainSpace(x -1), pixYUpMainSpace(y-1), pixXRightMainSpace(x +1), pixYDownMainSpace(y +1))
-                        canvas.drawRect(rectAnim, paint)
-                        rectAnim.set(pixXLeftMainSpace(x ), pixYUpMainSpace(y-2), pixXRightMainSpace(x ), pixYDownMainSpace(y +2))
-                        canvas.drawRect(rectAnim, paint)
-                    }
-                    animation.progress()
-                }
                 rectDest.left += Pix.wSpace
                 rectDest.right += Pix.wSpace
                 rectDestSpace.left += Pix.wSpace
@@ -399,29 +353,30 @@ class MyCanvasView(context: Context) : View(context) {
         }
     }
 
-    private fun rotatedShrinkedRect(rectDest: Rect, ratio: Float): Rect {
-        return Rect(
-            (rectDest.left + Pix.wMainSpace*ratio/2).roundToInt(),
-            (rectDest.top + Pix.hMainSpace*ratio/2).roundToInt(),
-            (rectDest.right - Pix.wMainSpace*ratio/2).roundToInt(),
-            (rectDest.bottom - Pix.hMainSpace*ratio/2).roundToInt()
-        )
+    @RequiresApi(Build.VERSION_CODES.N)
+    private fun drawSpaceAnimations(canvas : Canvas, spaceAnimations : List<SpaceAnimation>) {
+        for (sa : SpaceAnimation in spaceAnimations) {
+            if (sa.shouldBeDrawn()) {
+                sa.draw(this, canvas, rectSource, rectDest, paint)
+                sa.progress()
+            }
+        }
     }
 
     private fun drawTopImageInBotSpace(xSpaceToDraw : Int, ySpaceToDraw : Int, xSpaceTarget : Int, ySpaceTarget : Int, pixYSplitImgSrc : Int, pixYSplitImgDst : Int, canvas : Canvas) {
-        rectDest.left = pixXLeftMainSpace(xSpaceTarget)
+        rectDest.left = Pix.pixXLeftMainSpace(xSpaceTarget)
         rectDest.right = rectDest.left + Pix.wMainSpace
-        rectDest.top = pixYUpMainSpace(ySpaceTarget) + pixYSplitImgDst
-        rectDest.bottom = pixYUpMainSpace(ySpaceTarget + 1)
+        rectDest.top = Pix.pixYUpMainSpace(ySpaceTarget) + pixYSplitImgDst
+        rectDest.bottom = Pix.pixYUpMainSpace(ySpaceTarget + 1)
         rectSourceVariable.top = 0
         rectSourceVariable.bottom = pixYSplitImgSrc
         drawSpaceContent(xSpaceToDraw, ySpaceToDraw, canvas, rectSourceVariable, rectDest, paint)
     }
 
     private fun drawBotImageInTopSpace(xSpaceToDraw : Int, ySpaceToDraw : Int, xSpaceTarget : Int, ySpaceTarget : Int, pixYSplitImgSrc : Int, pixYSplitImgDst : Int, canvas : Canvas) {
-        rectDest.left = pixXLeftMainSpace(xSpaceTarget)
+        rectDest.left = Pix.pixXLeftMainSpace(xSpaceTarget)
         rectDest.right = rectDest.left + Pix.wMainSpace
-        rectDest.top = pixYUpMainSpace(ySpaceTarget)
+        rectDest.top = Pix.pixYUpMainSpace(ySpaceTarget)
         rectDest.bottom = rectDest.top + pixYSplitImgDst
         rectSourceVariable.top = pixYSplitImgSrc
         rectSourceVariable.bottom = Pix.resourceSide
@@ -430,39 +385,13 @@ class MyCanvasView(context: Context) : View(context) {
 
     // Note : it should be possible to factorize this with the previous !
     private fun drawBotFruitInSpawnSpace(xSpaceTarget : Int, ySpaceTarget : Int, image : Bitmap, pixYSplitImgSrc : Int, pixYSplitImgDst : Int, canvas : Canvas) {
-        rectDest.left = pixXLeftMainSpace(xSpaceTarget)
+        rectDest.left = Pix.pixXLeftMainSpace(xSpaceTarget)
         rectDest.right = rectDest.left + Pix.wMainSpace
-        rectDest.top = pixYUpMainSpace(ySpaceTarget)
+        rectDest.top = Pix.pixYUpMainSpace(ySpaceTarget)
         rectDest.bottom = rectDest.top + pixYSplitImgDst
         rectSourceVariable.top = pixYSplitImgSrc
         rectSourceVariable.bottom = Pix.resourceSide
         canvas.drawBitmap(image, rectSourceVariable, rectDest, paint)
-    }
-
-    // Draw pix
-    private fun pixXLeftMainSpace(x : Float) : Int {
-        return Pix.xStartSpaces + (x * Pix.wSpace).toInt()
-    }
-    private fun pixYUpMainSpace(y : Float) : Int {
-        return Pix.yStartSpaces + (y * Pix.hSpace).toInt()
-    }
-    private fun pixXRightMainSpace(x : Float) : Int {
-        return pixXLeftMainSpace(x) + Pix.wMainSpace
-    }
-    private fun pixYDownMainSpace(y : Float) : Int {
-        return pixYUpMainSpace(y) + Pix.hMainSpace
-    }
-    private fun pixXLeftMainSpace(x : Int) : Int {
-        return Pix.xStartSpaces + (x * Pix.wSpace)
-    }
-    private fun pixYUpMainSpace(y : Int) : Int {
-        return Pix.yStartSpaces + (y * Pix.hSpace)
-    }
-    private fun pixXRightMainSpace(x : Int) : Int {
-        return pixXLeftMainSpace(x) + Pix.wMainSpace
-    }
-    private fun pixYDownMainSpace(y : Int) : Int {
-        return pixYUpMainSpace(y) + Pix.hMainSpace
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -512,7 +441,7 @@ class MyCanvasView(context: Context) : View(context) {
     }
 
     private fun spaceXToPixXRight(spaceX : Int) : Int {
-        return Pix.xStartField + Pix.wSpace * (spaceX + 1) - Pix.wGap
+        return Pix.xStartField + Pix.wSpace * (spaceX + 1)
     }
 
     private fun spaceYToPixYUp(spaceY : Int) : Int {
@@ -520,7 +449,7 @@ class MyCanvasView(context: Context) : View(context) {
     }
 
     private fun spaceYToPixYDown(spaceY : Int) : Int {
-        return Pix.yStartField + Pix.hSpace * (spaceY + 1) - Pix.wGap
+        return Pix.yStartField + Pix.hSpace * (spaceY + 1)
     }
 
 

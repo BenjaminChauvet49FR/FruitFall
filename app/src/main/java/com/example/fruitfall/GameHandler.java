@@ -615,6 +615,7 @@ public class GameHandler {
                             if (numberAlignTransversal == 3 || numberAlignTransversal == 4) {
                                 // TODO Changer ce comportement (pas de fruit créé si à l'intersection)... ou faire avec ?
                                 // TODO Il faudra voir ce qu'on veut en cas de test 3x3 fruits identiques
+                                // TODO sorte de bug quand on a 3 fruits dans un sens et 4 dans un autre, puisqu'on a 2 fruits spéciaux créés, on ne veut pas ça...
                                 if (this.arrayField[y][xx].getPower() == GameEnums.FRUITS_POWER.NONE) {
                                     this.createSpecialFruit(xx, y, new Fruit(this.getFruit(x, y), GameEnums.FRUITS_POWER.FIRE), 3);
                                 }
@@ -975,10 +976,6 @@ public class GameHandler {
         return this.gameIndexToImageIndex[indexFieldFruit];
     }
 
-    public int getRandomFruitFromCoors(int x, int y) {
-        return this.gameIndexToImageIndex[this.arrayField[y][x].getFruit()];
-    }
-
     public GameEnums.FRUITS_POWER getFruitPowerFromCoors(int x, int y) {
         return this.arrayField[y][x].getPower();
     }
@@ -1013,7 +1010,7 @@ public class GameHandler {
 
     public boolean hasOmegaSphere(int x, int y) {
         return (this.arrayField[y][x] instanceof OmegaSphere);
-    } // TODO changer "Omega" en pouvuoir ?
+    } // TODO changer "Omega" en pouvoir ?
 
     // ------------
     // Getter for input
