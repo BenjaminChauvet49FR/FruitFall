@@ -41,6 +41,9 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.buttonModeRestart).setOnClickListener {
             myView.startLevel();
         }
+        findViewById<Button>(R.id.buttonModeTolerance).setOnClickListener {
+            myView.setTolerance();
+        }
         findViewById<Button>(R.id.buttonModeNext).setOnClickListener {
             if (LevelManager.levelNumber != LevelManager.levelLists.size-1) {
                 LevelManager.levelNumber++;

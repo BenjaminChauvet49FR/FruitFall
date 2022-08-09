@@ -5,6 +5,7 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.view.View;
 
+import com.example.fruitfall.GameEnums;
 import com.example.fruitfall.MyCanvasView;
 import com.example.fruitfall.Pix;
 

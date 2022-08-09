@@ -9,6 +9,7 @@ public class GameEnums {
         FALLING,
         DESTRUCTING_STASIS,
         DESTRUCTING_LOCKS,
+        RAY_ANIMATIONS,
         PAUSED
     }
 
@@ -35,12 +36,23 @@ public class GameEnums {
         HORIZONTAL_LIGHTNING,
         VERTICAL_LIGHTNING,
         FIRE,
-        NONE,
+        OMEGA_SPHERE,
+        VIRTUAL_FIRE_FIRE,
+        VIRTUAL_FIRE_LIGHTNING,
+        VIRTUAL_LIGHTNING_LIGHTNING,
+        VIRTUAL_OMEGA_FIRE,
+        VIRTUAL_OMEGA_VERT_LIGHTNING,
+        VIRTUAL_OMEGA_HORIZ_LIGHTNING,
+        VIRTUAL_OMEGA_OMEGA,
+        NONE
     }
 
     public enum WHICH_SWAP {
         FRUIT_FRUIT,
         FRUIT_OMEGA,
+        OMEGA_OMEGA,
+        OMEGA_ELECTRIC,
+        OMEGA_FIRE,
         FIRE_FIRE,
         FIRE_ELECTRIC,
         ELECTRIC_ELECTRIC,

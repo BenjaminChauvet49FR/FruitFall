@@ -1,7 +1,9 @@
 package com.example.fruitfall;
 
+import android.graphics.Color;
 import android.os.Build;
 
+import androidx.annotation.ColorInt;
 import androidx.annotation.RequiresApi;
 
 import com.example.fruitfall.animations.SpaceAnimation;
@@ -9,9 +11,15 @@ import com.example.fruitfall.animations.SpaceAnimationFire;
 import com.example.fruitfall.animations.SpaceAnimationFruitShrinking;
 import com.example.fruitfall.animations.SpaceAnimationLightning;
 import com.example.fruitfall.animations.SpaceAnimationLockDuration;
+import com.example.fruitfall.animations.SpaceAnimationOmegaFire;
+import com.example.fruitfall.animations.SpaceAnimationOmegaFruit;
+import com.example.fruitfall.animations.SpaceAnimationOmegaLightning;
 import com.example.fruitfall.animations.SpaceAnimationOmegaSphere;
+import com.example.fruitfall.animations.SwapAnimationFireElectric;
+import com.example.fruitfall.animations.SwapAnimationFireFire;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class GameTimingHandler {
@@ -25,6 +33,9 @@ public class GameTimingHandler {
     private long frameTotalCount;
     private List<SpaceAnimation> spaceAnimationList;
     private List<SpaceAnimation> spaceAnimationFruitDestroyedList;
+    private Checker handledSpecialAnimationsChecker = new Checker(Constants.FIELD_XLENGTH, Constants.FIELD_YLENGTH);
+    private Checker handledDestroyAnimationsChecker = new Checker(Constants.FIELD_XLENGTH, Constants.FIELD_YLENGTH);
+
 
     public GameTimingHandler(GameHandler gh) {
         this.gh = gh;
@@ -36,6 +47,8 @@ public class GameTimingHandler {
         this.frameCount = 0;
         this.frameTotalCount = 0;
         this.clearSwap();
+        this.handledSpecialAnimationsChecker.clear();
+        this.handledDestroyAnimationsChecker.clear();
         this.spaceAnimationList = new ArrayList<>();
         this.spaceAnimationFruitDestroyedList = new ArrayList<>();
     }
@@ -69,9 +82,25 @@ public class GameTimingHandler {
         this.ySwap2 = y2;
     }
 
+    // Called after unstable check where fruits still need to fall AND after there are no more fruits to destroy in a stable check
     public void startFall() {
         frameCount = 0;
+        this.handledDestroyAnimationsChecker.clear();
+        this.handledSpecialAnimationsChecker.clear();
         this.gameState = GameEnums.GAME_STATE.FALLING;
+    }
+
+    public void startRayAnimations() {
+        SpaceCoors source;
+        for (int colour = 0 ; colour < Constants.RESOURCES_NUMBER_FRUITS ; colour++) {
+            source = this.gh.getCoorsSourceOmegaSphere(colour);
+            if (source != null) {
+                this.spaceAnimationList.add(new SpaceAnimationOmegaFruit(source.x, source.y, this.gh.getCoorsTargetOmegaSphere(colour), Color.rgb(255, 255, 255), Color.rgb(255, 255, 192), Color.rgb(255, 192, 128)));
+            }
+            // TODO revoir les couleurs des beams
+        }
+        frameCount = 0;
+        this.gameState = GameEnums.GAME_STATE.RAY_ANIMATIONS;
     }
 
     public void startDestruction(boolean alignedFruits) {
@@ -83,14 +112,24 @@ public class GameTimingHandler {
             y = coors.y;
             fruitId = this.gh.getFruit(x, y);
             if (fruitId != Constants.NOT_A_FRUIT) {
-                if (alignedFruits) {
-                    this.spaceAnimationFruitDestroyedList.add(new SpaceAnimationFruitShrinking(x, y, fruitId, false));
-                } else {
-                    this.spaceAnimationFruitDestroyedList.add(new SpaceAnimationFruitShrinking(x, y, fruitId, true));
-                }
+                this.tryToAddToAnimationsDestroy(x, y, new SpaceAnimationFruitShrinking(x, y, fruitId, !alignedFruits));
             } else if (this.gh.hasOmegaSphere(x, y)) {
-                this.spaceAnimationFruitDestroyedList.add(new SpaceAnimationOmegaSphere(x, y));
+                this.tryToAddToAnimations(x, y, new SpaceAnimationOmegaSphere(x, y));
             }
+        }
+        GameEnums.WHICH_SWAP swap = this.gh.getLastSwap();
+        x = this.gh.getXCenterAnimation();
+        y = this.gh.getYCenterAnimation();
+        if (swap == GameEnums.WHICH_SWAP.FIRE_ELECTRIC) {
+            this.tryToAddToAnimations(x, y, new SwapAnimationFireElectric(x, y));
+        }
+        if (swap == GameEnums.WHICH_SWAP.FIRE_FIRE) {
+            this.tryToAddToAnimations(x, y, new SwapAnimationFireFire(x, y));
+        }
+        if (swap == GameEnums.WHICH_SWAP.ELECTRIC_ELECTRIC) {
+            this.tryToAddToAnimations(x, y,
+                    Arrays.asList(new SpaceAnimationLightning(x, y, true), new SpaceAnimationLightning(x, y, false))
+            );
         }
         GameEnums.FRUITS_POWER power;
         for (SpaceCoors coors : this.gh.getListToBeActivatedSpecialFruits()) {
@@ -98,20 +137,46 @@ public class GameTimingHandler {
             y = coors.y;
             power = this.gh.getFruitPowerFromCoors(x, y);
             if (power == GameEnums.FRUITS_POWER.FIRE) {
-                this.spaceAnimationList.add(new SpaceAnimationFire(x, y));
+                this.tryToAddToAnimations(x, y, new SpaceAnimationFire(x, y));
             }
             if (power == GameEnums.FRUITS_POWER.HORIZONTAL_LIGHTNING) {
-                this.spaceAnimationList.add(new SpaceAnimationLightning(x, y, true));
+                this.tryToAddToAnimations(x, y, new SpaceAnimationLightning(x, y, true));
             }
             if (power == GameEnums.FRUITS_POWER.VERTICAL_LIGHTNING) {
-                this.spaceAnimationList.add(new SpaceAnimationLightning(x, y, false));
+                this.tryToAddToAnimations(x, y, new SpaceAnimationLightning(x, y, false));
             }
-            if (gh.hasOmegaSphere(x, y)) {
-                // TODO chercher toutes les sphères détruites de cette couleur ?
+            if (power == GameEnums.FRUITS_POWER.VIRTUAL_OMEGA_HORIZ_LIGHTNING) {
+                this.tryToAddToAnimations(x, y, new SpaceAnimationOmegaLightning(x, y, true));
+            }
+            if (power == GameEnums.FRUITS_POWER.VIRTUAL_OMEGA_VERT_LIGHTNING) {
+                this.tryToAddToAnimations(x, y, new SpaceAnimationOmegaLightning(x, y, false));
+            }
+            if (power == GameEnums.FRUITS_POWER.VIRTUAL_OMEGA_FIRE) {
+                this.tryToAddToAnimations(x, y, new SpaceAnimationOmegaFire(x, y));
             }
         }
         // TODO démarrer les destructions pour les fruits spéciaux
         this.gameState = GameEnums.GAME_STATE.DESTRUCTING_STASIS;
+    }
+
+    private void tryToAddToAnimationsDestroy(int x, int y, SpaceAnimation animation) {
+        if (this.handledDestroyAnimationsChecker.add(x, y)) {
+            this.spaceAnimationList.add(animation);
+        }
+    }
+    
+    private void tryToAddToAnimations(int x, int y, SpaceAnimation animation) {
+        if (this.handledSpecialAnimationsChecker.add(x, y)) {
+            this.spaceAnimationList.add(animation);
+        }
+    }
+
+    private void tryToAddToAnimations(int x, int y, List<SpaceAnimation> animations) {
+        if (this.handledSpecialAnimationsChecker.add(x, y)) {
+            for (SpaceAnimation animation : animations) {
+                this.spaceAnimationList.add(animation);
+            }
+        }
     }
 
     public void startDestructionLocks(List<SpaceCoors> newlyDestroyed) {
@@ -160,6 +225,13 @@ public class GameTimingHandler {
             this.frameScore++;
             if (this.frameCount == Constants.NUMBER_FRAMES_DESTRUCTION) {
                 this.gh.triggerDestruction();
+            }
+            return;
+        }
+        if (this.gameState == GameEnums.GAME_STATE.RAY_ANIMATIONS) {
+            this.frameCount++;
+            if (this.frameCount == Constants.NUMBER_FRAMES_RAY_ANIMATION) {
+                this.gh.triggerAfterOmegaStasis();
             }
             return;
         }

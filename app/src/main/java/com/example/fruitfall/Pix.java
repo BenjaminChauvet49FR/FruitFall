@@ -39,6 +39,10 @@ public class Pix {
 
     public static int resourceSide = 64;
 
+    public static float thicknessOuterBeam = 12f;
+    public static float thicknessMidBeam = 8f;
+    public static float thicknessInnerBeam = 4f;
+
     // Draw pix
     public static int pixXLeftMainSpace(float x) {
         return Pix.xStartSpaces + (int)(x * Pix.wSpace); // Note : must return an int ?
@@ -64,4 +68,10 @@ public class Pix {
     public static int pixYDownMainSpace(int y) {
         return pixYUpMainSpace(y) + Pix.hMainSpace;
     }
+    public static int xCenter(int x) {
+        return pixXLeftMainSpace(x) + Pix.hMainSpace/2;
+    }
+    public static int yCenter(int y) {
+        return pixYUpMainSpace(y) + Pix.hMainSpace/2;
+    } // TODO retirer "pix" des noms des méthodes
 }

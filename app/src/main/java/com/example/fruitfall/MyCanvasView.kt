@@ -99,6 +99,11 @@ class MyCanvasView(context: Context) : View(context) {
         gh.initializeGrid(ld)
     }
 
+    fun setTolerance() {
+        gh.setTolerance();
+    }
+
+
     // Set up the paint with which to draw.
     private val paint = Paint().apply { // Great details here : https://developer.android.com/codelabs/advanced-android-kotlin-training-canvas#4
         // Smooths out edges of what is drawn without affecting shape.
@@ -483,7 +488,7 @@ class MyCanvasView(context: Context) : View(context) {
         return (selectedSpaceX != SPACE_UNDEFINED)
     }
 
-    /*companion object {
+/*companion object {
         @kotlin.jvm.JvmField
         var bitmapImages: Array<Bitmap> = arrayOf(
         BitmapFactory.decodeResource(resources, R.drawable.f1),

@@ -19,15 +19,15 @@ public class LevelManager {
     public static void init() {
         levelNumber = 0;
         levelLists = new ArrayList<>();
+        levelLists.add(new LevelData("f4 F0099 iah", "4 fruits"));
         levelLists.add(new LevelData("f6 L12233 L22637 L36273 L46677 l5 l9 l13 l17 it", "Blocs verrouillés"));
         levelLists.add(new LevelData("f5 iah", "5 fruits"));
         levelLists.add(new LevelData("f5 X0495 X4059 t03064 t09604 t63664", "Quadrants"));
         levelLists.add(new LevelData("f5 X5059 t09602 t2990", "Téléportation"));
         levelLists.add(new LevelData("f512 iah", "5 fruits dont 2 forcés"));
-        levelLists.add(new LevelData("f4 F0099 iah", "4 fruits"));
         levelLists.add(new LevelData("f8 iah", "8 fruits"));
         levelLists.add(new LevelData("f6 X0019 X8099 X2072 X2779", "6 fruits, arène restreinte"));
-        levelLists.add(new LevelData("f6 X!3366", "5 fruits, trou au milieu"));
-        levelLists.add(new LevelData("f6 X3366", "5 fruits, trou spawnant au milieu"));
+        levelLists.add(new LevelData("f5 X!3366", "5 fruits, trou au milieu"));
+        levelLists.add(new LevelData("f5 X3366", "5 fruits, trou spawnant au milieu"));
     }
 }

@@ -4,6 +4,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 
+import com.example.fruitfall.GameEnums;
 import com.example.fruitfall.MyCanvasView;
 
 public class OmegaSphere extends SpaceFiller {
@@ -22,4 +23,7 @@ public class OmegaSphere extends SpaceFiller {
     public void paintStill(MyCanvasView view, Canvas canvas, Rect rectSource, Rect rectDestination, Paint paint) {
         canvas.drawBitmap(view.getBitmapImageSphereOmega(), rectSource, rectDestination, paint);
     }
+
+    @Override
+    public GameEnums.FRUITS_POWER getPower() {return GameEnums.FRUITS_POWER.OMEGA_SPHERE;}
 }
