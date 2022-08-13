@@ -39,7 +39,7 @@ public abstract class SpaceAnimation {
 
     public void draw(MyCanvasView view, Canvas canvas, Rect rectSource, Rect rectDestination, Paint paint) {
         if (this.needRecenter) {
-            rectDestination.set(Pix.pixXLeftMainSpace(x), Pix.pixYUpMainSpace(y), Pix.pixXRightMainSpace(x), Pix.pixYDownMainSpace(y) );
+            rectDestination.set(Pix.xLeftMainSpace(x), Pix.yUpMainSpace(y), Pix.rightMainSpace(x), Pix.yDownMainSpace(y) );
         }
         drawProtected(view, canvas, rectSource, rectDestination, paint);
     }

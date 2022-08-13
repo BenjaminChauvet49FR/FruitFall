@@ -19,12 +19,12 @@ public class Pix {
     public static int xStartActiveLight = xStartSpaces;
     public static int yStartActiveLight = 22;
     public static float xScore = xStartSpaces + 50;
-    public static float hText = yStartSpaces * (float)0.4;
+    public static float hText = yStartSpaces * (float)0.3;
     public static float yScore = 10+hText;
     public static float xTime = xScore + 300;
     public static float yTime = yScore;
-    public static float xCommand1 = xScore;
-    public static float yCommand1 = yScore + hText*(float)1.2;
+    public static float xCommands = xScore;
+    public static float yCommands = yScore + hText*(float)1.2;
 
     public static float xTitle = xStartSpaces;
     public static float yTitle = yAfterSpaces + hText*(float)1.2;
@@ -37,41 +37,39 @@ public class Pix {
     public static float selectionFrame = 4f;
     public static float backgroundFrame = 1f;
 
-    public static int resourceSide = 64;
+    public static int resourceSide = 128;
 
     public static float thicknessOuterBeam = 12f;
     public static float thicknessMidBeam = 8f;
     public static float thicknessInnerBeam = 4f;
 
     // Draw pix
-    public static int pixXLeftMainSpace(float x) {
+    public static int xLeftMainSpace(float x) {
         return Pix.xStartSpaces + (int)(x * Pix.wSpace); // Note : must return an int ?
     }
-    public static int pixYUpMainSpace(float y) {
+    public static int yUpMainSpace(float y) {
         return Pix.yStartSpaces + (int)(y * Pix.hSpace);
     }
-    public static int pixXRightMainSpace(float x) {
-        return pixXLeftMainSpace(x) + Pix.wMainSpace;
+    public static int rightMainSpace(float x) {
+        return xLeftMainSpace(x) + Pix.wMainSpace;
     }
-    public static int pixYDownMainSpace(float y) {
-        return pixYUpMainSpace(y) + Pix.hMainSpace;
+    public static int yDownMainSpace(float y) {
+        return yUpMainSpace(y) + Pix.hMainSpace;
     }
-    public static int pixXLeftMainSpace(int x) {
+    public static int xLeftMainSpace(int x) {
         return Pix.xStartSpaces + (x * Pix.wSpace);
     }
-    public static int pixYUpMainSpace(int y) {
+    public static int yUpMainSpace(int y) {
         return Pix.yStartSpaces + (y * Pix.hSpace);
     }
-    public static int pixXRightMainSpace(int x) {
-        return pixXLeftMainSpace(x) + Pix.wMainSpace;
+    public static int rightMainSpace(int x) {
+        return xLeftMainSpace(x) + Pix.wMainSpace;
     }
-    public static int pixYDownMainSpace(int y) {
-        return pixYUpMainSpace(y) + Pix.hMainSpace;
+    public static int yDownMainSpace(int y) {
+        return yUpMainSpace(y) + Pix.hMainSpace;
     }
     public static int xCenter(int x) {
-        return pixXLeftMainSpace(x) + Pix.hMainSpace/2;
+        return xLeftMainSpace(x) + Pix.hMainSpace/2;
     }
-    public static int yCenter(int y) {
-        return pixYUpMainSpace(y) + Pix.hMainSpace/2;
-    } // TODO retirer "pix" des noms des méthodes
+    public static int yCenter(int y) { return yUpMainSpace(y) + Pix.hMainSpace/2; }
 }

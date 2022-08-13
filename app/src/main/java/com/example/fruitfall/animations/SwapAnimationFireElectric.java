@@ -67,29 +67,29 @@ public class SwapAnimationFireElectric extends SpaceAnimation {
         float ratioSpeed = (float) Math.min(1.0, ratio * 1.4);
         // Horizontal part
         rectDestination.set(
-            Pix.pixXLeftMainSpace((float)(x-((x+0.25-finalXLeft)*ratioSpeed))),
-            Pix.pixYUpMainSpace((float) (y + 0.35 * ratio)),
-            Pix.pixXRightMainSpace((float)(x+(finalXRight+0.25-x)*ratioSpeed)),
-            Pix.pixYDownMainSpace((float) (y - 0.35 * ratio))
+            Pix.xLeftMainSpace((float)(x-((x+0.25-finalXLeft)*ratioSpeed))),
+            Pix.yUpMainSpace((float) (y + 0.35 * ratio)),
+            Pix.rightMainSpace((float)(x+(finalXRight+0.25-x)*ratioSpeed)),
+            Pix.yDownMainSpace((float) (y - 0.35 * ratio))
         );
         canvas.drawRect(rectDestination, paint);
         // Vertical part
         rectDestination.set(
-                    Pix.pixXLeftMainSpace((float)(x + 0.35 * ratio)),
-                    Pix.pixYUpMainSpace((float)(y-((y+0.25-finalYUp)*ratioSpeed)) ),
-                    Pix.pixXRightMainSpace((float)(x - 0.35 * ratio)),
-                    Pix.pixYDownMainSpace((float)(y+(finalYDown+0.25-y)*ratioSpeed))
+                    Pix.xLeftMainSpace((float)(x + 0.35 * ratio)),
+                    Pix.yUpMainSpace((float)(y-((y+0.25-finalYUp)*ratioSpeed)) ),
+                    Pix.rightMainSpace((float)(x - 0.35 * ratio)),
+                    Pix.yDownMainSpace((float)(y+(finalYDown+0.25-y)*ratioSpeed))
 
         );
         canvas.drawRect(rectDestination, paint);
         // Fun part
         canvas.save();
-        int[] pixX = {Pix.xCenter(finalXLU), Pix.pixXLeftMainSpace(finalXLU), Pix.xCenter(finalXRD), Pix.pixXRightMainSpace(finalXRD)};
-        int[] pixY = {Pix.pixYUpMainSpace(finalYLU), Pix.yCenter(finalYLU), Pix.pixYDownMainSpace(finalYRD), Pix.yCenter(finalYRD)};
+        int[] pixX = {Pix.xCenter(finalXLU), Pix.xLeftMainSpace(finalXLU), Pix.xCenter(finalXRD), Pix.rightMainSpace(finalXRD)};
+        int[] pixY = {Pix.yUpMainSpace(finalYLU), Pix.yCenter(finalYLU), Pix.yDownMainSpace(finalYRD), Pix.yCenter(finalYRD)};
         Path path = new Path();
         drawPolygonFromPath(canvas, pixX, pixY, path, paint);
-        pixX = new int[]{Pix.xCenter(finalXRU), Pix.pixXRightMainSpace(finalXRU), Pix.xCenter(finalXLD), Pix.pixXLeftMainSpace(finalXLD)};
-        pixY = new int[]{Pix.pixYUpMainSpace(finalYRU), Pix.yCenter(finalYRU), Pix.pixYDownMainSpace(finalYLD), Pix.yCenter(finalYLD)};
+        pixX = new int[]{Pix.xCenter(finalXRU), Pix.rightMainSpace(finalXRU), Pix.xCenter(finalXLD), Pix.xLeftMainSpace(finalXLD)};
+        pixY = new int[]{Pix.yUpMainSpace(finalYRU), Pix.yCenter(finalYRU), Pix.yDownMainSpace(finalYLD), Pix.yCenter(finalYLD)};
         drawPolygonFromPath(canvas, pixX, pixY, path, paint);
     }
 

@@ -6,10 +6,10 @@ import android.view.View;
 import com.example.fruitfall.Constants;
 import com.example.fruitfall.MyCanvasView;
 
-public class SpaceAnimationLockDuration extends SpaceAnimationFading {
+public class SpaceAnimationDelayedLock extends SpaceAnimationFading {
 
-    public SpaceAnimationLockDuration(int x, int y) {
-        super(x, y, Constants.NUMBER_FRAMES_DESTRUCTION_FORANIM);
+    public SpaceAnimationDelayedLock(int x, int y) {
+        super(x, y, Constants.NUMBER_FRAMES_DESTRUCTION_FORDELAYEDLOCK);
     }
 
     @Override

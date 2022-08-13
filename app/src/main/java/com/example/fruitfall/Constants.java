@@ -11,7 +11,7 @@ public class Constants {
     public static final int NUMBER_FRAMES_INTRODUCTION_TOTAL = NUMBER_FRAMES_INTRODUCTION_SPACES_ONLY + NUMBER_FRAMES_INTRODUCTION_FLEX_FRUIT;
     public static final int NUMBER_FRAMES_DESTRUCTION = 20;
     public static final int NUMBER_FRAMES_RAY_ANIMATION = 40;
-    public static final int NUMBER_FRAMES_DESTRUCTION_FORDELAYEDLOCK = 100;
+    public static final int NUMBER_FRAMES_DESTRUCTION_FORDELAYEDLOCK = 40;
     public static final int NUMBER_FRAMES_DESTRUCTION_FORANIM = NUMBER_FRAMES_DESTRUCTION*1;
     public static final int NUMBER_FRAMES_ANIMATION_LIGHTNING = NUMBER_FRAMES_DESTRUCTION*1;
     public static final int NUMBER_FRAMES_ANIMATION_MIXED = NUMBER_FRAMES_DESTRUCTION*1;
@@ -19,6 +19,7 @@ public class Constants {
 
     public static final int FIELD_YLENGTH = 10;
     public static final int FIELD_XLENGTH = 10;
+    public static final int MAX_MISSIONS = 3;
 
     public static final int MAX_ANGLE_IN_DEGREES = 480;
     public static final int MAX_ANIMATIONS = 480;

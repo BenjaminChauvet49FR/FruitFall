@@ -1,5 +1,7 @@
 package com.example.fruitfall;
 
+import androidx.annotation.NonNull;
+
 public class GameEnums {
     public enum GAME_STATE {
         INTRODUCTION,
@@ -60,4 +62,47 @@ public class GameEnums {
         NONE
     }
 
+    public enum MISSION_KIND {
+        FRUITS_ANY,
+        FRUIT_1,
+        FRUIT_2,
+        FRUIT_3,
+        FRUIT_4,
+        FRUIT_5,
+        FRUIT_6,
+        FRUIT_7,
+        FRUIT_8,
+        OMEGA,
+        LIGHTNING,
+        FIRE,
+        OMEGA_FIRE,
+        LIGHTNING_FIRE,
+        LIGHTNING_OMEGA,
+        OMEGA_OMEGA,
+        LIGHTNING_LIGHTNING,
+        FIRE_FIRE,
+        FIRE_WILD,
+        LIGHTNING_WILD,
+        OMEGA_WILD,
+        NONE
+    }
+
+    @NonNull
+    public static String toString(MISSION_KIND m) {
+        switch (m) {
+            case OMEGA : return "O";
+            case LIGHTNING : return "L";
+            case FIRE : return "F";
+            case LIGHTNING_FIRE: return "LF";
+            case LIGHTNING_LIGHTNING: return "LL";
+            case LIGHTNING_OMEGA: return "LO";
+            case OMEGA_FIRE: return "FO";
+            case FIRE_FIRE: return "FF";
+            case OMEGA_OMEGA: return "OO";
+            case LIGHTNING_WILD: return "L+";
+            case OMEGA_WILD: return "O+";
+            case FIRE_WILD: return "F+";
+            default : return "";
+        }
+    }
 }

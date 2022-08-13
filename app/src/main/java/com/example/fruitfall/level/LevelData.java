@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Random;
 
 public class LevelData {
-    private int fruitNumber;
+    private int numberOfFruitKinds;
     private GameEnums.SPACE_DATA[][] spaceData;
     private List<Integer> forcedIndexes;
     private List<Integer> locksDuration;
@@ -24,9 +24,12 @@ public class LevelData {
     private String name;
     private GameEnums.SPACE_DATA[] topRowSpawn;
     private String charsForTransition;
+    private int[] amountsMission;
+    private int numberOfMissions;
+    private GameEnums.MISSION_KIND[] kindsOfMissions;
 
     public int getFruitColours() {
-        return this.fruitNumber;
+        return this.numberOfFruitKinds;
     }
     public List<Integer> getForcedIndexes() {
         return this.forcedIndexes;
@@ -45,6 +48,10 @@ public class LevelData {
     }
 
     public String getTitle() { return this.name; }
+    public int getMissionsNumber() { return this.numberOfMissions; }
+    public GameEnums.MISSION_KIND getKind(int i) { return this.kindsOfMissions[i]; }
+    public int getAmount(int i) { return this.amountsMission[i]; }
+
 
     public GameEnums.SPACE_DATA getTopRowSpawn(int x) {
         return topRowSpawn[x];
@@ -52,6 +59,13 @@ public class LevelData {
 
     // Note : the string is parsed into tokens ('split(" ")'). Read below to understand how each token is then interpreted.
     public LevelData(String s, String name) {
+        this.numberOfMissions = 0;
+        this.kindsOfMissions = new GameEnums.MISSION_KIND[Constants.MAX_MISSIONS];
+        this.amountsMission = new int[Constants.MAX_MISSIONS];
+        for (int i = 0 ; i < Constants.MAX_MISSIONS ; i++) {
+            this.kindsOfMissions[i] = GameEnums.MISSION_KIND.NONE;
+        }
+
         int x, y;
         this.name = name;
         this.forcedIndexes = new ArrayList<>();
@@ -84,21 +98,66 @@ public class LevelData {
                     break;
                 case 'i' : this.charsForTransition = (token.substring(1));
                     break;
+                case 'm' : interpretStringMissions(token.substring(1));
+                    break;
                 default : interpretStringClassic(token);
                     break;
             } 
         }
+
+        if (this.numberOfMissions == 0) {
+            this.numberOfMissions = 1;
+            this.kindsOfMissions[0] = GameEnums.MISSION_KIND.LIGHTNING_LIGHTNING;
+            this.amountsMission[1] = 5;
+        }
+    }
+
+    private void interpretStringMissions(String tokenBody) {
+        GameEnums.MISSION_KIND kind = GameEnums.MISSION_KIND.NONE;
+        int amount = 5;
+
+        switch(tokenBody.charAt(0)) {
+            case '0' : kind = GameEnums.MISSION_KIND.FRUITS_ANY; break;
+            case '1' : kind = GameEnums.MISSION_KIND.FRUIT_1; break;
+            case '2' : kind = GameEnums.MISSION_KIND.FRUIT_2; break;
+            case '3' : kind = GameEnums.MISSION_KIND.FRUIT_3; break;
+            case '4' : kind = GameEnums.MISSION_KIND.FRUIT_4; break;
+            case '5' : kind = GameEnums.MISSION_KIND.FRUIT_5; break;
+            case '6' : kind = GameEnums.MISSION_KIND.FRUIT_6; break;
+            case '7' : kind = GameEnums.MISSION_KIND.FRUIT_7; break;
+            case '8' : kind = GameEnums.MISSION_KIND.FRUIT_8; break;
+            case 'l' : kind = GameEnums.MISSION_KIND.LIGHTNING; break;
+            case 'f' : kind = GameEnums.MISSION_KIND.FIRE; break;
+            case 'o' : kind = GameEnums.MISSION_KIND.OMEGA; break;
+            case 'L' : kind = GameEnums.MISSION_KIND.LIGHTNING_WILD; break;
+            case 'F' : kind = GameEnums.MISSION_KIND.FIRE_WILD; break;
+            case 'O' : kind = GameEnums.MISSION_KIND.OMEGA_WILD; break;
+            case 'A' : kind = GameEnums.MISSION_KIND.LIGHTNING_LIGHTNING; break;
+            case 'B' : kind = GameEnums.MISSION_KIND.FIRE_FIRE; break;
+            case 'C' : kind = GameEnums.MISSION_KIND.OMEGA_OMEGA; break;
+            case 'X' : kind = GameEnums.MISSION_KIND.LIGHTNING_FIRE; break;
+            case 'Y' : kind = GameEnums.MISSION_KIND.LIGHTNING_OMEGA; break;
+            case 'Z' : kind = GameEnums.MISSION_KIND.OMEGA_FIRE; break;
+        }
+        if (tokenBody.length() > 1) {
+            amount = (Integer.parseInt(tokenBody.substring(1)));
+        }
+        if (kind != GameEnums.MISSION_KIND.NONE) {
+            this.kindsOfMissions[numberOfMissions] = kind;
+            this.amountsMission[numberOfMissions] = amount;
+            this.numberOfMissions++;
+        }
     }
 
     private void interpretStringFruits(String tokenBody) {
-        this.fruitNumber = charToInt(tokenBody, 0);
+        this.numberOfFruitKinds = charToInt(tokenBody, 0);
         for ( int i = 1 ; i < tokenBody.length() ; i++) {
             this.forcedIndexes.add(charToInt(tokenBody, i));
         }
     }
 
     private void interpretStringBlockSpawn1stRow(String tokenBody) {
-        for ( int i = 1 ; i < tokenBody.length() ; i++) {
+        for ( int i = 0 ; i < tokenBody.length() ; i++) {
             this.topRowSpawn[charToInt(tokenBody, i)] = GameEnums.SPACE_DATA.VOID;
         }
     }
@@ -128,6 +187,9 @@ public class LevelData {
         GameEnums.SPACE_DATA data = null;
         if (cType == 'F') {
             data = GameEnums.SPACE_DATA.FRUIT;
+        }
+        if (cType == 'E') {
+            data = GameEnums.SPACE_DATA.EMPTY;
         }
         if (cType == 'X') {
             char cParam = tokenBody.charAt(1);

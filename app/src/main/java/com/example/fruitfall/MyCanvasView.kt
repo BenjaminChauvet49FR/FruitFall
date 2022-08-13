@@ -50,14 +50,14 @@ class MyCanvasView(context: Context) : View(context) {
     //private var touchTolerance = ViewConfiguration.get(context).scaledTouchSlop
 
     private var bitmapImages : Array<Bitmap> = arrayOf(
-        BitmapFactory.decodeResource(resources, R.drawable.f1),
-        BitmapFactory.decodeResource(resources, R.drawable.f2),
-        BitmapFactory.decodeResource(resources, R.drawable.f3),
-        BitmapFactory.decodeResource(resources, R.drawable.f4),
-        BitmapFactory.decodeResource(resources, R.drawable.f5),
-        BitmapFactory.decodeResource(resources, R.drawable.f6),
-        BitmapFactory.decodeResource(resources, R.drawable.f7),
-        BitmapFactory.decodeResource(resources, R.drawable.f8),
+        BitmapFactory.decodeResource(resources, R.drawable.f_orange),
+        BitmapFactory.decodeResource(resources, R.drawable.f_pomme),
+        BitmapFactory.decodeResource(resources, R.drawable.f_banane),
+        BitmapFactory.decodeResource(resources, R.drawable.f_kiwi),
+        BitmapFactory.decodeResource(resources, R.drawable.f_fraise),
+        BitmapFactory.decodeResource(resources, R.drawable.f_raisin),
+        BitmapFactory.decodeResource(resources, R.drawable.f_myrtille),
+        BitmapFactory.decodeResource(resources, R.drawable.f_mure),
     )
 
     public fun getBitmapImages() :  Array<Bitmap> {
@@ -74,8 +74,8 @@ class MyCanvasView(context: Context) : View(context) {
     // https://stackoverflow.com/questions/20279084/how-android-set-custom-font-in-canvas
     // Got myself seducted by this : https://medium.com/programming-lite/using-custom-font-as-resources-in-android-app-6331477f8f57 so I dealt with the API.
 
-    public fun getBitmapFruitToDrawFromIndex(index : Int) : Bitmap {
-        return bitmapImages[gh.getRandomFruit(index)]
+    fun getBitmapFruitToDrawFromIndex(index : Int) : Bitmap {
+        return bitmapImages[gh.getSpriteIdFromFieldIndex(index)]
     }
 
     private fun drawSpaceContent(x : Int, y : Int, canvas : Canvas, rectSource : Rect, rectDest : Rect, paint : Paint) {
@@ -96,7 +96,7 @@ class MyCanvasView(context: Context) : View(context) {
     fun startLevel() {
         val ld : LevelData = LevelManager.levelLists[LevelManager.levelNumber]
         introTransition = ld.getTransition();
-        gh.initializeGrid(ld)
+        gh.start(ld)
     }
 
     fun setTolerance() {
@@ -136,7 +136,7 @@ class MyCanvasView(context: Context) : View(context) {
         paint.setStyle(Paint.Style.FILL)// How to avoid awful outlined texts : https://stackoverflow.com/questions/31877417/android-draw-text-with-solid-background-onto-canvas-to-be-used-as-a-bitmap
         canvas.drawText("Score : " + gh.getScore(), Pix.xScore, Pix.yScore, paint);
         canvas.drawText("Temps : " + gh.gth.getTimeToDisplay(), Pix.xTime, Pix.yTime, paint);
-        canvas.drawText("F : " + gh.getFruits(), Pix.xCommand1, Pix.yCommand1, paint);
+        canvas.drawText(gh.getMissionSummary(), Pix.xCommands, Pix.yCommands, paint);
         paint.setColor(colorTitle);
         canvas.drawText(gh.getTitle(), Pix.xTitle, Pix.yTitle, paint);
 
@@ -184,8 +184,8 @@ class MyCanvasView(context: Context) : View(context) {
                 val x = coors.x;
                 val y = coors.y;
                 canvas.drawText("+" + this.gh.scoreFallSpace(x, y),
-                    Pix.pixXLeftMainSpace(x).toFloat(),
-                    Pix.pixYUpMainSpace(y) + Pix.hScoreSpace,
+                    Pix.xLeftMainSpace(x).toFloat(),
+                    Pix.yUpMainSpace(y) + Pix.hScoreSpace,
                     paint);
             }
             paint.setColor(colorScoreDestructionSpace);
@@ -196,8 +196,8 @@ class MyCanvasView(context: Context) : View(context) {
                 val x = coors.x;
                 val y = coors.y;
                 canvas.drawText("+" + this.gh.scoreDestructionSpecialSpace(x, y),
-                    Pix.pixXLeftMainSpace(x).toFloat(),
-                    Pix.pixYUpMainSpace(y) + Pix.hScoreSpace,
+                    Pix.xLeftMainSpace(x).toFloat(),
+                    Pix.yUpMainSpace(y) + Pix.hScoreSpace,
                     paint);
             }
         }
@@ -211,14 +211,14 @@ class MyCanvasView(context: Context) : View(context) {
             val y1 = gh.gth.ySwap1
             val y2 = gh.gth.ySwap2
             val ratio = gh.gth.ratioToCompletionSwap()
-            rectDest.left = Pix.pixXLeftMainSpace(x1 + ratio*(x2-x1))
+            rectDest.left = Pix.xLeftMainSpace(x1 + ratio*(x2-x1))
             rectDest.right = rectDest.left + Pix.wMainSpace
-            rectDest.top = Pix.pixYUpMainSpace((y1 + ratio*(y2-y1)) )
+            rectDest.top = Pix.yUpMainSpace((y1 + ratio*(y2-y1)) )
             rectDest.bottom = rectDest.top + Pix.hMainSpace
             this.drawSpaceContent(x1, y1, canvas, rectSource, rectDest, paint)
-            rectDest.left = Pix.pixXLeftMainSpace(x2 + ratio*(x1-x2))
+            rectDest.left = Pix.xLeftMainSpace(x2 + ratio*(x1-x2))
             rectDest.right = rectDest.left + Pix.wMainSpace
-            rectDest.top = Pix.pixYUpMainSpace(y2 + ratio*(y1-y2))
+            rectDest.top = Pix.yUpMainSpace(y2 + ratio*(y1-y2))
             rectDest.bottom = rectDest.top + Pix.hMainSpace
             this.drawSpaceContent(x2, y2, canvas, rectSource, rectDest, paint)
         }
@@ -254,9 +254,9 @@ class MyCanvasView(context: Context) : View(context) {
                         drawTopImageInBotSpace(xStartFall, yStartFall, coors.x, coors.y, pixYSplitImgSrc, pixYSplitImgDst, canvas)
                         drawBotImageInTopSpace(xStartFall, yStartFall, outCoors.x, outCoors.y, pixYSplitImgSrc, pixYSplitImgDst, canvas)
                     } else { // FallElt without teleportation
-                        rectDest.left = Pix.pixXLeftMainSpace(xStartFall)
+                        rectDest.left = Pix.xLeftMainSpace(xStartFall)
                         rectDest.right = rectDest.left + Pix.wMainSpace
-                        rectDest.top = Pix.pixYUpMainSpace(yStartFall + ratioFall)
+                        rectDest.top = Pix.yUpMainSpace(yStartFall + ratioFall)
                         rectDest.bottom = rectDest.top + Pix.hMainSpace
                         this.drawSpaceContent(xStartFall, yStartFall, canvas, rectSource, rectDest, paint)
                     }
@@ -369,19 +369,19 @@ class MyCanvasView(context: Context) : View(context) {
     }
 
     private fun drawTopImageInBotSpace(xSpaceToDraw : Int, ySpaceToDraw : Int, xSpaceTarget : Int, ySpaceTarget : Int, pixYSplitImgSrc : Int, pixYSplitImgDst : Int, canvas : Canvas) {
-        rectDest.left = Pix.pixXLeftMainSpace(xSpaceTarget)
+        rectDest.left = Pix.xLeftMainSpace(xSpaceTarget)
         rectDest.right = rectDest.left + Pix.wMainSpace
-        rectDest.top = Pix.pixYUpMainSpace(ySpaceTarget) + pixYSplitImgDst
-        rectDest.bottom = Pix.pixYUpMainSpace(ySpaceTarget + 1)
+        rectDest.top = Pix.yUpMainSpace(ySpaceTarget) + pixYSplitImgDst
+        rectDest.bottom = Pix.yUpMainSpace(ySpaceTarget + 1)
         rectSourceVariable.top = 0
         rectSourceVariable.bottom = pixYSplitImgSrc
         drawSpaceContent(xSpaceToDraw, ySpaceToDraw, canvas, rectSourceVariable, rectDest, paint)
     }
 
     private fun drawBotImageInTopSpace(xSpaceToDraw : Int, ySpaceToDraw : Int, xSpaceTarget : Int, ySpaceTarget : Int, pixYSplitImgSrc : Int, pixYSplitImgDst : Int, canvas : Canvas) {
-        rectDest.left = Pix.pixXLeftMainSpace(xSpaceTarget)
+        rectDest.left = Pix.xLeftMainSpace(xSpaceTarget)
         rectDest.right = rectDest.left + Pix.wMainSpace
-        rectDest.top = Pix.pixYUpMainSpace(ySpaceTarget)
+        rectDest.top = Pix.yUpMainSpace(ySpaceTarget)
         rectDest.bottom = rectDest.top + pixYSplitImgDst
         rectSourceVariable.top = pixYSplitImgSrc
         rectSourceVariable.bottom = Pix.resourceSide
@@ -390,9 +390,9 @@ class MyCanvasView(context: Context) : View(context) {
 
     // Note : it should be possible to factorize this with the previous !
     private fun drawBotFruitInSpawnSpace(xSpaceTarget : Int, ySpaceTarget : Int, image : Bitmap, pixYSplitImgSrc : Int, pixYSplitImgDst : Int, canvas : Canvas) {
-        rectDest.left = Pix.pixXLeftMainSpace(xSpaceTarget)
+        rectDest.left = Pix.xLeftMainSpace(xSpaceTarget)
         rectDest.right = rectDest.left + Pix.wMainSpace
-        rectDest.top = Pix.pixYUpMainSpace(ySpaceTarget)
+        rectDest.top = Pix.yUpMainSpace(ySpaceTarget)
         rectDest.bottom = rectDest.top + pixYSplitImgDst
         rectSourceVariable.top = pixYSplitImgSrc
         rectSourceVariable.bottom = Pix.resourceSide

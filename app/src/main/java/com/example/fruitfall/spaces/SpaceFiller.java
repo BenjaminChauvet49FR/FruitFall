@@ -12,7 +12,7 @@ import com.example.fruitfall.MyCanvasView;
 public abstract class SpaceFiller {
     public abstract boolean canBeSwapped();
     public abstract boolean canFall();
-    public int getFruit() {
+    public int getIdFruit() {
         return Constants.NOT_A_FRUIT;
     }
     public GameEnums.FRUITS_POWER getPower() { return GameEnums.FRUITS_POWER.NONE; }

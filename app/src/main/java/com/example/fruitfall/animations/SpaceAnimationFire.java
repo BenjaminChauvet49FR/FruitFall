@@ -20,11 +20,11 @@ public class SpaceAnimationFire extends SpaceAnimation {
     protected void drawProtected(MyCanvasView view, Canvas canvas, Rect rectSource, Rect rectDestination, Paint paint) {
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(view.getColorAnimationFire());
-        rectDestination.set(Pix.pixXLeftMainSpace(x -2), Pix.pixYUpMainSpace(y), Pix.pixXRightMainSpace(x +2), Pix.pixYDownMainSpace(y ));
+        rectDestination.set(Pix.xLeftMainSpace(x -2), Pix.yUpMainSpace(y), Pix.rightMainSpace(x +2), Pix.yDownMainSpace(y ));
         canvas.drawRect(rectDestination, paint);
-        rectDestination.set(Pix.pixXLeftMainSpace(x -1), Pix.pixYUpMainSpace(y-1), Pix.pixXRightMainSpace(x +1), Pix.pixYDownMainSpace(y +1));
+        rectDestination.set(Pix.xLeftMainSpace(x -1), Pix.yUpMainSpace(y-1), Pix.rightMainSpace(x +1), Pix.yDownMainSpace(y +1));
         canvas.drawRect(rectDestination, paint);
-        rectDestination.set(Pix.pixXLeftMainSpace(x ), Pix.pixYUpMainSpace(y-2), Pix.pixXRightMainSpace(x ), Pix.pixYDownMainSpace(y +2));
+        rectDestination.set(Pix.xLeftMainSpace(x ), Pix.yUpMainSpace(y-2), Pix.rightMainSpace(x ), Pix.yDownMainSpace(y +2));
         canvas.drawRect(rectDestination, paint);
     }// TODO animer plutôt que maintenir ?
 }
