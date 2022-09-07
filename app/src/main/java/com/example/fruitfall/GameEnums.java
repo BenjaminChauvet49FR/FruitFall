@@ -28,10 +28,8 @@ public class GameEnums {
         EMPTY,
         VOID,
         VOID_SPAWN,
-        DELAYED_LOCK_LENGTH1,
-        DELAYED_LOCK_LENGTH2,
-        DELAYED_LOCK_LENGTH3,
-        DELAYED_LOCK_LENGTH4,
+        DELAYED_LOCK,
+        BREAKABLE_BLOCK
     }
 
     public enum FRUITS_POWER {
@@ -62,7 +60,7 @@ public class GameEnums {
         NONE
     }
 
-    public enum MISSION_KIND {
+    public enum ORDER_KIND {
         FRUITS_ANY,
         FRUIT_1,
         FRUIT_2,
@@ -87,8 +85,13 @@ public class GameEnums {
         NONE
     }
 
+    public enum GOAL_KIND {
+        BASKETS,
+        ORDERS
+    }
+
     @NonNull
-    public static String toString(MISSION_KIND m) {
+    public static String toString(ORDER_KIND m) {
         switch (m) {
             case OMEGA : return "O";
             case LIGHTNING : return "L";

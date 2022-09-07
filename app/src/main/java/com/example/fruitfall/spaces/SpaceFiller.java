@@ -19,4 +19,5 @@ public abstract class SpaceFiller {
     public abstract void paintStill(MyCanvasView view, Canvas canvas, Rect rectSource, Rect rectDestination, Paint paint);
 
     public boolean isASpace() { return true; }
+    public boolean mayDisappear() { return true; }
 }

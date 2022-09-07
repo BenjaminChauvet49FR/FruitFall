@@ -22,4 +22,6 @@ public class VoidSpace extends SpaceFiller {
 
     public boolean isASpace() { return false; }
 
+    public boolean mayDisappear() { return false; }
+
 }

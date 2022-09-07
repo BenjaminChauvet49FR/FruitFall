@@ -6,6 +6,7 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.example.fruitfall.level.LevelData;
+import com.example.fruitfall.spaces.BreakableBlock;
 import com.example.fruitfall.spaces.EmptySpace;
 import com.example.fruitfall.spaces.Fruit;
 import com.example.fruitfall.spaces.DelayedLock;
@@ -66,7 +67,12 @@ public class GameHandler {
 
     private int[] amountsMission = new int[Constants.MAX_MISSIONS];
     private int numberOfMissions;
-    private GameEnums.MISSION_KIND[] kindsOfMissions = new GameEnums.MISSION_KIND[Constants.MAX_MISSIONS];
+    private GameEnums.ORDER_KIND[] kindsOfMissions = new GameEnums.ORDER_KIND[Constants.MAX_MISSIONS];
+
+    private final int[][] arrayBaskets = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
+    private int basketsCount;
+
+    private GameEnums.GOAL_KIND goalKind;
 
     // Cheat part
     private boolean toleranceMode = false;
@@ -375,11 +381,13 @@ public class GameHandler {
                     if (y >= 2) {
                         testAndAlertAboutAlignedFruits(x, y, x, y-1, x, y-2);
                     }
-                } else if (data == GameEnums.SPACE_DATA.DELAYED_LOCK_LENGTH1 || data == GameEnums.SPACE_DATA.DELAYED_LOCK_LENGTH2 ||
-                        data == GameEnums.SPACE_DATA.DELAYED_LOCK_LENGTH3 || data == GameEnums.SPACE_DATA.DELAYED_LOCK_LENGTH4 ) {
-                    this.arrayField[y][x] = new DelayedLock(ld.getLockDuration(data));
+                } else if (data == GameEnums.SPACE_DATA.DELAYED_LOCK) {
+                    this.arrayField[y][x] = new DelayedLock(ld.getLockDuration(x, y));
                     this.countRemainingLocks++;
                     this.listDelayedLocks.add(new SpaceCoors(x, y));
+                } else if (data == GameEnums.SPACE_DATA.BREAKABLE_BLOCK) {
+                    this.arrayField[y][x] = new BreakableBlock(ld.getBreakableBlockLevel(x, y));
+                    // Note : the list of coors may be actually useless, unlike locks which are discounted each turn
                 } else if (data == GameEnums.SPACE_DATA.EMPTY) {
                     this.arrayField[y][x] = new EmptySpace();
                 } else {
@@ -389,6 +397,19 @@ public class GameHandler {
                     shouldGainSpawn = false;
                 }
                 this.arrayShouldFruitsBeSpawned[y][x] = shouldGainSpawn;
+            }
+        }
+
+        this.goalKind = ld.getGoalKind();
+        this.basketsCount = 0;
+        for (y = 0 ; y < Constants.FIELD_YLENGTH ; y++) {
+            for (x = 0; x < Constants.FIELD_XLENGTH; x++) {
+                if (this.arrayField[y][x].mayDisappear()) {
+                    this.arrayBaskets[y][x] = ld.getBaskets(x, y);
+                    this.basketsCount += this.arrayBaskets[y][x];
+                } else {
+                    this.arrayBaskets[y][x] = 0;
+                }
             }
         }
 
@@ -607,10 +628,10 @@ public class GameHandler {
                         // xx = last coordinate with the correct fruit PLUS ONE
                         if (xAft - x >= 3) {
                             this.checkerHorizAlignment.add(x, y, xAft-x);
-                            this.checkerToBeEmptiedSpaces.add(x, y);
+                            this.destroyByAlignment(x, y);
                             for (xx = x+1; xx < xAft ; xx++) {
                                 this.checkerHorizAlignment.add(xx, y, 1);
-                                this.checkerToBeEmptiedSpaces.add(xx, y);
+                                this.destroyByAlignment(xx, y);
                             }
                         }
                     }
@@ -622,10 +643,10 @@ public class GameHandler {
                         }
                         if (yAft - y >= 3) {
                             this.checkerVertAlignment.add(x, y, yAft - y);
-                            this.checkerToBeEmptiedSpaces.add(x, y);
+                            this.destroyByAlignment(x, y);
                             for (yy = y+1; yy < yAft ; yy++) {
                                 this.checkerVertAlignment.add(x, yy, 1);
-                                this.checkerToBeEmptiedSpaces.add(x, yy);
+                                this.destroyByAlignment(x, yy);
                             }
                         }
                     }
@@ -721,6 +742,13 @@ public class GameHandler {
             if (this.arrayField[y][x].getPower() != GameEnums.FRUITS_POWER.NONE) {
                 this.listToBeActivatedSpecialFruits.add(new SpaceCoors(x, y));
             }
+        }
+    }
+
+    private void destroyByAlignment(int x, int y) {
+        if (this.checkerToBeEmptiedSpaces.add(x, y)) {
+            this.catchBasket(x, y);
+            this.tryToDecreaseBreakableBlockAround(x, y);
         }
     }
 
@@ -885,7 +913,7 @@ public class GameHandler {
                 y = coors.y;
                 switch (this.arrayField[y][x].getPower()) {
                     case FIRE:
-                        this.advanceMission(GameEnums.MISSION_KIND.FIRE, 1);
+                        this.advanceMission(GameEnums.ORDER_KIND.FIRE, 1);
                         leftMargin1 = (x > 0);
                         leftMargin2 = (x > 1);
                         upMargin1 = (y > 0);
@@ -932,19 +960,19 @@ public class GameHandler {
                         }
                         break;
                     case HORIZONTAL_LIGHTNING:
-                        this.advanceMission(GameEnums.MISSION_KIND.LIGHTNING, 1);
+                        this.advanceMission(GameEnums.ORDER_KIND.LIGHTNING, 1);
                         for (xx = 0; xx < Constants.FIELD_XLENGTH; xx++) {
                             this.destroyBySpecialFruit(xx, y, newListToBeActivated);
                         }
                         break;
                     case VERTICAL_LIGHTNING:
-                        this.advanceMission(GameEnums.MISSION_KIND.LIGHTNING, 1);
+                        this.advanceMission(GameEnums.ORDER_KIND.LIGHTNING, 1);
                         for (yy = 0; yy < Constants.FIELD_YLENGTH; yy++) {
                             this.destroyBySpecialFruit(x, yy, newListToBeActivated);
                         }
                         break;
                     case OMEGA_SPHERE:
-                        this.advanceMission(GameEnums.MISSION_KIND.OMEGA, 1);
+                        this.advanceMission(GameEnums.ORDER_KIND.OMEGA, 1);
                         if (mostPresentFruitId < this.numberOfFruitKinds) {
                             int colour = orderedFruitIndexes.get(mostPresentFruitId);
                             for (yy = 0 ; yy < Constants.FIELD_YLENGTH ; yy++) {
@@ -1080,6 +1108,10 @@ public class GameHandler {
                 this.collectedFruits++;
             }
         }
+
+        // Collect a basket even if no fruit is found there
+        this.catchBasket(x, y);
+        this.tryToDecreaseBreakableBlock(x, y);
     }
 
     /*
@@ -1247,41 +1279,41 @@ public class GameHandler {
     public void controlMissionsWithSwap(GameEnums.WHICH_SWAP swap) {
         switch (swap) {
             case FIRE_ELECTRIC:
-                if (!this.advanceMission(GameEnums.MISSION_KIND.LIGHTNING_FIRE, 1)) {
-                    if (this.advanceMission(GameEnums.MISSION_KIND.LIGHTNING_WILD, 1)) {
-                        this.advanceMission(GameEnums.MISSION_KIND.LIGHTNING, 1);
+                if (!this.advanceMission(GameEnums.ORDER_KIND.LIGHTNING_FIRE, 1)) {
+                    if (this.advanceMission(GameEnums.ORDER_KIND.LIGHTNING_WILD, 1)) {
+                        this.advanceMission(GameEnums.ORDER_KIND.LIGHTNING, 1);
                     }
-                    if (this.advanceMission(GameEnums.MISSION_KIND.FIRE_WILD, 1)) {
-                        this.advanceMission(GameEnums.MISSION_KIND.FIRE, 1);
+                    if (this.advanceMission(GameEnums.ORDER_KIND.FIRE_WILD, 1)) {
+                        this.advanceMission(GameEnums.ORDER_KIND.FIRE, 1);
                     }
                 }
                 break;
             case OMEGA_ELECTRIC:
-                if (!this.advanceMission(GameEnums.MISSION_KIND.LIGHTNING_OMEGA, 1)) {
-                    if (this.advanceMission(GameEnums.MISSION_KIND.LIGHTNING_WILD, 1)) {
-                        this.advanceMission(GameEnums.MISSION_KIND.LIGHTNING, 1);
+                if (!this.advanceMission(GameEnums.ORDER_KIND.LIGHTNING_OMEGA, 1)) {
+                    if (this.advanceMission(GameEnums.ORDER_KIND.LIGHTNING_WILD, 1)) {
+                        this.advanceMission(GameEnums.ORDER_KIND.LIGHTNING, 1);
                     }
-                    if (this.advanceMission(GameEnums.MISSION_KIND.OMEGA_WILD, 1)) {
-                        this.advanceMission(GameEnums.MISSION_KIND.OMEGA, 1);
+                    if (this.advanceMission(GameEnums.ORDER_KIND.OMEGA_WILD, 1)) {
+                        this.advanceMission(GameEnums.ORDER_KIND.OMEGA, 1);
                     }
                 }
                 break;
             case OMEGA_FIRE:
-                if (!this.advanceMission(GameEnums.MISSION_KIND.OMEGA_FIRE, 1)) {
-                    if (this.advanceMission(GameEnums.MISSION_KIND.FIRE_WILD, 1)) {
-                        this.advanceMission(GameEnums.MISSION_KIND.FIRE, 1);
+                if (!this.advanceMission(GameEnums.ORDER_KIND.OMEGA_FIRE, 1)) {
+                    if (this.advanceMission(GameEnums.ORDER_KIND.FIRE_WILD, 1)) {
+                        this.advanceMission(GameEnums.ORDER_KIND.FIRE, 1);
                     }
-                    if (this.advanceMission(GameEnums.MISSION_KIND.OMEGA_WILD, 1)) {
-                        this.advanceMission(GameEnums.MISSION_KIND.OMEGA, 1);
+                    if (this.advanceMission(GameEnums.ORDER_KIND.OMEGA_WILD, 1)) {
+                        this.advanceMission(GameEnums.ORDER_KIND.OMEGA, 1);
                     }
                 }
                 break;
             case FIRE_FIRE:
                 if ((
-                        this.advanceMission(GameEnums.MISSION_KIND.FIRE_FIRE, 1) ||
-                                this.advanceMission(GameEnums.MISSION_KIND.FIRE_WILD, 2)
+                        this.advanceMission(GameEnums.ORDER_KIND.FIRE_FIRE, 1) ||
+                                this.advanceMission(GameEnums.ORDER_KIND.FIRE_WILD, 2)
                 )) {
-                    this.advanceMission(GameEnums.MISSION_KIND.FIRE, 2);
+                    this.advanceMission(GameEnums.ORDER_KIND.FIRE, 2);
                     // TODO Ajouter un checker "taken in swap for mission" ou qqch du genre pour quand on contrôlera les fruits ?
                     // Il faudra veiller à cleaner ce swap juste après la première salve de destructions
                 }
@@ -1289,25 +1321,50 @@ public class GameHandler {
 
             case ELECTRIC_ELECTRIC:
                 if ((
-                        this.advanceMission(GameEnums.MISSION_KIND.LIGHTNING_LIGHTNING, 1) ||
-                                this.advanceMission(GameEnums.MISSION_KIND.LIGHTNING_WILD, 2)
+                        this.advanceMission(GameEnums.ORDER_KIND.LIGHTNING_LIGHTNING, 1) ||
+                                this.advanceMission(GameEnums.ORDER_KIND.LIGHTNING_WILD, 2)
                 )) {
-                    this.advanceMission(GameEnums.MISSION_KIND.LIGHTNING, 2);
+                    this.advanceMission(GameEnums.ORDER_KIND.LIGHTNING, 2);
                 }
                 break;
             case OMEGA_OMEGA:
                 if (!(
-                        this.advanceMission(GameEnums.MISSION_KIND.OMEGA_OMEGA, 1) ||
-                                this.advanceMission(GameEnums.MISSION_KIND.OMEGA_WILD, 2)
+                        this.advanceMission(GameEnums.ORDER_KIND.OMEGA_OMEGA, 1) ||
+                                this.advanceMission(GameEnums.ORDER_KIND.OMEGA_WILD, 2)
                 )) {
-                    this.advanceMission(GameEnums.MISSION_KIND.OMEGA, 2);
+                    this.advanceMission(GameEnums.ORDER_KIND.OMEGA, 2);
                 }
                 break;
 
         }
     }
 
-    public boolean advanceMission(GameEnums.MISSION_KIND kind, int amount) {
+    public void tryToDecreaseBreakableBlock(int x, int y) {
+        if (this.arrayField[y][x] instanceof BreakableBlock) {
+            BreakableBlock bb = (BreakableBlock) this.arrayField[y][x];
+            bb.downgrade();
+            if (bb.getCount() == 0) {
+                this.checkerToBeEmptiedSpaces.add(x, y);
+            }
+        }
+    }
+
+    public void tryToDecreaseBreakableBlockAround(int x, int y) {
+        if (x > 0) {
+            this.tryToDecreaseBreakableBlock(x-1, y);
+        }
+        if (y > 0) {
+            this.tryToDecreaseBreakableBlock(x, y-1);
+        }
+        if (x < Constants.FIELD_XLENGTH-1) {
+            this.tryToDecreaseBreakableBlock(x+1, y);
+        }
+        if (y < Constants.FIELD_YLENGTH-1) {
+            this.tryToDecreaseBreakableBlock(x, y+1);
+        }
+    }
+
+    public boolean advanceMission(GameEnums.ORDER_KIND kind, int amount) {
         for (int i = 0 ; i < this.numberOfMissions; i++) {
             if (this.kindsOfMissions[i] == kind) {
                 if (this.amountsMission[i] <= 0) {
@@ -1318,6 +1375,16 @@ public class GameHandler {
             }
         }
         return false;
+    }
+
+    public void catchBasket(int x, int y) {
+        if (this.arrayBaskets[y][x] > 0) {
+            if (this.arrayField[y][x].canFall()) {
+                this.arrayBaskets[y][x]--;
+                this.basketsCount--;
+            }
+        }
+
     }
     
     // ------------
@@ -1361,9 +1428,17 @@ public class GameHandler {
     }
 
     public String getMissionSummary() {
+        
         String answer = "";
-        for (int i = 0; i < this.numberOfMissions; i++) {
-            answer += GameEnums.toString(this.kindsOfMissions[i]) + " " + this.amountsMission[i] + " ";
+        switch (this.goalKind) {
+            case BASKETS :
+                answer = "Paniers : " + this.basketsCount;
+            break;
+            case ORDERS :
+                for (int i = 0; i < this.numberOfMissions; i++) {
+                    answer += GameEnums.toString(this.kindsOfMissions[i]) + " " + this.amountsMission[i] + " ";
+                }
+            break;
         }
         return answer;
     }
@@ -1390,6 +1465,14 @@ public class GameHandler {
 
     public boolean hasOmegaSphere(int x, int y) {
         return (this.arrayField[y][x].getPower() == GameEnums.FRUITS_POWER.OMEGA_SPHERE);
+    }
+
+    public GameEnums.GOAL_KIND getGoalKind() {
+        return this.goalKind;
+    }
+
+    public int getBaskets(int x, int y) {
+        return (this.arrayBaskets[y][x]);
     }
 
     // ------------
@@ -1420,3 +1503,13 @@ public class GameHandler {
     }
 
 }
+
+
+// TODO philosophie paniers et blocs cassables : ce qui suit est acceptable ?
+// Un breakable peut être dégradé plusieurs fois par des alignements.
+// Dans un même check stable, un même breakable peut être détruit plusieurs fois
+// Block breakable et à côté d'un fruit spécial nouvellement créé : on dégrade le breakable.
+// Gestion breakables / paniers : quand la dernière couche d'un rocher est détruite, on ne collecte pas les paniers avant le stable check suivant.
+// C'est ce qui se produit quand on fait un échange près d'un rocher à 1 qui déclenche le fruit spécial et celui-ci touche la case à panier visée. Pas de panier collecté.
+
+// TODO : collecte panier dans le cas swap oméga + X et dans les cas feu + éclair (et les 2 autres swap.... ?)

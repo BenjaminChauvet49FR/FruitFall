@@ -25,6 +25,9 @@ class MyCanvasView(context: Context) : View(context) {
     private val colorTextMain = ResourcesCompat.getColor(resources, R.color.textMain, null)
     private val colorFrameRect = ResourcesCompat.getColor(resources, R.color.frameRect, null)
     private val colorScoreFallSpace = ResourcesCompat.getColor(resources, R.color.scoreFallSpace, null)
+    private val colorBasketsSpaceFG = ResourcesCompat.getColor(resources, R.color.scoreBasketsSpaceFG, null)
+    private val colorBasketsSpaceBG = ResourcesCompat.getColor(resources, R.color.scoreBasketsSpaceBG, null)
+
     private val colorScoreDestructionSpace = ResourcesCompat.getColor(resources, R.color.scoreDestructionSpace, null)
     private val colorTitle = ResourcesCompat.getColor(resources, R.color.title, null)
     val colorAnimationLightning = ResourcesCompat.getColor(resources, R.color.animationLightning, null)
@@ -90,6 +93,7 @@ class MyCanvasView(context: Context) : View(context) {
     val bitmapImageLightV = BitmapFactory.decodeResource(resources, R.drawable.lightning_v)
     val bitmapImageSphereOmega = BitmapFactory.decodeResource(resources, R.drawable.sphere_omega)
     val bitmapImageLocking = BitmapFactory.decodeResource(resources, R.drawable.locking)
+    val bitmapImageBreakableBlock = BitmapFactory.decodeResource(resources, R.drawable.crushable)
 
     private val gh = GameHandler()
 
@@ -162,6 +166,9 @@ class MyCanvasView(context: Context) : View(context) {
             drawCursor(canvas)
             drawSwap(canvas)
             drawSpaceAnimations(canvas, gh.gth.animations2List)
+            if (gh.goalKind == GameEnums.GOAL_KIND.BASKETS) {
+                drawBaskets(canvas)
+            }
             drawScoresOnField(canvas)
         }
         invalidate() // At the end of draw... right ? Also, how many FPS ?
@@ -170,6 +177,41 @@ class MyCanvasView(context: Context) : View(context) {
         if (gh.gth != null) {
             gh.gth.step() // TODO Lui donner son propre processus parallèle ? Ou bien laisser dans onDraw ?
         }
+    }
+
+    private fun drawBaskets(canvas: Canvas) {
+        var baskets : Int
+        val pixXLeftStart = Pix.xLeftMainSpace(0) + Pix.basketSpaceBGMargin
+        val pixXRightStart = pixXLeftStart + Pix.basketSpaceSide
+        paint.setTextSize(Pix.hScoreSpace);
+        paint.setStyle(Paint.Style.FILL_AND_STROKE)
+        val formerAlpha = paint.alpha
+        rectDest.left = pixXLeftStart
+        rectDest.right = pixXRightStart
+        rectDest.top = Pix.yUpMainSpace(0)
+        rectDest.bottom = rectDest.top + Pix.basketSpaceSide
+        for (y in 0 until Constants.FIELD_YLENGTH) {
+            for (x in 0 until Constants.FIELD_XLENGTH) {
+                baskets = gh.getBaskets(x, y)
+                if (baskets > 0) {
+                    paint.setColor(colorBasketsSpaceBG)
+                    paint.alpha = 127
+                    canvas.drawRect(rectDest, paint)
+                    paint.setColor(colorBasketsSpaceFG);
+                    canvas.drawText(baskets.toString(),
+                        Pix.xLeftMainSpace(x).toFloat() + Pix.basketSpaceMargin,
+                        Pix.yUpMainSpace(y) + Pix.hScoreSpace,
+                        paint);
+                }
+                rectDest.left += Pix.wSpace
+                rectDest.right += Pix.wSpace
+            }
+            rectDest.top += Pix.hSpace
+            rectDest.bottom += Pix.hSpace
+            rectDest.left = pixXLeftStart
+            rectDest.right = pixXRightStart
+        }
+        paint.alpha = formerAlpha // Useless if colour is changed after the last alpha set
     }
 
     // Draw scores on the field
@@ -227,11 +269,13 @@ class MyCanvasView(context: Context) : View(context) {
     // Draw the cursor
     private fun drawCursor(canvas: Canvas) {
         if (isSpaceSelected()) {
+            var formerWidth = paint.strokeWidth
             paint.strokeWidth = Pix.selectionFrame
             rectFrame.set(spaceXToPixXLeft(selectedSpaceX), spaceYToPixYUp(selectedSpaceY), spaceXToPixXRight(selectedSpaceX), spaceYToPixYDown(selectedSpaceY))
             paint.setStyle(Paint.Style.STROKE)
             paint.setColor(colorFrameRect)
             canvas.drawRect(rectFrame, paint)
+            paint.strokeWidth = formerWidth
         }
     }
 

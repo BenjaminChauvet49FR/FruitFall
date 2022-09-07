@@ -14,6 +14,8 @@
     <color name="spaceBG2">#FFFCF8FF</color>
     <color name="spaceBGFrame">#FF440088</color>
     <color name="scoreFallSpace">#FF0000FF</color>
+    <color name="scoreBasketsSpaceFG">#FF0088FF</color>
+    <color name="scoreBasketsSpaceBG">#FFAACCFF</color>
     <color name="scoreDestructionSpace">#FF440000</color>
     <color name="colorLockDuration">#FF440000</color>
     <color name="textMain">#FF000000</color>

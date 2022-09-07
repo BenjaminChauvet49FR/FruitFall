@@ -20,6 +20,9 @@ public class Pix {
     public static int yStartActiveLight = 22;
     public static float xScore = xStartSpaces + 50;
     public static float hText = yStartSpaces * (float)0.3;
+    public static float basketSpaceMargin = wMainSpace * (float)0.5;
+    public static int basketSpaceBGMargin = wMainSpace * 2 / 5;
+    public static int basketSpaceSide = wMainSpace / 2;
     public static float yScore = 10+hText;
     public static float xTime = xScore + 300;
     public static float yTime = yScore;
