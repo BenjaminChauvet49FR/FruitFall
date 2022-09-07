@@ -511,6 +511,7 @@ public class GameHandler {
     private void swapNonOmega(GameEnums.FRUITS_POWER power) {
         this.arrayField[ySwapCenter][xSwapCenter] = new Fruit(this.arrayField[ySwapCenter][xSwapCenter].getIdFruit(), power);
         this.removeSpecialFruit(this.xSwapSide, this.ySwapSide);
+        this.removeSpecialFruit(this.xSwapCenter, this.ySwapCenter);
         this.listToBeActivatedSpecialFruits.add(new SpaceCoors(this.xSwapCenter, this.ySwapCenter));
     }
 
