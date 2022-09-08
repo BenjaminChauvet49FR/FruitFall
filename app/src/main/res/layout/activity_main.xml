@@ -49,14 +49,22 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:layout_weight="1">
 
                 <Button
                     android:id="@+id/buttonModeTolerance"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:text="Tolerance" />
+
+                <Button
+                    android:id="@+id/buttonModeFallSpeed"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Vitesse chute" />
+
             </LinearLayout>
 
         </LinearLayout>
@@ -73,14 +81,13 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dip"
-            android:layout_weight="1"
-            android:orientation="vertical">
+            android:layout_weight="1">
 
             <Button
-                android:id="@+id/button"
+                android:id="@+id/buttonLevelChoice"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:text="Button" />
+                android:text="Choix du niveau" />
         </LinearLayout>
 
     </LinearLayout>

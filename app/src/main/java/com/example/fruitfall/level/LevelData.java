@@ -108,7 +108,7 @@ public class LevelData {
                     break;
 
                 // Field data
-                case 'b' : interpretStringBlockSpawn1stRow(token.substring(2));
+                case 'b' : interpretStringBlockSpawn1stRow(token.substring(1)); // 551551 Ca a été un bug corrigé ?
                     break;
                 case 't' : interpretStringTeleporters(token.substring(1));
                     break;

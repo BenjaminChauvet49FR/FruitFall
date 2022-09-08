@@ -107,6 +107,10 @@ class MyCanvasView(context: Context) : View(context) {
         gh.setTolerance();
     }
 
+    fun switchFallSpeed() {
+        gh.gth.switchFallSpeed();
+    }
+
 
     // Set up the paint with which to draw.
     private val paint = Paint().apply { // Great details here : https://developer.android.com/codelabs/advanced-android-kotlin-training-canvas#4
@@ -142,7 +146,7 @@ class MyCanvasView(context: Context) : View(context) {
         canvas.drawText("Temps : " + gh.gth.getTimeToDisplay(), Pix.xTime, Pix.yTime, paint);
         canvas.drawText(gh.getMissionSummary(), Pix.xCommands, Pix.yCommands, paint);
         paint.setColor(colorTitle);
-        canvas.drawText(gh.getTitle(), Pix.xTitle, Pix.yTitle, paint);
+        canvas.drawText(gh.getTitleAndInfos(), Pix.xTitle, Pix.yTitle, paint);
 
         // Draw the status light
         rectDest.left = Pix.xStartActiveLight
@@ -305,6 +309,21 @@ class MyCanvasView(context: Context) : View(context) {
                         this.drawSpaceContent(xStartFall, yStartFall, canvas, rectSource, rectDest, paint)
                     }
                 }
+            }
+            // Draw the diagonal squeezing fruits
+            for (coorsDest in gh.coorsElementsGettingFromUpperLeft) {
+                rectDest.left = Pix.xLeftMainSpace(coorsDest.x - 1 + ratioFall)
+                rectDest.right = rectDest.left + Pix.wMainSpace
+                rectDest.top = Pix.yUpMainSpace(coorsDest.y - 1 + ratioFall)
+                rectDest.bottom = rectDest.top + Pix.hMainSpace
+                this.drawSpaceContent(coorsDest.x-1, coorsDest.y-1, canvas, rectSource, rectDest, paint)
+            }
+            for (coorsDest in gh.coorsElementsGettingFromUpperRight) {
+                rectDest.left = Pix.xLeftMainSpace(coorsDest.x + 1 - ratioFall)
+                rectDest.right = rectDest.left + Pix.wMainSpace
+                rectDest.top = Pix.yUpMainSpace(coorsDest.y - 1 + ratioFall)
+                rectDest.bottom = rectDest.top + Pix.hMainSpace
+                this.drawSpaceContent(coorsDest.x+1, coorsDest.y-1, canvas, rectSource, rectDest, paint)
             }
 
             // Draw the spawning fruits

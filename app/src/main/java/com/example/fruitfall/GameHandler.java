@@ -44,6 +44,9 @@ public class GameHandler {
     public static int[] gameIndexToImageIndex = new int[Constants.RESOURCES_NUMBER_FRUITS];
     private List<SpaceCoors> listToBeActivatedSpecialFruits = new ArrayList<>();
     private final List<SpaceCoors> listToBeActivatedOmegaSpheres = new ArrayList<>();
+    private final Checker checkerDropUpperRightHere = new Checker(Constants.FIELD_XLENGTH, Constants.FIELD_YLENGTH);
+    private final Checker checkerDropUpperLeftHere = new Checker(Constants.FIELD_XLENGTH, Constants.FIELD_YLENGTH);
+    private final Checker checkerBlockDiagonalSqueeze = new Checker(Constants.FIELD_XLENGTH, Constants.FIELD_YLENGTH); // During a "empty spaces handling", any space that is full OR immediately below a sucking space must not be able to vaccuum an element diagonally, neither the spaces below it until the next wall.
     private final List<SpaceCoors> listDelayedLocks = new ArrayList<>();
     // Note : convention : before a stable check, only one source / destination per colour.
     private final SpaceCoors[]  omegaSourceCoorsByColour = new SpaceCoors[Constants.RESOURCES_NUMBER_FRUITS];
@@ -237,7 +240,7 @@ public class GameHandler {
     Or return null if the space is either non existent or empty
     SOMETHING IS SUPPOSED TO FALL (and emptiness can fall)
      */
-    private SpaceCoors getCoorsFruitRightAbove(int x, int y) {
+    private SpaceCoors getCoorsFallableJustAbove(int x, int y) {
         SpaceCoors supposedSource = this.arrayTeleporterCorrespondingEntrance[y][x];
         if (supposedSource != null) {
             if (!this.arrayField[supposedSource.y][supposedSource.x].canFall()) {
@@ -257,7 +260,7 @@ public class GameHandler {
     /*
     SOMETHING IS SUPPOSED TO FALL
      */
-    private SpaceCoors getCoorsFruitRightBelow(int x, int y) {
+    private SpaceCoors getCoorsFallableJustBelow(int x, int y) {
         SpaceCoors supposedDest = this.arrayTeleporterCorrespondingExit[y][x];
         if (supposedDest != null) {
             if (!this.arrayField[supposedDest.y][supposedDest.x].canFall()) {
@@ -288,6 +291,9 @@ public class GameHandler {
         checkerHorizAlignment.clear();
         checkerVertAlignment.clear();
         listDelayedLocks.clear();
+        checkerDropUpperLeftHere.clear();
+        checkerBlockDiagonalSqueeze.clear();
+        checkerDropUpperRightHere.clear();
 
         this.score = 0;
         this.collectedFruits = 0;
@@ -523,7 +529,7 @@ public class GameHandler {
         // Otherwise, destroy, detect new special fruits, restart a stasis
         boolean goForDestructionAgain = this.activateSpecialFruits();
         if (goForDestructionAgain) {
-            this.gth.startDestruction(false);
+            this.performDestruction(false);
         } else {
             this.gth.startFall();
         }
@@ -603,10 +609,14 @@ public class GameHandler {
             this.thisMoveFruitsDestroyedByFall = 0;
             this.triggerNextPhaseAfterStableCheck();
         } else {
-            // Destruction time !
-            this.fullyCheckFallingElementsInStableCheck();
-            this.gth.startDestruction(isAlignment);
+            this.performDestruction(isAlignment);
         }
+    }
+
+    // Destruction time !
+    private void performDestruction(boolean isAlignment) {
+        this.fullyCheckFallingElementsInStableCheck();
+        this.gth.startDestruction(isAlignment);
     }
 
     private void alignmentDestructionCheck() {
@@ -727,18 +737,12 @@ public class GameHandler {
             }
         }
 
-        // Score management + special fruit activation for regularly destroyed fruits
-        int scoreAmount;
+        // Special fruit activation for regularly destroyed fruits
         this.listToBeActivatedSpecialFruits.clear(); // Note : could be cleared also elsewhere... ?
         this.listToBeActivatedOmegaSpheres.clear(); // Note : could be cleared also elsewhere... ?
         for (SpaceCoors coors : this.checkerToBeEmptiedSpaces.getList()) {
             x = coors.x;
             y = coors.y;
-            this.thisMoveFruitsDestroyedByFall++;
-            scoreAmount = (this.thisMoveFruitsDestroyedByFall+2)/3;
-            this.checkerScoreDestructionFall.add(x, y, scoreAmount);
-            this.score += scoreAmount;
-            this.collectedFruits++;
             if (this.arrayField[y][x].getPower() != GameEnums.FRUITS_POWER.NONE) {
                 this.listToBeActivatedSpecialFruits.add(new SpaceCoors(x, y));
             }
@@ -749,6 +753,11 @@ public class GameHandler {
         if (this.checkerToBeEmptiedSpaces.add(x, y)) {
             this.catchBasket(x, y);
             this.tryToDecreaseBreakableBlockAround(x, y);
+            this.thisMoveFruitsDestroyedByFall++;
+            int scoreAmount = (this.thisMoveFruitsDestroyedByFall+2)/3;
+            this.checkerScoreDestructionFall.add(x, y, scoreAmount);
+            this.score += scoreAmount;
+            this.collectedFruits++;
         }
     }
 
@@ -848,7 +857,7 @@ public class GameHandler {
                     delayedLock.decreaseCount();
                     if (delayedLock.getCount() == 0) {
                         this.countRemainingLocks--;
-                        this.checkerToBeEmptiedSpaces.add(x, y); 
+                        this.checkerToBeEmptiedSpaces.add(x, y);
                         newlyDestroyed.add(new SpaceCoors(x, y));
                     }
                 }
@@ -856,7 +865,7 @@ public class GameHandler {
         }
         return newlyDestroyed;
     }
-    
+
     private void triggerNextPhaseAfterStableCheck() {
         this.phaseCount++; // Note : phaseCount should only be started here
         switch(this.phaseCount) {
@@ -1120,15 +1129,18 @@ public class GameHandler {
      */
     private void handleNewFallingFruitsAndPotentiallySpawn(int xFallInto, int yFallInto) {
         SpaceCoors coorsToFall, coorsHead;
-        coorsToFall = this.getCoorsFruitRightAbove(xFallInto, yFallInto);
         coorsHead = new SpaceCoors(xFallInto, yFallInto); // Note : the head is itself if there is no fruit above it
-
+        boolean keepClimbing = true;
+        int xDiagonalClimb, yDiagonalClimb;
         // Climb up to declare all falling spaces from this one
-        while (coorsToFall != null && this.checkerFallingElements.add(coorsToFall.x, coorsToFall.y)) {
-            coorsHead = new SpaceCoors(coorsToFall.x, coorsToFall.y);
-            coorsToFall = this.getCoorsFruitRightAbove(coorsToFall.x, coorsToFall.y);
+        while (keepClimbing) {
+            coorsToFall = this.getCoorsFallableJustAbove(coorsHead.x, coorsHead.y);
+            while (coorsToFall != null && this.checkerFallingElements.add(coorsToFall.x, coorsToFall.y)) {
+                coorsHead = new SpaceCoors(coorsToFall.x, coorsToFall.y);
+                coorsToFall = this.getCoorsFallableJustAbove(coorsToFall.x, coorsToFall.y);
+            }
+            keepClimbing = false;
         }
-        // TODO glissement diagonal. Ca va être drôle.
 
         // Spawn
         if (this.shouldSpawnFruit(coorsHead.x, coorsHead.y)) {
@@ -1144,7 +1156,7 @@ public class GameHandler {
      */
     public void triggerUnstableCheck() {
         SpaceCoors belowCoors;
-        List<SpaceCoors> newFallingFruitsCoors = new ArrayList<>();
+        List<SpaceCoors> fallingFruitsNewCoors = new ArrayList<>();
 
         // Get rid of former fruits for good
         for (SpaceCoors coorsDestroy : this.checkerToBeEmptiedSpaces.getList()) {
@@ -1153,17 +1165,40 @@ public class GameHandler {
         this.checkerToBeEmptiedSpaces.clear();
 
         // Shift all falling fruits "below" in futur array
-        int xFall, yFall;
-        boolean newFall = false;
+        int xFall, yFall, xDest, yDest, xSource, ySource;
+        boolean newFall;
+
+
         for (SpaceCoors coorsFall : this.checkerFallingElements.getList()) {
             xFall = coorsFall.x;
             yFall = coorsFall.y;
-            belowCoors = this.getCoorsFruitRightBelow(xFall, yFall);
+            belowCoors = this.getCoorsFallableJustBelow(xFall, yFall);
             this.arrayFutureField[belowCoors.y][belowCoors.x] = this.arrayField[yFall][xFall];
             this.arrayField[yFall][xFall] = new EmptySpace();
-            newFallingFruitsCoors.add(new SpaceCoors(belowCoors.x, belowCoors.y));
+            fallingFruitsNewCoors.add(new SpaceCoors(belowCoors.x, belowCoors.y)); // Note : nomination "coors" refers as a list, but "new coors" refers to new coordinates ! Beware !
         }
+        for (SpaceCoors coorsFall : this.checkerDropUpperLeftHere.getList()) {
+            xDest = coorsFall.x;
+            yDest = coorsFall.y;
+            xSource = xDest-1;
+            ySource = yDest-1;
+            this.arrayFutureField[yDest][xDest] = this.arrayField[ySource][xSource];
+            this.arrayField[ySource][xSource] = new EmptySpace();
+            fallingFruitsNewCoors.add(new SpaceCoors(xDest, yDest));
+        }
+        for (SpaceCoors coorsFall : this.checkerDropUpperRightHere.getList()) {
+            xDest = coorsFall.x;
+            yDest = coorsFall.y;
+            xSource = xDest+1;
+            ySource = yDest-1;
+            this.arrayFutureField[yDest][xDest] = this.arrayField[ySource][xSource];
+            this.arrayField[ySource][xSource] = new EmptySpace();
+            fallingFruitsNewCoors.add(new SpaceCoors(xDest, yDest));
+        }
+
         this.checkerFallingElements.clear();
+        this.checkerDropUpperLeftHere.clear();
+        this.checkerDropUpperRightHere.clear();
 
         // Fruits in the spawning part
         int xSpawn, ySpawn;
@@ -1171,14 +1206,14 @@ public class GameHandler {
             xSpawn = coorsSpawn.x;
             ySpawn = coorsSpawn.y;
             this.arrayFutureField[ySpawn][xSpawn] = new Fruit(this.checkerSpawnFruits.get(xSpawn, ySpawn));
-            newFallingFruitsCoors.add(new SpaceCoors(xSpawn, ySpawn)); // Note : apparently it used to work fine without it when using int arrays...
+            fallingFruitsNewCoors.add(new SpaceCoors(xSpawn, ySpawn)); // Note : apparently it used to work fine without it when using int arrays...
             newFall = true; // Sometimes (typically in a omega+omega combo), all fruits on field are destroyed at once, meaning a renewal should be asked here... (renewal fall)
         }
         this.checkerSpawnFruits.clear();
 
         // Change future array to array
         int xNew, yNew;
-        for (SpaceCoors coorsNew : newFallingFruitsCoors) {
+        for (SpaceCoors coorsNew : fallingFruitsNewCoors) {
             xNew = coorsNew.x;
             yNew = coorsNew.y;
             this.arrayField[yNew][xNew] = this.arrayFutureField[yNew][xNew];
@@ -1186,6 +1221,8 @@ public class GameHandler {
 
         // Now, check again falling elements.
         this.fullyCheckFallingElements();
+        newFall = !this.checkerDropUpperRightHere.getList().isEmpty() || !this.checkerDropUpperLeftHere.getList().isEmpty();
+
 
         if (!newFall) {
             // (renewal fall) ... instead of here
@@ -1210,23 +1247,88 @@ public class GameHandler {
 
     private void fullyCheckFallingElements() {
         int xCheck, yCheck;
+        List<SpaceCoors> emptySpaces = new ArrayList<>();
         for (yCheck = 0 ; yCheck < Constants.FIELD_YLENGTH ; yCheck++) {
             for (xCheck = 0 ; xCheck < Constants.FIELD_XLENGTH ; xCheck++) {
                 if (this.arrayField[yCheck][xCheck] instanceof EmptySpace) {
-                    this.handleNewFallingFruitsAndPotentiallySpawn(xCheck, yCheck);
+                    emptySpaces.add(new SpaceCoors(xCheck, yCheck));
+                } else if (this.shouldBlockDiagonalSqueeze(xCheck, yCheck)) {
+                    this.blockDiagonalSqueezeHereAndDownward(xCheck, yCheck);
                 }
+            }
+        }
+        handleAboveEmptySpaces(emptySpaces);
+    }
+    // 551551
+    // Si on détruit 3 blocs d'un coup, les blocs se mettent à glisser. Il faut mieux déterminer quels blocs peuvent attirer les blocs en case suivante !
+
+
+    private void fullyCheckFallingElementsInStableCheck() {
+        int xCheck, yCheck;
+        List<SpaceCoors> emptySpaces = new ArrayList<>();
+        precheckEmptySpaces();
+        for (yCheck = 0 ; yCheck < Constants.FIELD_YLENGTH ; yCheck++) {
+            for (xCheck = 0 ; xCheck < Constants.FIELD_XLENGTH ; xCheck++) {
+                if (this.checkerToBeEmptiedSpaces.get(xCheck, yCheck)) {
+                    emptySpaces.add(new SpaceCoors(xCheck, yCheck));
+                } else if (!(this.arrayField[yCheck][xCheck] instanceof EmptySpace) && this.shouldBlockDiagonalSqueeze(xCheck, yCheck)) {
+                    this.blockDiagonalSqueezeHereAndDownward(xCheck, yCheck);
+                }
+            }
+        }
+        handleAboveEmptySpaces(emptySpaces);
+    }
+
+    private boolean shouldBlockDiagonalSqueeze(int x, int y) {
+        return this.shouldSpawnFruit(x, y);
+    }
+    
+    private void precheckEmptySpaces() {
+        checkerBlockDiagonalSqueeze.clear();
+    }
+
+    private void handleAboveEmptySpaces(List<SpaceCoors> emptySpaces) {
+        for (SpaceCoors coors : emptySpaces) {
+            this.handleNewFallingFruitsAndPotentiallySpawn(coors.x, coors.y);
+        }
+        for (SpaceCoors coors : emptySpaces) {
+            if (coors.x > 0) {
+                this.handleDiagonallySqueezingFruits(coors.x, coors.y, coors.x-1, this.checkerDropUpperLeftHere);
+            }
+        }
+        for (SpaceCoors coors : emptySpaces) {
+            if (coors.x < Constants.FIELD_XLENGTH-1 && !this.checkerDropUpperLeftHere.get(coors.x, coors.y) && (coors.x == Constants.FIELD_XLENGTH-2 || !this.checkerDropUpperLeftHere.get(coors.x+2, coors.y))) {
+                this.handleDiagonallySqueezingFruits(coors.x, coors.y, coors.x+1, this.checkerDropUpperRightHere);
             }
         }
     }
 
-    private void fullyCheckFallingElementsInStableCheck() {
-        int xCheck, yCheck;
-        for (yCheck = 0 ; yCheck < Constants.FIELD_YLENGTH ; yCheck++) {
-            for (xCheck = 0 ; xCheck < Constants.FIELD_XLENGTH ; xCheck++) {
-                if (this.checkerToBeEmptiedSpaces.get(xCheck, yCheck)) {
-                    this.handleNewFallingFruitsAndPotentiallySpawn(xCheck, yCheck);
-                }
+    private void handleDiagonallySqueezingFruits(int xFall, int yFall, int xSource, Checker checkerDropUpperHere) {
+        int ySource = yFall-1;
+       // if (ySource >= 0 && this.arrayField[ySource][xSource].canFall() && !this.checkerFallingElements.get(xSource, ySource)  && !this.checkerFallingElements.get(xFall, yFall-1)
+        if (ySource >= 0 
+                && this.arrayField[ySource][xSource].canFall() && !this.checkerFallingElements.get(xSource, ySource) && !this.checkerFallingElements.get(xFall, yFall-1)
+                && (!checkerDropUpperHere.get(xFall, yFall-1))
+                && !checkerBlockDiagonalSqueeze.get(xFall, yFall-1)
+        ) {
+            checkerDropUpperHere.add(xFall, yFall);
+            this.blockDiagonalSqueezeHereAndDownward(xFall, yFall);
+        }
+    }
+
+    // Blocks diagonal squeeze until a solid block is met
+    private void blockDiagonalSqueezeHereAndDownward(int x, int y) {
+        int yy = y;
+        int xx = x;
+        SpaceCoors coors;
+        
+        while (this.arrayField[yy][xx].canFall() && this.checkerBlockDiagonalSqueeze.add(xx, yy)) {
+            coors = this.getCoorsFallableJustBelow(xx, yy);
+            if (coors == null) {
+                return;
             }
+            xx = coors.x;
+            yy = coors.y;
         }
     }
 
@@ -1443,8 +1545,8 @@ public class GameHandler {
         return answer;
     }
 
-    public String getTitle() {
-        return this.title;
+    public String getTitleAndInfos() {
+        return this.title + " " + "(" + this.numberOfFruitKinds + "c)";
     }
 
     public int scoreFallSpace(int x, int y) {
@@ -1475,6 +1577,14 @@ public class GameHandler {
         return (this.arrayBaskets[y][x]);
     }
 
+    public List<SpaceCoors> getCoorsElementsGettingFromUpperRight() {
+        return this.checkerDropUpperRightHere.getList();
+    }
+
+    public List<SpaceCoors> getCoorsElementsGettingFromUpperLeft() {
+        return this.checkerDropUpperLeftHere.getList();
+    }
+
     // ------------
     // Getter for input
     public boolean isClickable(int x, int y) {
@@ -1502,6 +1612,15 @@ public class GameHandler {
         return this.omegaSourceCoorsByColour[colour];
     }
 
+    public boolean isNotInDiagonalSqueeze(int x, int y) {
+        return (y == Constants.FIELD_YLENGTH-1 || (
+
+                (x == 0 || !this.checkerDropUpperRightHere.get(x-1, y+1)) &&
+                        (x == Constants.FIELD_XLENGTH-1 || !this.checkerDropUpperLeftHere.get(x+1, y+1))
+        ));
+        // TODO change "checkerDropUpperRightHere" into "checkerDropUpperLeftHere" ;
+        //  I didn't change it yet because of the logic of the checkers in handleDiagonallySqueezingFruits and the fact the falls were still bugged.
+    }
 }
 
 
@@ -1513,3 +1632,17 @@ public class GameHandler {
 // C'est ce qui se produit quand on fait un échange près d'un rocher à 1 qui déclenche le fruit spécial et celui-ci touche la case à panier visée. Pas de panier collecté.
 
 // TODO : collecte panier dans le cas swap oméga + X et dans les cas feu + éclair (et les 2 autres swap.... ?)
+
+// TODO Diagonal squeeze et chute :
+// On doit pouvoir diminuer le check des cases vides à chaque check instable en construisant une liste des "cases potentiellement vides" ; idem pour les cases potentiellement squeezables. Mais attention, une case potentiellement squezzable n'a rien à voir avec une case qui squeeze lors d'une vérification, stable ou pas !
+
+// 551551 Fait :
+// Ajout du squeeze diagonal
+// Ajout de boutons de changement
+// Ajout d'un check qui n'était pas refait au-delà de la première destruction car jugé inutile
+// Déplacement endroit où on score (ce n'est plus dans le check de l'alignement mais bien dans la destruction du fruit)
+// Ajout du nombre de fruits dans le titre
+// Ajout d'un menu de niveau !
+// Changement icone (provisoire)
+
+// 551551 Bug : les fruits effacés juste au dessus des sphères Oméga

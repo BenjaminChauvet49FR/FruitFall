@@ -34,10 +34,13 @@ public class GameTimingHandler {
     private List<SpaceAnimation> spaceAnimationFruitDestroyedList;
     private Checker handledSpecialAnimationsChecker = new Checker(Constants.FIELD_XLENGTH, Constants.FIELD_YLENGTH);
     private Checker handledDestroyAnimationsChecker = new Checker(Constants.FIELD_XLENGTH, Constants.FIELD_YLENGTH);
-
+    private int constantNumberFramesFall;
+    private boolean debugShouldSwitchFallSpeed;
 
     public GameTimingHandler(GameHandler gh) {
         this.gh = gh;
+        this.constantNumberFramesFall = Constants.NUMBER_FRAMES_FALL;
+        this.debugShouldSwitchFallSpeed = false;
     }
 
     // Init
@@ -205,6 +208,10 @@ public class GameTimingHandler {
     public void step() {
         if (this.gameState == GameEnums.GAME_STATE.NORMAL) {
             this.frameTotalCount++;
+            if (this.debugShouldSwitchFallSpeed) {
+                this.debugShouldSwitchFallSpeed = false;
+                this.constantNumberFramesFall = Constants.NUMBER_FRAMES_FALL + Constants.NUMBER_FRAMES_FALL_ALTER - this.constantNumberFramesFall;
+            }
             return;
         }
         if (this.gameState == GameEnums.GAME_STATE.SWAP) {
@@ -240,7 +247,7 @@ public class GameTimingHandler {
         if (this.gameState == GameEnums.GAME_STATE.FALLING) {
             this.frameCount++;
             this.frameScore++;
-            if (this.frameCount == Constants.NUMBER_FRAMES_FALL) {
+            if (this.frameCount == this.constantNumberFramesFall) {
                 this.gh.triggerUnstableCheck();
             }
             return;
@@ -284,7 +291,7 @@ public class GameTimingHandler {
         return (float)this.frameCount / Constants.NUMBER_FRAMES_SWAP;
     }
     public float ratioToCompletionFall() {
-        return (float)this.frameCount / Constants.NUMBER_FRAMES_FALL;
+        return (float)this.frameCount / this.constantNumberFramesFall;
     }
 
     // How it works : an affine-by-pieces method worth 0 before, climbing from 0 to 1, then worth 1
@@ -317,7 +324,7 @@ public class GameTimingHandler {
         return (
                 ((x != this.xSwap1) || (y != this.ySwap1)) &&
                         ((x != this.xSwap2) || (y != this.ySwap2)) &&
-                        (this.gameState == GameEnums.GAME_STATE.DESTRUCTING_STASIS || this.gh.isNotFallingFruit(x, y)) &&
+                        (this.gameState == GameEnums.GAME_STATE.DESTRUCTING_STASIS || (this.gh.isNotFallingFruit(x, y) && this.gh.isNotInDiagonalSqueeze(x, y))) &&
                         this.gh.isNotDestroyedBeforeFall(x, y)
         );
     }
@@ -346,5 +353,9 @@ public class GameTimingHandler {
         }
         return this.spaceAnimationFruitDestroyedList;
 
+    }
+
+    public void switchFallSpeed() {
+        this.debugShouldSwitchFallSpeed = true;
     }
 }
