@@ -44,6 +44,8 @@ public class GameHandler {
     public static int[] gameIndexToImageIndex = new int[Constants.RESOURCES_NUMBER_FRUITS];
     private List<SpaceCoors> listToBeActivatedSpecialFruits = new ArrayList<>();
     private final List<SpaceCoors> listToBeActivatedOmegaSpheres = new ArrayList<>();
+    private final List<SpaceCoors> listFruitsToCreateCoors = new ArrayList<>();
+    private final List<SpaceFiller> listFruitsToCreateKind = new ArrayList<>();
     private final Checker checkerDropUpperRightHere = new Checker(Constants.FIELD_XLENGTH, Constants.FIELD_YLENGTH);
     private final Checker checkerDropUpperLeftHere = new Checker(Constants.FIELD_XLENGTH, Constants.FIELD_YLENGTH);
     private final Checker checkerBlockDiagonalSqueeze = new Checker(Constants.FIELD_XLENGTH, Constants.FIELD_YLENGTH); // During a "empty spaces handling", any space that is full OR immediately below a sucking space must not be able to vaccuum an element diagonally, neither the spaces below it until the next wall.
@@ -55,9 +57,8 @@ public class GameHandler {
     private String title;
     private int numberOfFruitKinds;
     private int score;
-    private int thisMoveComboCoefficient;
+    private int numberElapsedMoves;
     private int thisMoveFruitsDestroyedByFall;
-    private int collectedFruits;
     private int phaseCount;
     private int countRemainingLocks;
 
@@ -109,124 +110,6 @@ public class GameHandler {
         return (this.arrayField[y][x].isASpace());
     }
 
-    private GameEnums.WHICH_SWAP getSwapNature(int x1, int y1, int x2, int y2) {
-        this.xSwapSide = x2;
-        this.ySwapSide = y2;
-        this.xSwapCenter = x1;
-        this.ySwapCenter = y1;
-        GameEnums.FRUITS_POWER power1 = this.arrayField[y1][x1].getPower();
-        GameEnums.FRUITS_POWER power2 = this.arrayField[y2][x2].getPower();
-        boolean light1 = (power1 == GameEnums.FRUITS_POWER.HORIZONTAL_LIGHTNING || power1 == GameEnums.FRUITS_POWER.VERTICAL_LIGHTNING);
-        boolean light2 = (power2 == GameEnums.FRUITS_POWER.HORIZONTAL_LIGHTNING || power2 == GameEnums.FRUITS_POWER.VERTICAL_LIGHTNING);
-        boolean fire1 = (power1 == GameEnums.FRUITS_POWER.FIRE);
-        boolean fire2 = (power2 == GameEnums.FRUITS_POWER.FIRE);
-        boolean omega1 = (power1 == GameEnums.FRUITS_POWER.OMEGA_SPHERE);
-        boolean omega2 = (power2 == GameEnums.FRUITS_POWER.OMEGA_SPHERE);
-        if (light1 && light2) {
-            return GameEnums.WHICH_SWAP.ELECTRIC_ELECTRIC;
-        }
-        if ((light1 && fire2) || (light2 && fire1)) {
-            return GameEnums.WHICH_SWAP.FIRE_ELECTRIC;
-        }
-        if (fire1 && fire2) {
-            return GameEnums.WHICH_SWAP.FIRE_FIRE;
-        }
-        if (omega1 && omega2) {
-            this.xSourceOmegaDestruction = x1;
-            this.ySourceOmegaDestruction = y1;
-            return GameEnums.WHICH_SWAP.OMEGA_OMEGA;
-        }
-        if (omega1 && fire2) {
-            this.idFruitOmegaDestruction = this.getIdFruit(x2, y2);
-            this.xSourceOmegaDestruction = x1;
-            this.ySourceOmegaDestruction = y1;
-            return GameEnums.WHICH_SWAP.OMEGA_FIRE;
-        }
-        if (omega2 && fire1) {
-            this.idFruitOmegaDestruction = this.getIdFruit(x1, y1);
-            this.xSourceOmegaDestruction = x2;
-            this.ySourceOmegaDestruction = y2;
-            return GameEnums.WHICH_SWAP.OMEGA_FIRE;
-        }
-        if (omega1 && light2) {
-            this.idFruitOmegaDestruction = this.getIdFruit(x2, y2);
-            this.xSourceOmegaDestruction = x1;
-            this.ySourceOmegaDestruction = y1;
-            return GameEnums.WHICH_SWAP.OMEGA_ELECTRIC;
-        }
-        if (omega2 && light1) {
-            this.idFruitOmegaDestruction = this.getIdFruit(x1, y1);
-            this.xSourceOmegaDestruction = x2;
-            this.ySourceOmegaDestruction = y2;
-            return GameEnums.WHICH_SWAP.OMEGA_ELECTRIC;
-        }
-        // Put them at the end, or else !
-        if (omega1 && this.hasFruit(x2, y2)) {
-            this.idFruitOmegaDestruction = this.getIdFruit(x2, y2);
-            this.xSourceOmegaDestruction = x1;
-            this.ySourceOmegaDestruction = y1;
-            return GameEnums.WHICH_SWAP.FRUIT_OMEGA;
-        }
-        if (omega2 && this.hasFruit(x1, y1)) {
-            this.idFruitOmegaDestruction = this.getIdFruit(x1, y1);
-            this.xSourceOmegaDestruction = x2;
-            this.ySourceOmegaDestruction = y2;
-            return GameEnums.WHICH_SWAP.FRUIT_OMEGA;
-        }
-        if (validFruitAlignment(x1, y1) || validFruitAlignment(x2, y2)) {
-            return GameEnums.WHICH_SWAP.FRUIT_FRUIT;
-        }
-        if (this.toleranceMode) {
-            this.toleranceMode = false;
-            return GameEnums.WHICH_SWAP.FRUIT_FRUIT;
-        }
-        return GameEnums.WHICH_SWAP.INVALID;
-    }
-
-    private boolean validFruitAlignment(int x, int y) {
-        if (x >= 1) {
-            if (x >= 2) {
-                if (gotAlignment(x, y, x-1, y, x-2, y)) {
-                    return true;
-                }
-            }
-            if (x <= Constants.FIELD_XLENGTH-2) {
-                if (gotAlignment(x, y, x-1, y, x+1, y)) {
-                    return true;
-                }
-                if (x <= Constants.FIELD_XLENGTH-3) {
-                    if (gotAlignment(x, y, x+1, y, x+2, y)) {
-                        return true;
-                    }
-                }
-            }
-        } else {
-            if (gotAlignment(0, y, 1, y, 2, y)) {
-                return true;
-            }
-        }
-        if (y >= 1) {
-            if (y >= 2) {
-                if (gotAlignment(x, y, x, y-1, x, y-2)){
-                    return true;
-                }
-            }
-            if (y <= Constants.FIELD_YLENGTH-2) {
-                if (gotAlignment(x, y-1, x, y, x, y+1)){
-                    return true;
-                }
-                if (y <= Constants.FIELD_YLENGTH-3) {
-                    if (gotAlignment(x, y, x, y+1, x, y+2)) {
-                        return true;
-                    }
-                }
-            }
-        } else {
-            return gotAlignment(x, 0, x, 1, x, 2);
-        }
-        return false;
-    }
-
     public boolean shouldSpawnFruit(int x, int y) {
         return this.arrayShouldFruitsBeSpawned[y][x];
     }
@@ -235,46 +118,27 @@ public class GameHandler {
         this.checkerSpawnFruits.add(x, y, new Random().nextInt(this.numberOfFruitKinds));
     }
 
-    /*
-    Returns the coordinates of the fruit that is supposed to fall into this space (usually the one right above, but there may be teleporters)
-    Or return null if the space is either non existent or empty
-    SOMETHING IS SUPPOSED TO FALL (and emptiness can fall)
-     */
-    private SpaceCoors getCoorsFallableJustAbove(int x, int y) {
-        SpaceCoors supposedSource = this.arrayTeleporterCorrespondingEntrance[y][x];
-        if (supposedSource != null) {
-            if (!this.arrayField[supposedSource.y][supposedSource.x].canFall()) {
-                return null;
-            }
-            return supposedSource;
-        }
-        if (y == 0) {
-            return null;
-        }
-        if (!this.arrayField[y-1][x].canFall()) {
-            return null;
-        }
-        return new SpaceCoors(x, y-1);
+    // Note : used before fruits are removed, of course
+    // "special fruits" should include Omega spheres ! (activateSpecialFruitBlast)
+    private boolean isSpecialFruit(int x, int y) {
+        return this.arrayField[y][x].getPower() != GameEnums.FRUITS_POWER.NONE;
     }
 
-    /*
-    SOMETHING IS SUPPOSED TO FALL
-     */
-    private SpaceCoors getCoorsFallableJustBelow(int x, int y) {
-        SpaceCoors supposedDest = this.arrayTeleporterCorrespondingExit[y][x];
-        if (supposedDest != null) {
-            if (!this.arrayField[supposedDest.y][supposedDest.x].canFall()) {
-                return null;
-            }
-            return supposedDest;
+    // Should be considered empty for fall calculations
+    private boolean isEmpty(int x, int y) {
+        return this.arrayField[y][x] instanceof EmptySpace;
+    }
+
+    private void testAndAlertAboutAlignedFruits(int x1, int y1, int x2, int y2, int x3, int y3) {
+        if (gotAlignment(x1, y1, x2, y2, x3, y3)) {
+            this.checkerAlignedFruits.add(x1, y1);
+            this.checkerAlignedFruits.add(x2, y2);
+            this.checkerAlignedFruits.add(x3, y3);
         }
-        if (y == Constants.FIELD_YLENGTH-1) {
-            return null;
-        }
-        if (!this.arrayField[y+1][x].canFall()) {
-            return null;
-        }
-        return new SpaceCoors(x, y+1);
+    }
+
+    private boolean areAcceptableCoordinates(int x, int y) {
+        return (x >= 0 && y >= 0 && x < Constants.FIELD_XLENGTH && y < Constants.FIELD_YLENGTH);
     }
 
     // ----------------------------
@@ -296,11 +160,12 @@ public class GameHandler {
         checkerDropUpperRightHere.clear();
 
         this.score = 0;
-        this.collectedFruits = 0;
-        this.thisMoveComboCoefficient = 1;
         this.thisMoveFruitsDestroyedByFall = 0;
         this.phaseCount = 0;
         this.countRemainingLocks = 0;
+        this.numberElapsedMoves = 0;
+
+        ld.deploy();
 
         this.numberOfMissions = ld.getMissionsNumber();
         for (int i = 0 ; i < Constants.MAX_MISSIONS ; i++) {
@@ -467,6 +332,7 @@ public class GameHandler {
         // trigger method (GH) -> stop method ; data of game affected ; start method or end methods
         // end methods (GTH) -> stop methods ; return to normal state
         // stop method (GTH) -> clearing things
+        // TODO clairement pas à jour
     */
 
     public void inputSwap(int x1, int y1, int x2, int y2) {
@@ -506,6 +372,127 @@ public class GameHandler {
         this.gth.endSwap();
     }
 
+    private GameEnums.WHICH_SWAP getSwapNature(int x1, int y1, int x2, int y2) {
+        this.xSwapSide = x2;
+        this.ySwapSide = y2;
+        this.xSwapCenter = x1;
+        this.ySwapCenter = y1;
+        GameEnums.FRUITS_POWER power1 = this.arrayField[y1][x1].getPower();
+        GameEnums.FRUITS_POWER power2 = this.arrayField[y2][x2].getPower();
+        boolean light1 = (power1 == GameEnums.FRUITS_POWER.HORIZONTAL_LIGHTNING || power1 == GameEnums.FRUITS_POWER.VERTICAL_LIGHTNING);
+        boolean light2 = (power2 == GameEnums.FRUITS_POWER.HORIZONTAL_LIGHTNING || power2 == GameEnums.FRUITS_POWER.VERTICAL_LIGHTNING);
+        boolean fire1 = (power1 == GameEnums.FRUITS_POWER.FIRE);
+        boolean fire2 = (power2 == GameEnums.FRUITS_POWER.FIRE);
+        boolean omega1 = (power1 == GameEnums.FRUITS_POWER.OMEGA_SPHERE);
+        boolean omega2 = (power2 == GameEnums.FRUITS_POWER.OMEGA_SPHERE);
+
+        this.numberElapsedMoves++;
+        if (light1 && light2) {
+            return GameEnums.WHICH_SWAP.ELECTRIC_ELECTRIC;
+        }
+        if ((light1 && fire2) || (light2 && fire1)) {
+            return GameEnums.WHICH_SWAP.FIRE_ELECTRIC;
+        }
+        if (fire1 && fire2) {
+            return GameEnums.WHICH_SWAP.FIRE_FIRE;
+        }
+        if (omega1 && omega2) {
+            this.xSourceOmegaDestruction = x1;
+            this.ySourceOmegaDestruction = y1;
+            return GameEnums.WHICH_SWAP.OMEGA_OMEGA;
+        }
+        if (omega1 && fire2) {
+            this.idFruitOmegaDestruction = this.getIdFruit(x2, y2);
+            this.xSourceOmegaDestruction = x1;
+            this.ySourceOmegaDestruction = y1;
+            return GameEnums.WHICH_SWAP.OMEGA_FIRE;
+        }
+        if (omega2 && fire1) {
+            this.idFruitOmegaDestruction = this.getIdFruit(x1, y1);
+            this.xSourceOmegaDestruction = x2;
+            this.ySourceOmegaDestruction = y2;
+            return GameEnums.WHICH_SWAP.OMEGA_FIRE;
+        }
+        if (omega1 && light2) {
+            this.idFruitOmegaDestruction = this.getIdFruit(x2, y2);
+            this.xSourceOmegaDestruction = x1;
+            this.ySourceOmegaDestruction = y1;
+            return GameEnums.WHICH_SWAP.OMEGA_ELECTRIC;
+        }
+        if (omega2 && light1) {
+            this.idFruitOmegaDestruction = this.getIdFruit(x1, y1);
+            this.xSourceOmegaDestruction = x2;
+            this.ySourceOmegaDestruction = y2;
+            return GameEnums.WHICH_SWAP.OMEGA_ELECTRIC;
+        }
+        // Put them at the end, or else !
+        if (omega1 && this.hasFruit(x2, y2)) {
+            this.idFruitOmegaDestruction = this.getIdFruit(x2, y2);
+            this.xSourceOmegaDestruction = x1;
+            this.ySourceOmegaDestruction = y1;
+            return GameEnums.WHICH_SWAP.FRUIT_OMEGA;
+        }
+        if (omega2 && this.hasFruit(x1, y1)) {
+            this.idFruitOmegaDestruction = this.getIdFruit(x1, y1);
+            this.xSourceOmegaDestruction = x2;
+            this.ySourceOmegaDestruction = y2;
+            return GameEnums.WHICH_SWAP.FRUIT_OMEGA;
+        }
+        if (validFruitAlignment(x1, y1) || validFruitAlignment(x2, y2)) {
+            return GameEnums.WHICH_SWAP.FRUIT_FRUIT;
+        }
+        if (this.toleranceMode) {
+            this.toleranceMode = false;
+            return GameEnums.WHICH_SWAP.FRUIT_FRUIT;
+        }
+        this.numberElapsedMoves--;
+        return GameEnums.WHICH_SWAP.INVALID;
+    }
+
+    private boolean validFruitAlignment(int x, int y) {
+        if (x >= 1) {
+            if (x >= 2) {
+                if (gotAlignment(x, y, x-1, y, x-2, y)) {
+                    return true;
+                }
+            }
+            if (x <= Constants.FIELD_XLENGTH-2) {
+                if (gotAlignment(x, y, x-1, y, x+1, y)) {
+                    return true;
+                }
+                if (x <= Constants.FIELD_XLENGTH-3) {
+                    if (gotAlignment(x, y, x+1, y, x+2, y)) {
+                        return true;
+                    }
+                }
+            }
+        } else {
+            if (gotAlignment(0, y, 1, y, 2, y)) {
+                return true;
+            }
+        }
+        if (y >= 1) {
+            if (y >= 2) {
+                if (gotAlignment(x, y, x, y-1, x, y-2)){
+                    return true;
+                }
+            }
+            if (y <= Constants.FIELD_YLENGTH-2) {
+                if (gotAlignment(x, y-1, x, y, x, y+1)){
+                    return true;
+                }
+                if (y <= Constants.FIELD_YLENGTH-3) {
+                    if (gotAlignment(x, y, x, y+1, x, y+2)) {
+                        return true;
+                    }
+                }
+            }
+        } else {
+            return gotAlignment(x, 0, x, 1, x, 2);
+        }
+        return false;
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.N)
     public void triggerAfterOmegaStasis() {
         this.triggerAfterDestructionStasis();
@@ -531,8 +518,26 @@ public class GameHandler {
         if (goForDestructionAgain) {
             this.performDestruction(false);
         } else {
-            this.gth.startFall();
+            this.performCleanUpAndFall();
         }
+    }
+
+    // The final thing to do before going to destruction check
+    private void performCleanUpAndFall() {
+        this.emptyTheSpaces();
+        this.fullyCheckFallingElements();
+        this.gth.startFall();
+    }
+
+    // Should be called at the end of a stable check
+    private void emptyTheSpaces() {
+        // Note : actually, checkerToBeEmptiedSpaces mustn't be cleaned before, because of the animations.
+        for (SpaceCoors coors : this.checkerToBeEmptiedSpaces.getList()) {
+            // TODO Il faut récupérer les fruits ici avant qu'ils disparaissent définitivement
+            //this.destroyedFruits[coors.y][coors.x] = this.arrayField[coors.y][coors.x].copy();
+            this.arrayField[coors.y][coors.x] = new EmptySpace();
+        }
+        this.checkerToBeEmptiedSpaces.clear();
     }
 
     private void swapNonOmega(GameEnums.FRUITS_POWER power) {
@@ -605,7 +610,6 @@ public class GameHandler {
 
         if (this.checkerToBeEmptiedSpaces.getList().isEmpty()) {
             // Nothing new destroyed : move on.
-            this.thisMoveComboCoefficient = 1;
             this.thisMoveFruitsDestroyedByFall = 0;
             this.triggerNextPhaseAfterStableCheck();
         } else {
@@ -615,7 +619,6 @@ public class GameHandler {
 
     // Destruction time !
     private void performDestruction(boolean isAlignment) {
-        this.fullyCheckFallingElementsInStableCheck();
         this.gth.startDestruction(isAlignment);
     }
 
@@ -664,78 +667,8 @@ public class GameHandler {
             }
         }
 
-        // Yeehaw, handling special fruits !
-        int numberAlign, numberAlignTransversal;
-        int xInter, yInter;
-        for (SpaceCoors coors : this.checkerHorizAlignment.getList()) {
-            x = coors.x;
-            y = coors.y;
-            numberAlign = this.checkerHorizAlignment.get(x, y);
-            if (numberAlign == 3 || numberAlign == 4) {
-                xInter = -1;
-                for (xx = x ; xx < x + numberAlign ; xx++) {
-                    if (this.checkerVertAlignment.get(xx, y) > 0) {
-                        yy = y;
-                        numberAlignTransversal = 1;
-                        while (this.checkerVertAlignment.get(xx,yy) == 1) {
-                            yy--;
-                            numberAlignTransversal++;
-                        } // numberAlignTransversal = number of fruits identical going upwards starting with yy included
-                        yy = y+1;
-                        while (yy < Constants.FIELD_YLENGTH && this.checkerVertAlignment.get(xx, yy) == 1) {
-                            yy++;
-                            numberAlignTransversal++;
-                        }
-                        if (numberAlignTransversal == 3 || numberAlignTransversal == 4) {
-                            // TODO Changer ce comportement (pas de fruit créé si à l'intersection)... ou faire avec ?
-                            // TODO Il faudra voir ce qu'on veut en cas de test 3x3 fruits identiques
-                            // TODO sorte de bug quand on a 3 fruits dans un sens et 4 dans un autre, puisqu'on a 2 fruits spéciaux créés, on ne veut pas ça...
-                            if (this.arrayField[y][xx].getPower() == GameEnums.FRUITS_POWER.NONE) {
-                                this.createSpecialFruit(xx, y, new Fruit(this.getIdFruit(x, y), GameEnums.FRUITS_POWER.FIRE), 3);
-                            }
-                        }
-                        if (numberAlignTransversal >= 5) {
-                            xInter = xx;
-                        }
-                    }
-                }
-                if (xInter == -1 && numberAlign == 4) {
-                    int xDefault = x+1;
-                    if (this.lastSwap != GameEnums.WHICH_SWAP.NONE) {
-                        xDefault = this.xSwapCenter;
-                    }
-                    this.tryToCreateSpecialFruitInHorizontalAlignment(x, y, numberAlign, xDefault, new Fruit(this.getIdFruit(x, y), GameEnums.FRUITS_POWER.VERTICAL_LIGHTNING), 2);
-                }
-            }
-            if (numberAlign >= 5) {
-                this.createSpecialFruit(x+(numberAlign-1)/2, y, new OmegaSphere(), 5);
-            }
-        }
-        for (SpaceCoors coors : this.checkerVertAlignment.getList()) {
-            x = coors.x;
-            y = coors.y;
-            numberAlign = this.checkerVertAlignment.get(x, y);
-            if (numberAlign == 4) {
-                // Only check if there is nothing done horizontally - other checks already done.
-                yInter = -1;
-                for (xx = x ; xx < x + numberAlign ; xx++) {
-                    if (this.checkerVertAlignment.get(xx, y) > 0) {
-                        yInter = 0;
-                        break;
-                    }
-                }
-                if (yInter == 0) {
-                    int yDefault = y+1;
-                    if (this.lastSwap != GameEnums.WHICH_SWAP.NONE) {
-                        yDefault = this.ySwapCenter;
-                    }
-                    this.tryToCreateSpecialFruitInVerticalAlignment(x, y, numberAlign, yDefault, new Fruit(this.getIdFruit(x, y), GameEnums.FRUITS_POWER.HORIZONTAL_LIGHTNING), 2);
-                }
-            }
-            if (numberAlign >= 5) {
-                this.tryToCreateSpecialFruitInVerticalAlignment(x, y, numberAlign, y+(numberAlign-1)/2, new OmegaSphere(), 5);
-            }
-        }
+        // Creating special fruits here !
+        this.createNewSpecialFruits();
 
         // Special fruit activation for regularly destroyed fruits
         this.listToBeActivatedSpecialFruits.clear(); // Note : could be cleared also elsewhere... ?
@@ -757,33 +690,105 @@ public class GameHandler {
             int scoreAmount = (this.thisMoveFruitsDestroyedByFall+2)/3;
             this.checkerScoreDestructionFall.add(x, y, scoreAmount);
             this.score += scoreAmount;
-            this.collectedFruits++;
+        }
+    }
+    
+    private void createNewSpecialFruits() {
+        for (SpaceCoors coors : this.checkerHorizAlignment.getList()) {
+            this.createNewSpecialFruitHorizChecker(coors.x, coors.y);
+        }
+        for (SpaceCoors coors : this.checkerVertAlignment.getList()) {
+            this.createNewSpecialFruitVertChecker(coors.x, coors.y);
         }
     }
 
-    private static final int NO_SPECIAL_FOUND = -1;
-    private static final int SATURATED = -2;
-    /*
-    This is where special fruits are created and score is marked.
-    It has to take the former special fruits into amount ! (see below for more details)
-    */
-    private void tryToCreateSpecialFruitInHorizontalAlignment(int x, int y, int numberAlign, int xDefault, SpaceFiller spaceFiller, int scoreAmount) {
-        int xCreation = this.lookingForXSpecialFruitCreation(x, y, numberAlign);
-        if (xCreation == NO_SPECIAL_FOUND) {
-            xCreation = xDefault; // TODO voir le swap x y, aussi
+    // Do not create anything if any special fruit is met.
+    private void createNewSpecialFruitHorizChecker(int x, int y) {
+        int xx, yy, yTransversalHead;
+        boolean createdSpecial = false;
+        int numberAlign, numberAlignTransversal;
+        this.listFruitsToCreateCoors.clear(); // Note : these lists are only used in this method & submethods.
+        this.listFruitsToCreateKind.clear();
+        numberAlign = this.checkerHorizAlignment.get(x, y);
+        if (numberAlign == 3 || numberAlign == 4) {
+            for (xx = x ; xx < x + numberAlign ; xx++) {
+                if (this.isSpecialFruit(xx, y)) {return;} // Any special fruit = we move on.
+                if (this.checkerVertAlignment.get(xx, y) > 0) {
+                    yy = y;
+                    numberAlignTransversal = 1;
+                    while (this.checkerVertAlignment.get(xx, yy) == 1) {
+                        if (this.isSpecialFruit(xx, yy)) {return;}
+                        yy--;
+                        numberAlignTransversal++;
+                    } // numberAlignTransversal = number of fruits identical going upwards starting with yy included
+                    if (this.isSpecialFruit(xx, yy)) {return;}
+                    yTransversalHead = yy;
+                    yy = y+1;
+                    while (yy < Constants.FIELD_YLENGTH && this.checkerVertAlignment.get(xx, yy) == 1) {
+                        if (this.isSpecialFruit(xx, yy)) {return;}
+                        yy++;
+                        numberAlignTransversal++;
+                    }
+                    if (numberAlignTransversal == 3 || numberAlignTransversal == 4) {
+                        // TODO Il faudra voir ce qu'on veut en cas de test 3x3 fruits identiques
+                        this.reserveSpecialFruit(xx, y, new Fruit(this.getIdFruit(x, y), GameEnums.FRUITS_POWER.FIRE));
+                        createdSpecial = true;
+                    }
+                    if (numberAlignTransversal >= 5) {
+                        this.reserveSpecialFruit(xx, yTransversalHead + (numberAlign-1)/2, new OmegaSphere());
+                        createdSpecial = true;
+                    }
+                } //End of "if checker vertical alignment"
+            }
+            if (numberAlign == 4 && !createdSpecial) {
+                int xDefault = x+1;
+                if (this.lastSwap != GameEnums.WHICH_SWAP.NONE) {
+                    xDefault = this.xSwapCenter;
+                }
+                this.createSpecialFruit(xDefault, y, new Fruit(this.getIdFruit(x, y), GameEnums.FRUITS_POWER.VERTICAL_LIGHTNING), 2);
+            }
         }
-        if (xCreation != SATURATED) {
-            this.createSpecialFruit(xCreation, y, spaceFiller, scoreAmount);
+        if (numberAlign >= 5) {
+            for (xx = x ; xx < x + numberAlign ; xx++) {
+                if (this.isSpecialFruit(xx, y)) {return;}
+            }
+            this.createSpecialFruit(x+(numberAlign-1)/2, y, new OmegaSphere(), 5);
+        }
+        this.createReservedSpecialFruits();
+    }
+
+    // TODO la liste "listFruitsToCreateKind" serait-elle inutile ? Pourrait-on réserver la liste aux créations de fruits de feu ?  A voir...
+    private void reserveSpecialFruit(int x, int y, SpaceFiller sf) {
+        this.listFruitsToCreateCoors.add(new SpaceCoors(x, y));
+        this.listFruitsToCreateKind.add(sf);
+    }
+
+    private void createReservedSpecialFruits() {
+        SpaceFiller filler;
+        int scoreAmount;
+        for (int i = 0 ; i < this.listFruitsToCreateCoors.size() ; i++) {
+            filler = this.listFruitsToCreateKind.get(i);
+            scoreAmount = (filler.getPower() == GameEnums.FRUITS_POWER.OMEGA_SPHERE ? 3 : (filler.getPower() == GameEnums.FRUITS_POWER.FIRE ? 3 : 2));
+            this.createSpecialFruit(this.listFruitsToCreateCoors.get(i).x, this.listFruitsToCreateCoors.get(i).y, filler, scoreAmount);
         }
     }
 
-    private void tryToCreateSpecialFruitInVerticalAlignment(int x, int y, int numberAlign, int yDefault, SpaceFiller spaceFiller, int scoreAmount) {
-        int yCreation = this.lookingForYSpecialFruitCreation(x, y, numberAlign);
-        if (yCreation == NO_SPECIAL_FOUND) {
-            yCreation = yDefault;
-        }
-        if (yCreation != SATURATED) {
-            this.createSpecialFruit(x, yCreation, spaceFiller, scoreAmount);
+    // Only check if there is nothing done horizontally - it should not cross anything horizontal because it would have already been checked.
+    private void createNewSpecialFruitVertChecker(int x, int y) {
+        // Note : no need to clean lists such as listFruitsToCreateCoors and listFruitsToCreateKind
+        int numberAlign = this.checkerVertAlignment.get(x, y);
+        if (numberAlign >= 4) {
+            for (int yy = y; yy < y + numberAlign; yy++) {
+                if (this.checkerHorizAlignment.get(x, yy) > 0 || this.isSpecialFruit(x, yy)) {
+                    return;
+                }
+            }
+            if (numberAlign == 4) {
+                int yDefault = (this.lastSwap != GameEnums.WHICH_SWAP.NONE) ? this.ySwapCenter : y+1;
+                this.createSpecialFruit(x, yDefault, new Fruit(this.getIdFruit(x, y), GameEnums.FRUITS_POWER.HORIZONTAL_LIGHTNING), 2);
+            } else {
+                this.createSpecialFruit(x, y + (numberAlign - 1) / 2, new OmegaSphere(), 5);
+            }
         }
     }
 
@@ -792,52 +797,6 @@ public class GameHandler {
         this.checkerToBeEmptiedSpaces.remove(x, y);
         this.checkerScoreDestructionFall.add(x, y, correspondingScoreAmount); // TODO score pour "création fruit spécial ?"
         this.score += correspondingScoreAmount;
-    }
-
-    /*
-    Looks for the spot in which a special fruit should be created in an horizontal alignment,
-    of length align and starting at (x, y)
-    if no special fruit is found, return NO_SPECIAL_FOUND
-    if at least one special fruit is found, return the first free spot starting from left
-    if the spaces contain only special fruit, return SATURATED
-     */
-    private int lookingForXSpecialFruitCreation(int x, int y, int align) {
-        boolean foundSpecial = false;
-        int xx;
-        for (xx = x ; xx < x + align ; xx++) {
-            if (this.arrayField[y][xx].getPower() != GameEnums.FRUITS_POWER.NONE) {
-                foundSpecial = true;
-                break;
-            }
-        }
-        if (!foundSpecial) {
-            return NO_SPECIAL_FOUND;
-        }
-        for (xx = x ; xx < x + align ; xx++) {
-            if (this.arrayField[y][xx].getPower() == GameEnums.FRUITS_POWER.NONE) {
-                return xx;
-            }
-        }
-        return SATURATED;
-    }
-    private int lookingForYSpecialFruitCreation(int x, int y, int align) {
-        boolean foundSpecial = false;
-        int yy;
-        for (yy = y ; yy < y + align ; yy++) {
-            if (this.arrayField[yy][x].getPower() != GameEnums.FRUITS_POWER.NONE) {
-                foundSpecial = true;
-                break;
-            }
-        }
-        if (!foundSpecial) {
-            return NO_SPECIAL_FOUND;
-        }
-        for (yy = y ; yy < y + align ; yy++) {
-            if (this.arrayField[yy][x].getPower() == GameEnums.FRUITS_POWER.NONE) {
-                return yy;
-            }
-        }
-        return SATURATED;
     }
 
     /*
@@ -932,52 +891,52 @@ public class GameHandler {
                         downMargin1 = (y < Constants.FIELD_YLENGTH - 1);
                         downMargin2 = (y < Constants.FIELD_YLENGTH - 2);
                         if (leftMargin1) {
-                            this.destroyBySpecialFruit(x - 1, y, newListToBeActivated);
+                            this.activateSpecialFruitBlast(x - 1, y, newListToBeActivated);
                             if (leftMargin2) {
-                                this.destroyBySpecialFruit(x - 2, y, newListToBeActivated);
+                                this.activateSpecialFruitBlast(x - 2, y, newListToBeActivated);
                             }
                             if (downMargin1) {
-                                this.destroyBySpecialFruit(x - 1, y + 1, newListToBeActivated);
+                                this.activateSpecialFruitBlast(x - 1, y + 1, newListToBeActivated);
                             }
                             if (upMargin1) {
-                                this.destroyBySpecialFruit(x - 1, y - 1, newListToBeActivated);
+                                this.activateSpecialFruitBlast(x - 1, y - 1, newListToBeActivated);
                             }
                         }
                         if (rightMargin1) {
-                            this.destroyBySpecialFruit(x + 1, y, newListToBeActivated);
+                            this.activateSpecialFruitBlast(x + 1, y, newListToBeActivated);
                             if (rightMargin2) {
-                                this.destroyBySpecialFruit(x + 2, y, newListToBeActivated);
+                                this.activateSpecialFruitBlast(x + 2, y, newListToBeActivated);
                             }
                             if (downMargin1) {
-                                this.destroyBySpecialFruit(x + 1, y + 1, newListToBeActivated);
+                                this.activateSpecialFruitBlast(x + 1, y + 1, newListToBeActivated);
                             }
                             if (upMargin1) {
-                                this.destroyBySpecialFruit(x + 1, y - 1, newListToBeActivated);
+                                this.activateSpecialFruitBlast(x + 1, y - 1, newListToBeActivated);
                             }
                         }
                         if (upMargin1) {
-                            this.destroyBySpecialFruit(x, y - 1, newListToBeActivated);
+                            this.activateSpecialFruitBlast(x, y - 1, newListToBeActivated);
                             if (upMargin2) {
-                                this.destroyBySpecialFruit(x, y - 2, newListToBeActivated);
+                                this.activateSpecialFruitBlast(x, y - 2, newListToBeActivated);
                             }
                         }
                         if (downMargin1) {
-                            this.destroyBySpecialFruit(x, y + 1, newListToBeActivated);
+                            this.activateSpecialFruitBlast(x, y + 1, newListToBeActivated);
                             if (downMargin2) {
-                                this.destroyBySpecialFruit(x, y + 2, newListToBeActivated);
+                                this.activateSpecialFruitBlast(x, y + 2, newListToBeActivated);
                             }
                         }
                         break;
                     case HORIZONTAL_LIGHTNING:
                         this.advanceMission(GameEnums.ORDER_KIND.LIGHTNING, 1);
                         for (xx = 0; xx < Constants.FIELD_XLENGTH; xx++) {
-                            this.destroyBySpecialFruit(xx, y, newListToBeActivated);
+                            this.activateSpecialFruitBlast(xx, y, newListToBeActivated);
                         }
                         break;
                     case VERTICAL_LIGHTNING:
                         this.advanceMission(GameEnums.ORDER_KIND.LIGHTNING, 1);
                         for (yy = 0; yy < Constants.FIELD_YLENGTH; yy++) {
-                            this.destroyBySpecialFruit(x, yy, newListToBeActivated);
+                            this.activateSpecialFruitBlast(x, yy, newListToBeActivated);
                         }
                         break;
                     case OMEGA_SPHERE:
@@ -986,8 +945,8 @@ public class GameHandler {
                             int colour = orderedFruitIndexes.get(mostPresentFruitId);
                             for (yy = 0 ; yy < Constants.FIELD_YLENGTH ; yy++) {
                                 for (xx = 0 ; xx < Constants.FIELD_XLENGTH ; xx++) {
-                                    if (this.getIdFruit(xx, yy) == colour && !this.checkerToBeEmptiedSpaces.get(xx, yy)) {
-                                        this.destroyBySpecialFruit(xx, yy, newListToBeActivated);
+                                    if (this.getIdFruit(xx, yy) == colour) {
+                                        this.activateSpecialFruitBlast(xx, yy, newListToBeActivated);
                                         this.omegaTargetsCoorsByColour[colour].add(new SpaceCoors(xx, yy));
                                     }
                                 }
@@ -1000,10 +959,10 @@ public class GameHandler {
                         break;
                     case VIRTUAL_LIGHTNING_LIGHTNING:
                         for (xx = 0; xx < Constants.FIELD_XLENGTH; xx++) {
-                            this.destroyBySpecialFruit(xx, y, newListToBeActivated);
+                            this.activateSpecialFruitBlast(xx, y, newListToBeActivated);
                         }
                         for (yy = 0; yy < Constants.FIELD_YLENGTH; yy++) {
-                            this.destroyBySpecialFruit(x, yy, newListToBeActivated);
+                            this.activateSpecialFruitBlast(x, yy, newListToBeActivated);
                         }
                         break;
                     case VIRTUAL_FIRE_LIGHTNING:
@@ -1011,7 +970,7 @@ public class GameHandler {
                             xx = x + coefDirectional8X[i];
                             yy = y + coefDirectional8Y[i];
                             while (areAcceptableCoordinates(xx, yy)) { // Note : later on, it may be blocked
-                                this.destroyBySpecialFruit(xx, yy, newListToBeActivated);
+                                this.activateSpecialFruitBlast(xx, yy, newListToBeActivated);
                                 xx += coefDirectional8X[i];
                                 yy += coefDirectional8Y[i];
                             }
@@ -1025,7 +984,7 @@ public class GameHandler {
                                 yy = this.ySwapCenter + dist*coefDirectionalY[dir];
                                 for (step = 0 ; step < dist ; step++) {
                                     if (areAcceptableCoordinates(xx, yy)) {
-                                        this.destroyBySpecialFruit(xx, yy, newListToBeActivated);
+                                        this.activateSpecialFruitBlast(xx, yy, newListToBeActivated);
                                     }
                                     xx += coefDirectionalClockwiseTurningX[dir];
                                     yy += coefDirectionalClockwiseTurningY[dir];
@@ -1037,12 +996,12 @@ public class GameHandler {
                         xx = x-1;
                         yy = y;
                         while (xx >= Math.max(x-2, 0)) {
-                            this.destroyBySpecialFruit(xx, yy, newListToBeActivated);
+                            this.activateSpecialFruitBlast(xx, yy, newListToBeActivated);
                             xx--;
                         }
                         xx = x+1;
                         while (xx <= Math.min(x+2, Constants.FIELD_XLENGTH-1)) {
-                            this.destroyBySpecialFruit(xx, yy, newListToBeActivated);
+                            this.activateSpecialFruitBlast(xx, yy, newListToBeActivated);
                             xx++;
                         }
                         break;
@@ -1050,12 +1009,12 @@ public class GameHandler {
                         xx = x;
                         yy = y-1;
                         while (yy >= Math.max(y-2, 0)) {
-                            this.destroyBySpecialFruit(xx, yy, newListToBeActivated);
+                            this.activateSpecialFruitBlast(xx, yy, newListToBeActivated);
                             yy--;
                         }
                         yy = y+1;
                         while (yy <= Math.min(y+2, Constants.FIELD_XLENGTH-1)) {
-                            this.destroyBySpecialFruit(xx, yy, newListToBeActivated);
+                            this.activateSpecialFruitBlast(xx, yy, newListToBeActivated);
                             yy++;
                         }
                         break;
@@ -1065,34 +1024,34 @@ public class GameHandler {
                         rightMargin1 = (x < Constants.FIELD_XLENGTH - 1);
                         downMargin1 = (y < Constants.FIELD_YLENGTH - 1);
                         if (leftMargin1) {
-                            this.destroyBySpecialFruit(x - 1, y, newListToBeActivated);
+                            this.activateSpecialFruitBlast(x - 1, y, newListToBeActivated);
                             if (downMargin1) {
-                                this.destroyBySpecialFruit(x - 1, y + 1, newListToBeActivated);
+                                this.activateSpecialFruitBlast(x - 1, y + 1, newListToBeActivated);
                             }
                             if (upMargin1) {
-                                this.destroyBySpecialFruit(x - 1, y - 1, newListToBeActivated);
+                                this.activateSpecialFruitBlast(x - 1, y - 1, newListToBeActivated);
                             }
                         }
                         if (rightMargin1) {
-                            this.destroyBySpecialFruit(x + 1, y, newListToBeActivated);
+                            this.activateSpecialFruitBlast(x + 1, y, newListToBeActivated);
                             if (downMargin1) {
-                                this.destroyBySpecialFruit(x + 1, y + 1, newListToBeActivated);
+                                this.activateSpecialFruitBlast(x + 1, y + 1, newListToBeActivated);
                             }
                             if (upMargin1) {
-                                this.destroyBySpecialFruit(x + 1, y - 1, newListToBeActivated);
+                                this.activateSpecialFruitBlast(x + 1, y - 1, newListToBeActivated);
                             }
                         }
                         if (upMargin1) {
-                            this.destroyBySpecialFruit(x, y - 1, newListToBeActivated);
+                            this.activateSpecialFruitBlast(x, y - 1, newListToBeActivated);
                         }
                         if (downMargin1) {
-                            this.destroyBySpecialFruit(x, y + 1, newListToBeActivated);
+                            this.activateSpecialFruitBlast(x, y + 1, newListToBeActivated);
                         }
                         break;
                     case VIRTUAL_OMEGA_OMEGA:
                         for (yy = 0 ; yy < Constants.FIELD_YLENGTH ; yy++) {
                             for (xx = 0; xx < Constants.FIELD_XLENGTH; xx++) {
-                                this.destroyBySpecialFruit(xx, yy, newListToBeActivated);
+                                this.activateSpecialFruitBlast(xx, yy, newListToBeActivated);
                             }
                         }
                         break;
@@ -1106,15 +1065,14 @@ public class GameHandler {
         return goForDestructionAgain;
     }
 
-    private void destroyBySpecialFruit(int x, int y, List<SpaceCoors> newList) {
+    private void activateSpecialFruitBlast(int x, int y, List<SpaceCoors> newList) {
         if (this.hasFruit(x, y) || this.hasOmegaSphere(x, y)) {
             if (this.checkerToBeEmptiedSpaces.add(x, y)) {
-                if ((this.arrayField[y][x].getPower() != GameEnums.FRUITS_POWER.NONE) || (this.hasOmegaSphere(x, y))) {
+                if (this.isSpecialFruit(x, y)) {
                     newList.add(new SpaceCoors(x, y));
                 }
                 this.checkerScoreDestructionSpecial.add(x, y, 1);
                 this.score += 1;
-                this.collectedFruits++;
             }
         }
 
@@ -1158,12 +1116,6 @@ public class GameHandler {
         SpaceCoors belowCoors;
         List<SpaceCoors> fallingFruitsNewCoors = new ArrayList<>();
 
-        // Get rid of former fruits for good
-        for (SpaceCoors coorsDestroy : this.checkerToBeEmptiedSpaces.getList()) {
-            this.arrayField[coorsDestroy.y][coorsDestroy.x] = new EmptySpace();
-        }
-        this.checkerToBeEmptiedSpaces.clear();
-
         // Shift all falling fruits "below" in futur array
         int xFall, yFall, xDest, yDest, xSource, ySource;
         boolean newFall;
@@ -1199,6 +1151,7 @@ public class GameHandler {
         this.checkerFallingElements.clear();
         this.checkerDropUpperLeftHere.clear();
         this.checkerDropUpperRightHere.clear();
+        // TODO A few remaining unwanted diagonal squeezes
 
         // Fruits in the spawning part
         int xSpawn, ySpawn;
@@ -1240,7 +1193,6 @@ public class GameHandler {
         if (newFall) {
             this.gth.startFall();
         } else {
-            this.thisMoveComboCoefficient++;
             this.performStableCheck(false);
         }
     }
@@ -1248,40 +1200,22 @@ public class GameHandler {
     private void fullyCheckFallingElements() {
         int xCheck, yCheck;
         List<SpaceCoors> emptySpaces = new ArrayList<>();
-        for (yCheck = 0 ; yCheck < Constants.FIELD_YLENGTH ; yCheck++) {
-            for (xCheck = 0 ; xCheck < Constants.FIELD_XLENGTH ; xCheck++) {
-                if (this.arrayField[yCheck][xCheck] instanceof EmptySpace) {
-                    emptySpaces.add(new SpaceCoors(xCheck, yCheck));
-                } else if (this.shouldBlockDiagonalSqueeze(xCheck, yCheck)) {
-                    this.blockDiagonalSqueezeHereAndDownward(xCheck, yCheck);
-                }
-            }
-        }
-        handleAboveEmptySpaces(emptySpaces);
-    }
-    // 551551
-    // Si on détruit 3 blocs d'un coup, les blocs se mettent à glisser. Il faut mieux déterminer quels blocs peuvent attirer les blocs en case suivante !
-
-
-    private void fullyCheckFallingElementsInStableCheck() {
-        int xCheck, yCheck;
-        List<SpaceCoors> emptySpaces = new ArrayList<>();
         precheckEmptySpaces();
         for (yCheck = 0 ; yCheck < Constants.FIELD_YLENGTH ; yCheck++) {
             for (xCheck = 0 ; xCheck < Constants.FIELD_XLENGTH ; xCheck++) {
-                if (this.checkerToBeEmptiedSpaces.get(xCheck, yCheck)) {
+                if (this.isEmpty(xCheck, yCheck)) { // Instead of simple checkerToBeEmptiedSpaces so that stable check after unstable check takes it into account
                     emptySpaces.add(new SpaceCoors(xCheck, yCheck));
-                } else if (!(this.arrayField[yCheck][xCheck] instanceof EmptySpace) && this.shouldBlockDiagonalSqueeze(xCheck, yCheck)) {
+                } else if (this.arrayField[yCheck][xCheck].canFall()) {
                     this.blockDiagonalSqueezeHereAndDownward(xCheck, yCheck);
                 }
+                if (this.shouldSpawnFruit(xCheck, yCheck)) {
+                    this.blockDiagonalSqueezeHereAndDownward(xCheck, yCheck);
+                }// Note : should NOT be added in the else because any spawning space needs to have a downward blocking.
             }
         }
         handleAboveEmptySpaces(emptySpaces);
     }
-
-    private boolean shouldBlockDiagonalSqueeze(int x, int y) {
-        return this.shouldSpawnFruit(x, y);
-    }
+    // TODO : last (?) bug to correct for diagonal squeezes : if you destroy 3 solid blocks from the left, fruits start falling from the right but ultimately fall from the left
     
     private void precheckEmptySpaces() {
         checkerBlockDiagonalSqueeze.clear();
@@ -1307,8 +1241,10 @@ public class GameHandler {
         int ySource = yFall-1;
        // if (ySource >= 0 && this.arrayField[ySource][xSource].canFall() && !this.checkerFallingElements.get(xSource, ySource)  && !this.checkerFallingElements.get(xFall, yFall-1)
         if (ySource >= 0 
-                && this.arrayField[ySource][xSource].canFall() && !this.checkerFallingElements.get(xSource, ySource) && !this.checkerFallingElements.get(xFall, yFall-1)
+                && this.arrayField[ySource][xSource].canFall() && !this.checkerFallingElements.get(xSource, ySource)
+                && (!this.checkerFallingElements.get(xFall, yFall-1) || this.isEmpty(xFall, yFall-1)) // "emptyspace check" to allow elements to form diagonal walls
                 && (!checkerDropUpperHere.get(xFall, yFall-1))
+                && (!(this.isEmpty(xSource, ySource))) // To prevent infinite loops
                 && !checkerBlockDiagonalSqueeze.get(xFall, yFall-1)
         ) {
             checkerDropUpperHere.add(xFall, yFall);
@@ -1322,14 +1258,19 @@ public class GameHandler {
         int xx = x;
         SpaceCoors coors;
         
-        while (this.arrayField[yy][xx].canFall() && this.checkerBlockDiagonalSqueeze.add(xx, yy)) {
+        while (this.shouldBeFallable(xx, yy) && this.checkerBlockDiagonalSqueeze.add(xx, yy)) {
             coors = this.getCoorsFallableJustBelow(xx, yy);
             if (coors == null) {
                 return;
             }
             xx = coors.x;
             yy = coors.y;
-        }
+        } // If we had only a (this.arrayField[yy][xx].canFall()), a "block that is about to be destroyed" would not count.
+    }
+
+    // Equals true IF : x, y is either an item to fall OR a block that is gonna be destroyed.
+    private boolean shouldBeFallable(int x, int y) {
+        return this.arrayField[y][x].canFall() || this.isEmpty(x, y);
     }
 
     private void testAndAlertAboutAlignedFruitsAroundSpace(int xFruit, int yFruit) {
@@ -1361,20 +1302,50 @@ public class GameHandler {
         }
     }
 
-    private void testAndAlertAboutAlignedFruits(int x1, int y1, int x2, int y2, int x3, int y3) {
-        if (gotAlignment(x1, y1, x2, y2, x3, y3)) {
-            this.checkerAlignedFruits.add(x1, y1);
-            this.checkerAlignedFruits.add(x2, y2);
-            this.checkerAlignedFruits.add(x3, y3);
+    /*
+    Returns the coordinates of the fruit that is supposed to fall into this space (usually the one right above, but there may be teleporters)
+    Or return null if the space is either non existent or empty
+    SOMETHING IS SUPPOSED TO FALL (and emptiness can fall)
+     */
+    private SpaceCoors getCoorsFallableJustAbove(int x, int y) {
+        SpaceCoors supposedSource = this.arrayTeleporterCorrespondingEntrance[y][x];
+        if (supposedSource != null) {
+            if (!this.shouldBeFallable(supposedSource.x,supposedSource.y)) {
+                return null;
+            }
+            return supposedSource;
         }
+        if (y == 0) {
+            return null;
+        }
+        if (!this.shouldBeFallable(x, y-1)) {
+            return null;
+        }
+        return new SpaceCoors(x, y-1);
     }
 
-    private boolean areAcceptableCoordinates(int x, int y) {
-        return (x >= 0 && y >= 0 && x < Constants.FIELD_XLENGTH && y < Constants.FIELD_YLENGTH);
+    /*
+    Coors of the space immediately below, if it can fall...
+     */
+    private SpaceCoors getCoorsFallableJustBelow(int x, int y) {
+        SpaceCoors supposedDest = this.arrayTeleporterCorrespondingExit[y][x];
+        if (supposedDest != null) {
+            if (!this.shouldBeFallable(supposedDest.x, supposedDest.y)) {
+                return null;
+            }
+            return supposedDest;
+        }
+        if (y == Constants.FIELD_YLENGTH-1) {
+            return null;
+        }
+        if (!this.shouldBeFallable(x, y+1)) {
+            return null;
+        }
+        return new SpaceCoors(x, y+1);
     }
 
     // ------------
-    // Missions 
+    // Goals and missions
     // Warning : order matters A LOT !
     // Note : "Control mission" is the name for whenever we want to advance missions
 
@@ -1382,38 +1353,38 @@ public class GameHandler {
         switch (swap) {
             case FIRE_ELECTRIC:
                 if (!this.advanceMission(GameEnums.ORDER_KIND.LIGHTNING_FIRE, 1)) {
-                    if (this.advanceMission(GameEnums.ORDER_KIND.LIGHTNING_WILD, 1)) {
+                    if (!this.advanceMission(GameEnums.ORDER_KIND.LIGHTNING_WILD, 1)) {
                         this.advanceMission(GameEnums.ORDER_KIND.LIGHTNING, 1);
                     }
-                    if (this.advanceMission(GameEnums.ORDER_KIND.FIRE_WILD, 1)) {
+                    if (!this.advanceMission(GameEnums.ORDER_KIND.FIRE_WILD, 1)) {
                         this.advanceMission(GameEnums.ORDER_KIND.FIRE, 1);
                     }
                 }
                 break;
             case OMEGA_ELECTRIC:
                 if (!this.advanceMission(GameEnums.ORDER_KIND.LIGHTNING_OMEGA, 1)) {
-                    if (this.advanceMission(GameEnums.ORDER_KIND.LIGHTNING_WILD, 1)) {
+                    if (!this.advanceMission(GameEnums.ORDER_KIND.LIGHTNING_WILD, 1)) {
                         this.advanceMission(GameEnums.ORDER_KIND.LIGHTNING, 1);
                     }
-                    if (this.advanceMission(GameEnums.ORDER_KIND.OMEGA_WILD, 1)) {
+                    if (!this.advanceMission(GameEnums.ORDER_KIND.OMEGA_WILD, 1)) {
                         this.advanceMission(GameEnums.ORDER_KIND.OMEGA, 1);
                     }
                 }
                 break;
             case OMEGA_FIRE:
                 if (!this.advanceMission(GameEnums.ORDER_KIND.OMEGA_FIRE, 1)) {
-                    if (this.advanceMission(GameEnums.ORDER_KIND.FIRE_WILD, 1)) {
+                    if (!this.advanceMission(GameEnums.ORDER_KIND.FIRE_WILD, 1)) {
                         this.advanceMission(GameEnums.ORDER_KIND.FIRE, 1);
                     }
-                    if (this.advanceMission(GameEnums.ORDER_KIND.OMEGA_WILD, 1)) {
+                    if (!this.advanceMission(GameEnums.ORDER_KIND.OMEGA_WILD, 1)) {
                         this.advanceMission(GameEnums.ORDER_KIND.OMEGA, 1);
                     }
                 }
                 break;
             case FIRE_FIRE:
                 if ((
-                        this.advanceMission(GameEnums.ORDER_KIND.FIRE_FIRE, 1) ||
-                                this.advanceMission(GameEnums.ORDER_KIND.FIRE_WILD, 2)
+                        !this.advanceMission(GameEnums.ORDER_KIND.FIRE_FIRE, 1) &&
+                                !this.advanceMission(GameEnums.ORDER_KIND.FIRE_WILD, 2)
                 )) {
                     this.advanceMission(GameEnums.ORDER_KIND.FIRE, 2);
                     // TODO Ajouter un checker "taken in swap for mission" ou qqch du genre pour quand on contrôlera les fruits ?
@@ -1499,6 +1470,7 @@ public class GameHandler {
     public boolean isNotDestroyedBeforeFall(int x, int y) {
         return (!this.checkerToBeEmptiedSpaces.get(x, y));
     }
+
     public SpaceCoors getDestination(int x, int y) {
         return this.arrayTeleporterCorrespondingExit[y][x];
     }
@@ -1585,6 +1557,8 @@ public class GameHandler {
         return this.checkerDropUpperLeftHere.getList();
     }
 
+    public int getElapsedMoves() {return this.numberElapsedMoves;}
+
     // ------------
     // Getter for input
     public boolean isClickable(int x, int y) {
@@ -1618,8 +1592,7 @@ public class GameHandler {
                 (x == 0 || !this.checkerDropUpperRightHere.get(x-1, y+1)) &&
                         (x == Constants.FIELD_XLENGTH-1 || !this.checkerDropUpperLeftHere.get(x+1, y+1))
         ));
-        // TODO change "checkerDropUpperRightHere" into "checkerDropUpperLeftHere" ;
-        //  I didn't change it yet because of the logic of the checkers in handleDiagonallySqueezingFruits and the fact the falls were still bugged.
+        // TODO rather than make a check on destinations, make one on starts ? (whole diagonal squeeze implementations have already been thought, though...)
     }
 }
 
@@ -1632,17 +1605,13 @@ public class GameHandler {
 // C'est ce qui se produit quand on fait un échange près d'un rocher à 1 qui déclenche le fruit spécial et celui-ci touche la case à panier visée. Pas de panier collecté.
 
 // TODO : collecte panier dans le cas swap oméga + X et dans les cas feu + éclair (et les 2 autres swap.... ?)
+// De plus, quand on active une sphère oméga, la case de destination de la sphère oméga ne collecte pas le panier...
 
 // TODO Diagonal squeeze et chute :
 // On doit pouvoir diminuer le check des cases vides à chaque check instable en construisant une liste des "cases potentiellement vides" ; idem pour les cases potentiellement squeezables. Mais attention, une case potentiellement squezzable n'a rien à voir avec une case qui squeeze lors d'une vérification, stable ou pas !
 
-// 551551 Fait :
-// Ajout du squeeze diagonal
-// Ajout de boutons de changement
-// Ajout d'un check qui n'était pas refait au-delà de la première destruction car jugé inutile
-// Déplacement endroit où on score (ce n'est plus dans le check de l'alignement mais bien dans la destruction du fruit)
-// Ajout du nombre de fruits dans le titre
-// Ajout d'un menu de niveau !
-// Changement icone (provisoire)
+// TODO création de fruits spéciaux :
+// Aucun fruit n'est créé si dans l'ensemble il y a au moins 1 fruit spécial activé
+// Si une ligne de 3 ou 4 (H ou V) intersecte deux lignes de 5, fruit créé au milieu de la ligne 5
+// Problème potentiel : intersection de deux lignes de 5
 
-// 551551 Bug : les fruits effacés juste au dessus des sphères Oméga

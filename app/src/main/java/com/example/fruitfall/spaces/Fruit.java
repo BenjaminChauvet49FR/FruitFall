@@ -58,4 +58,7 @@ public class Fruit extends SpaceFiller {
             canvas.drawBitmap(view.getBitmapImageFire(), rectSource, rectDestination, paint);
         }
     }
+
+    @Override
+    public SpaceFiller copy() { return new Fruit(this.value, this.power); }
 }

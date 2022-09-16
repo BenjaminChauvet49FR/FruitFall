@@ -26,4 +26,7 @@ public class OmegaSphere extends SpaceFiller {
 
     @Override
     public GameEnums.FRUITS_POWER getPower() {return GameEnums.FRUITS_POWER.OMEGA_SPHERE;}
+
+    @Override
+    public SpaceFiller copy() { return new OmegaSphere(); }
 }

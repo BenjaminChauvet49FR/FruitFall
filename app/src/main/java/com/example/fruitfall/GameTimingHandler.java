@@ -324,7 +324,7 @@ public class GameTimingHandler {
         return (
                 ((x != this.xSwap1) || (y != this.ySwap1)) &&
                         ((x != this.xSwap2) || (y != this.ySwap2)) &&
-                        (this.gameState == GameEnums.GAME_STATE.DESTRUCTING_STASIS || (this.gh.isNotFallingFruit(x, y) && this.gh.isNotInDiagonalSqueeze(x, y))) &&
+                        (this.gameState != GameEnums.GAME_STATE.FALLING || (this.gh.isNotFallingFruit(x, y) && this.gh.isNotInDiagonalSqueeze(x, y))) &&
                         this.gh.isNotDestroyedBeforeFall(x, y)
         );
     }

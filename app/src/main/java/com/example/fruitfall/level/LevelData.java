@@ -22,9 +22,12 @@ public class LevelData {
     // IMPORTANT : coordinate in position (i) in inFallTeleporters must be at a base, otherwise it can be very confusing. And coordinate in position (i) in outFallTeleporters must be at a summit.
     private List<SpaceCoors> inFallTeleporters;
     private List<SpaceCoors> outFallTeleporters;
-    private String name;
     private GameEnums.SPACE_DATA[] topRowSpawn;
     private String charsForTransition;
+
+    private String name;
+    private int category;
+    private String contents;
 
     private int[] amountsMission;
     private int numberOfMissions;
@@ -52,6 +55,7 @@ public class LevelData {
     }
 
     public String getTitle() { return this.name; }
+    public int getCategory() { return this.category; }
     public int getMissionsNumber() { return this.numberOfMissions; }
     public GameEnums.ORDER_KIND getKind(int i) { return this.kindsOfMissions[i]; }
     public int getAmount(int i) { return this.amountsMission[i]; }
@@ -62,7 +66,13 @@ public class LevelData {
     }
 
     // Note : the string is parsed into tokens ('split(" ")'). Read below to understand how each token is then interpreted.
-    public LevelData(String s, String name) {
+    public LevelData(int category, String contents, String name) {
+        this.name = name;
+        this.contents = contents;
+        this.category = category;
+    }
+
+    public void deploy() {
         this.numberOfMissions = 0;
         this.kindsOfMissions = new GameEnums.ORDER_KIND[Constants.MAX_MISSIONS];
         this.amountsMission = new int[Constants.MAX_MISSIONS];
@@ -93,7 +103,7 @@ public class LevelData {
         this.outFallTeleporters = new ArrayList<>();
         this.locksDuration = new ArrayList<>();
 
-        String[] obtainedStrings = s.split(" ");
+        String[] obtainedStrings = this.contents.split(" ");
         for (String token : obtainedStrings) {
             switch(token.charAt(0)) {
 
@@ -108,7 +118,7 @@ public class LevelData {
                     break;
 
                 // Field data
-                case 'b' : interpretStringBlockSpawn1stRow(token.substring(1)); // 551551 Ca a été un bug corrigé ?
+                case 'b' : interpretStringBlockSpawn1stRow(token.substring(1));
                     break;
                 case 't' : interpretStringTeleporters(token.substring(1));
                     break;

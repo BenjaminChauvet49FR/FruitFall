@@ -45,4 +45,7 @@ public class DelayedLock extends SpaceFiller {
                 rectDestination.bottom - Pix.hMainSpace/2, // rectDestination = where the space needs to be drawn
                 paint);
     }
+
+    @Override
+    public SpaceFiller copy() { return new DelayedLock(this.count); }
 }

@@ -20,8 +20,13 @@ public class VoidSpace extends SpaceFiller {
 
     }
 
+    @Override
     public boolean isASpace() { return false; }
 
+    @Override
     public boolean mayDisappear() { return false; }
+
+    @Override
+    public SpaceFiller copy() { return new VoidSpace(); }
 
 }

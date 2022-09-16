@@ -46,4 +46,7 @@ public class BreakableBlock extends SpaceFiller {
                 paint);
         // Note : should be changed ... ?
     }
+
+    @Override
+    public SpaceFiller copy() { return new BreakableBlock(this.count); }
 }

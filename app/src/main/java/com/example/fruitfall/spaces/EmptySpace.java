@@ -20,4 +20,7 @@ public class EmptySpace extends SpaceFiller {
 
     @Override
     public void paintStill(MyCanvasView view, Canvas canvas, Rect rectSource, Rect rectDestination, Paint paint) {}
+
+    @Override
+    public SpaceFiller copy() { return new EmptySpace(); }
 }

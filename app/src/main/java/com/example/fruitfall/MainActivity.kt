@@ -1,13 +1,12 @@
 package com.example.fruitfall
 
 import android.os.Bundle
-import android.view.Menu
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.PopupMenu
 import androidx.appcompat.app.AppCompatActivity
+import com.example.fruitfall.level.LevelCategories.*
 import com.example.fruitfall.level.LevelManager
-import java.util.logging.Level
 
 // Almost everything was taken from : https://developer.android.com/codelabs/advanced-android-kotlin-training-canvas#2
 // Main exception is "credits here".
@@ -57,21 +56,38 @@ class MainActivity : AppCompatActivity() {
         }
 
         // IMPORTANT : order must be the same for items and for levels.
-        // Credits : https://stackoverflow.com/questions/13784088/setting-popupmenu-menu-items-programmatically
-        val menu = PopupMenu(this, myView)
+        // Credits :
+        // General : https://stackoverflow.com/questions/13784088/setting-popupmenu-menu-items-programmatically
+        // For submenus : https://www.tabnine.com/code/java/methods/android.view.SubMenu/add
+        val generalMenu = PopupMenu(this, myView)
+        val submenus : Array<PopupMenu> = arrayOf(
+            PopupMenu(this, myView),
+            PopupMenu(this, myView),
+            PopupMenu(this, myView)
+        )
+        generalMenu.getMenu().add(LEVELS_TO_BE, LEVELS_TO_BE, LEVELS_TO_BE, "Futurs niveaux")
+        generalMenu.getMenu().add(DEBUG, DEBUG, DEBUG, "Débug")
+        generalMenu.getMenu().add(FUN, FUN, FUN, "Fun")
         var levelNumber = 0;
         for (level in LevelManager.levelLists) {
-            menu.getMenu().add(Menu.NONE, levelNumber, levelNumber, level.title)
+            submenus[level.category].getMenu().add(level.category, levelNumber, levelNumber, level.title)
             levelNumber++
         }
         findViewById<Button>(R.id.buttonLevelChoice).setOnClickListener {
-
-            menu.show()
+            generalMenu.show()
         }
-        menu.setOnMenuItemClickListener { item ->
-            LevelManager.levelNumber = item.itemId
-            myView.startLevel()
+
+        generalMenu.setOnMenuItemClickListener { item ->
+            submenus[item.itemId].show()
             true
+        }
+
+        for (subMenu in submenus) {
+            subMenu.setOnMenuItemClickListener { item ->
+                LevelManager.levelNumber = item.itemId
+                myView.startLevel()
+                true
+            }
         }
     }
 }

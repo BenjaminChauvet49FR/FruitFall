@@ -143,7 +143,7 @@ class MyCanvasView(context: Context) : View(context) {
         paint.setTypeface(mainFont)
         paint.setStyle(Paint.Style.FILL)// How to avoid awful outlined texts : https://stackoverflow.com/questions/31877417/android-draw-text-with-solid-background-onto-canvas-to-be-used-as-a-bitmap
         canvas.drawText("Score : " + gh.getScore(), Pix.xScore, Pix.yScore, paint);
-        canvas.drawText("Temps : " + gh.gth.getTimeToDisplay(), Pix.xTime, Pix.yTime, paint);
+        canvas.drawText("Temps : " + gh.gth.getTimeToDisplay() + " (" + gh.getElapsedMoves() + ")", Pix.xTime, Pix.yTime, paint);
         canvas.drawText(gh.getMissionSummary(), Pix.xCommands, Pix.yCommands, paint);
         paint.setColor(colorTitle);
         canvas.drawText(gh.getTitleAndInfos(), Pix.xTitle, Pix.yTitle, paint);

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+    Added diagonal squeeze
+    Stable check : Added a check that wasn't done post 1st destruction
+    Moved the place where score was made (in fruit destruction rather than in alignment check)
+
+    Changed the name of the method "destroyBySpecialFruit" with "activateSpecialFruitBlast", forcing to check whether the fruit is destroyed within the method.
+    Added method "performCleanUpAndFall" such that the destruction + fall of fruits is made at a single place, this place being right before the fall phase (before unstable check)
+    Also, the cleanup of 'toBeEmptied' checker is made here, and empty spaces are added here, and not in unstable check anymore (it was about time), but right before the fall of check
+    This allowed me to delete the separation of handleAboveEmptySpaces for stable and unstable checks ; there used to be a bothering philosophy around the checker 'toBeEmptied' that was the cause of a few bugs.
+    Whether the checker should be emptied or not as the spaces could be destroyed immediately will be decided later.
+
+    Modified behaviour of special fruits : a new special fruit is created only if no special fruit is already found in the alignment(s).
+    Added "isSpecialFruit", too
+
+    Added a new icon for the game
+    Added button that allows to directly select a level + started adding level categories
+    Added button to switch fall speed
+    Corrected (or avoided ?) an omega sphere bug : when switching, all fruits above a fruit destroyed by omega sphere would be considered in fall and not shown.
+    Corrected bugs that prevented special fruits to be collected on swaps
+    Corrected bug for blocking of the 1st row
+
+    Reordered code in GameHandler A LOT.
+
+    -->
+</resources>
