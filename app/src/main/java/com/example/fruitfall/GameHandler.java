@@ -68,7 +68,6 @@ public class GameHandler {
     private int xSourceOmegaDestruction = Constants.NOT_A_SPACE_COOR;
     private int ySourceOmegaDestruction = Constants.NOT_A_SPACE_COOR;
     private GameEnums.WHICH_SWAP lastSwap = GameEnums.WHICH_SWAP.NONE;
-
     private int[] amountsMission = new int[Constants.MAX_MISSIONS];
     private int numberOfMissions;
     private GameEnums.ORDER_KIND[] kindsOfMissions = new GameEnums.ORDER_KIND[Constants.MAX_MISSIONS];
@@ -684,12 +683,23 @@ public class GameHandler {
 
     private void destroyByAlignment(int x, int y) {
         if (this.checkerToBeEmptiedSpaces.add(x, y)) {
-            this.catchBasket(x, y);
-            this.tryToDecreaseBreakableBlockAround(x, y);
-            this.thisMoveFruitsDestroyedByFall++;
-            int scoreAmount = (this.thisMoveFruitsDestroyedByFall+2)/3;
-            this.checkerScoreDestructionFall.add(x, y, scoreAmount);
-            this.score += scoreAmount;
+            if (!this.isSpecialFruit(x, y)) {
+                // Philosophie : Considérer que si on a un fruit spécial ici on ne doit pas faire tout ce qui suit...
+                this.catchBasket(x, y);
+                this.tryToDecreaseBreakableBlockAround(x, y);
+                int scoreAmount;// 3 times : 5 7 9 10 11 12 13 14 15 15 16 16 17 17 18
+                if (this.thisMoveFruitsDestroyedByFall < 9) {
+                    scoreAmount = 5+2*(this.thisMoveFruitsDestroyedByFall/3);
+                } else if (this.thisMoveFruitsDestroyedByFall < 24) {
+                    scoreAmount = 10+(this.thisMoveFruitsDestroyedByFall-9)/3;
+                } else {
+                    scoreAmount = 15+(this.thisMoveFruitsDestroyedByFall-24)/6;
+                }
+                this.thisMoveFruitsDestroyedByFall++;
+                this.checkerScoreDestructionFall.add(x, y, scoreAmount);
+                this.score += scoreAmount; // Score adding !
+                this.advanceFruitMission(x, y);
+            }
         }
     }
     
@@ -796,7 +806,7 @@ public class GameHandler {
         this.arrayField[y][x] = spaceFiller;
         this.checkerToBeEmptiedSpaces.remove(x, y);
         this.checkerScoreDestructionFall.add(x, y, correspondingScoreAmount); // TODO score pour "création fruit spécial ?"
-        this.score += correspondingScoreAmount;
+        this.score += correspondingScoreAmount; // Score adding !
     }
 
     /*
@@ -1070,9 +1080,11 @@ public class GameHandler {
             if (this.checkerToBeEmptiedSpaces.add(x, y)) {
                 if (this.isSpecialFruit(x, y)) {
                     newList.add(new SpaceCoors(x, y));
+                } else { // Philosophy "not special fruit"
+                    this.checkerScoreDestructionSpecial.add(x, y, 5);
+                    this.score += 5; // Score adding !
+                    this.advanceFruitMission(x, y);
                 }
-                this.checkerScoreDestructionSpecial.add(x, y, 1);
-                this.score += 1;
             }
         }
 
@@ -1387,8 +1399,6 @@ public class GameHandler {
                                 !this.advanceMission(GameEnums.ORDER_KIND.FIRE_WILD, 2)
                 )) {
                     this.advanceMission(GameEnums.ORDER_KIND.FIRE, 2);
-                    // TODO Ajouter un checker "taken in swap for mission" ou qqch du genre pour quand on contrôlera les fruits ?
-                    // Il faudra veiller à cleaner ce swap juste après la première salve de destructions
                 }
                 break;
 
@@ -1450,6 +1460,33 @@ public class GameHandler {
         return false;
     }
 
+    private void advanceFruitMission(int x, int y) {
+        this.advanceFruitMissionAux(this.arrayField[y][x].getIdFruit()); // TODO if a fruit is collected as a "special fruit", it should be collected as a "coloured fruit" but not as an "any fruit". Here, it's an any fruit.
+    }
+
+    private void advanceFruitMissionAux(int index) {
+        for (int i = 0 ; i < this.numberOfMissions; i++) {
+            if (this.kindsOfMissions[i].getFruitId() == index) {
+                this.amountsMission[i]--;
+                if (this.amountsMission[i] == -1) {
+                    for (int j = 0 ; j < this.numberOfMissions ; j++) {
+                        if (this.kindsOfMissions[j].getFruitId() == Constants.ANY_FRUIT && this.amountsMission[j] > 0) {
+                            this.amountsMission[j]--;
+                        }
+                    }
+                    this.amountsMission[i] = 0;
+                }
+                return; // Found fruit of the colour of a mission (that may be over) : leave here.
+            }
+        }
+        // Didn't find, but we have this
+        for (int j = 0 ; j < this.numberOfMissions ; j++) {
+            if (this.kindsOfMissions[j].getFruitId() == Constants.ANY_FRUIT  && this.amountsMission[j] > 0) {
+                this.amountsMission[j]--;
+            }
+        }
+    }
+
     public void catchBasket(int x, int y) {
         if (this.arrayBaskets[y][x] > 0) {
             if (this.arrayField[y][x].canFall()) {
@@ -1501,20 +1538,23 @@ public class GameHandler {
         return this.score;
     }
 
-    public String getMissionSummary() {
-        
-        String answer = "";
-        switch (this.goalKind) {
-            case BASKETS :
-                answer = "Paniers : " + this.basketsCount;
-            break;
-            case ORDERS :
-                for (int i = 0; i < this.numberOfMissions; i++) {
-                    answer += GameEnums.toString(this.kindsOfMissions[i]) + " " + this.amountsMission[i] + " ";
-                }
-            break;
-        }
-        return answer;
+    public GameEnums.GOAL_KIND getGoalKind() {
+        return this.goalKind;
+    }
+
+    public int getNumberofMissions() {
+        return this.numberOfMissions;
+    }
+
+    public int[] getAmountsOrder() {
+        return this.amountsMission;
+    }
+    public GameEnums.ORDER_KIND[] getKindsOfOrder() {
+        return this.kindsOfMissions;
+    }
+
+    public int getBasketsCount() {
+           return this.basketsCount;
     }
 
     public String getTitleAndInfos() {
@@ -1539,10 +1579,6 @@ public class GameHandler {
 
     public boolean hasOmegaSphere(int x, int y) {
         return (this.arrayField[y][x].getPower() == GameEnums.FRUITS_POWER.OMEGA_SPHERE);
-    }
-
-    public GameEnums.GOAL_KIND getGoalKind() {
-        return this.goalKind;
     }
 
     public int getBaskets(int x, int y) {
@@ -1614,4 +1650,8 @@ public class GameHandler {
 // Aucun fruit n'est créé si dans l'ensemble il y a au moins 1 fruit spécial activé
 // Si une ligne de 3 ou 4 (H ou V) intersecte deux lignes de 5, fruit créé au milieu de la ligne 5
 // Problème potentiel : intersection de deux lignes de 5
+// Philosophie : on considère quand un fruit spécial est créé qu'il compte pour une mission de fruit, qu'il détruit les alentours... car il y a destruction. Mais doit-on considérer la même chose pour quand un fruit spécial est détruit ?
 
+// TODO deux questions qui restent sans réponse :
+// Que faire quand on a aucun coup possible ? Swap libre, ou bien brasser les fruits ?
+// Combo feu + feu ?

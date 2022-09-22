@@ -36,6 +36,8 @@ public class GameTimingHandler {
     private Checker handledDestroyAnimationsChecker = new Checker(Constants.FIELD_XLENGTH, Constants.FIELD_YLENGTH);
     private int constantNumberFramesFall;
     private boolean debugShouldSwitchFallSpeed;
+    private float relativeTransitionLength;
+    private boolean pause;
 
     public GameTimingHandler(GameHandler gh) {
         this.gh = gh;
@@ -53,6 +55,11 @@ public class GameTimingHandler {
         this.handledDestroyAnimationsChecker.clear();
         this.spaceAnimationList = new ArrayList<>();
         this.spaceAnimationFruitDestroyedList = new ArrayList<>();
+        this.pause = false;
+    }
+
+    public void setRelativeTransitionLength(float rtl) {
+        this.relativeTransitionLength = rtl;
     }
 
     // Misc
@@ -206,6 +213,9 @@ public class GameTimingHandler {
     // Transitions : step
     @RequiresApi(api = Build.VERSION_CODES.N)
     public void step() {
+        if (this.pause) {
+            return;
+        }
         if (this.gameState == GameEnums.GAME_STATE.NORMAL) {
             this.frameTotalCount++;
             if (this.debugShouldSwitchFallSpeed) {
@@ -261,7 +271,7 @@ public class GameTimingHandler {
         }
         if (this.gameState == GameEnums.GAME_STATE.INTRODUCTION) {
             this.frameCount++;
-            if (this.frameCount == Constants.NUMBER_FRAMES_INTRODUCTION_TOTAL) {
+            if (this.frameCount >= Constants.NUMBER_FRAMES_INTRODUCTION_TOTAL * this.relativeTransitionLength) {
                 this.gh.triggerWelcoming();
             }
             return;
@@ -299,8 +309,8 @@ public class GameTimingHandler {
     public float ratioProgressiveIntroSpaces(float desiredRatio) {
         // RFAI is 0.3 : time goes to 0 to 1 (always), full time goes to 0.3 to 1,
         // We desire 0.8 : window of opportunity is between 0.5 and 0.8
-        float firstFrame = desiredRatio*(Constants.NUMBER_FRAMES_INTRODUCTION_SPACES_ONLY-Constants.NUMBER_FRAMES_INTRODUCTION_GHOST);
-        int numberFrames = Constants.NUMBER_FRAMES_INTRODUCTION_GHOST;
+        float firstFrame = desiredRatio*(Constants.NUMBER_FRAMES_INTRODUCTION_SPACES_ONLY-Constants.NUMBER_FRAMES_INTRODUCTION_GHOST)*(float)this.relativeTransitionLength;
+        float numberFrames = Constants.NUMBER_FRAMES_INTRODUCTION_GHOST*this.relativeTransitionLength;
         float currentFrameRelativeTo1st = this.frameCount - firstFrame;
         if (currentFrameRelativeTo1st < 0) {
             return 0;
@@ -312,7 +322,7 @@ public class GameTimingHandler {
     }
 
     public boolean shouldDrawSpaceContentProgessiveIntro(float desiredRatio) {
-        return this.frameCount > desiredRatio*(Constants.NUMBER_FRAMES_INTRODUCTION_SPACES_ONLY-Constants.NUMBER_FRAMES_INTRODUCTION_GHOST) + Constants.NUMBER_FRAMES_INTRODUCTION_GHOST + Constants.NUMBER_FRAMES_INTRODUCTION_FLEX_FRUIT;
+        return this.frameCount > (desiredRatio*(Constants.NUMBER_FRAMES_INTRODUCTION_SPACES_ONLY-Constants.NUMBER_FRAMES_INTRODUCTION_GHOST) + Constants.NUMBER_FRAMES_INTRODUCTION_GHOST + Constants.NUMBER_FRAMES_INTRODUCTION_FLEX_FRUIT)*(float)this.relativeTransitionLength;
     }
 
     public int getXSwap1() { return this.xSwap1; }
@@ -357,5 +367,13 @@ public class GameTimingHandler {
 
     public void switchFallSpeed() {
         this.debugShouldSwitchFallSpeed = true;
+    }
+
+    public void switchPause() {
+        this.pause = !this.pause;
+    }
+
+    public boolean getPause() {
+        return this.pause;
     }
 }

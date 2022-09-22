@@ -26,13 +26,12 @@ public class Pix {
     public static float yScore = 10+hText;
     public static float xTime = xScore + 300;
     public static float yTime = yScore;
-    public static float xCommands = xScore;
-    public static float yCommands = yScore + hText*(float)1.2;
 
     public static float xTitle = xStartSpaces;
     public static float yTitle = yAfterSpaces + hText*(float)1.2;
 
     public static float hScoreSpace = hText;
+    public static float hTextTeleporters = hText;
     public static float hLockDuration = hText * (float)1.2;
     public static int wActiveLight = 22;
     public static int hActiveLight = 22;
@@ -45,6 +44,17 @@ public class Pix {
     public static float thicknessOuterBeam = 12f;
     public static float thicknessMidBeam = 8f;
     public static float thicknessInnerBeam = 4f;
+
+    public static int squareSide = 128;
+    public static int pauseFieldInfoSide = 128;
+
+    public static int resourceLittleSide = 64;
+    public static int xGapBetweenGoals = 64;
+    public static float yCommandsText = yScore + hText*(float)1.2;
+    public static float xCommands = xScore;
+    public static float yCommandsKind = yScore + hText*(float)0.2;
+    public static float xCommandsKind(int i) {return xCommands + i*(resourceLittleSide + xGapBetweenGoals);}
+    public static float xCommandsAmount(int i) {return xCommands + i*(resourceLittleSide + xGapBetweenGoals) + resourceLittleSide + 2;}
 
     // Draw pix
     public static int xLeftMainSpace(float x) {

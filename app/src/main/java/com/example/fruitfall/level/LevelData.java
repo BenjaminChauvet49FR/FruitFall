@@ -8,6 +8,10 @@ import com.example.fruitfall.SpaceCoors;
 import com.example.fruitfall.exceptions.IncorrectStringException;
 import com.example.fruitfall.introductions.Transition;
 import com.example.fruitfall.introductions.TransitionManager;
+import com.example.fruitfall.spatialTransformation.SpatialTransformation;
+import com.example.fruitfall.spatialTransformation.SpatialTransformationHorizMirror;
+import com.example.fruitfall.spatialTransformation.SpatialTransformationNone;
+import com.example.fruitfall.spatialTransformation.SpatialTransformationUTurn;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,13 +31,21 @@ public class LevelData {
 
     private String name;
     private int category;
-    private String contents;
+    private String infos;
+    private String fieldContents;
 
     private int[] amountsMission;
     private int numberOfMissions;
     private GameEnums.ORDER_KIND[] kindsOfMissions;
-    private int[][] baskets;
+    private int[][] basketsSpaceData;
     private GameEnums.GOAL_KIND goalKind;
+
+    private static int widthClipBoard = 0;
+    private static int heightClipBoard = 0;
+    private static GameEnums.SPACE_DATA[][] clipBoard = new GameEnums.SPACE_DATA[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
+    private static int[][] additionalClipBoard = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
+    private static int[][] basketsClipBoard = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
+
 
     public int getFruitColours() {
         return this.numberOfFruitKinds;
@@ -66,13 +78,16 @@ public class LevelData {
     }
 
     // Note : the string is parsed into tokens ('split(" ")'). Read below to understand how each token is then interpreted.
-    public LevelData(int category, String contents, String name) {
+    public LevelData(int category, String fieldContents, String infos, String name) {
         this.name = name;
-        this.contents = contents;
+        this.fieldContents = fieldContents;
+        this.infos = infos;
         this.category = category;
     }
 
     public void deploy() {
+
+        // Setup
         this.numberOfMissions = 0;
         this.kindsOfMissions = new GameEnums.ORDER_KIND[Constants.MAX_MISSIONS];
         this.amountsMission = new int[Constants.MAX_MISSIONS];
@@ -81,7 +96,6 @@ public class LevelData {
         }
 
         int x, y;
-        this.name = name;
         this.forcedIndexes = new ArrayList<>();
         this.topRowSpawn = new GameEnums.SPACE_DATA[Constants.FIELD_XLENGTH];
         for (x = 0; x < Constants.FIELD_XLENGTH; x++) {
@@ -90,12 +104,12 @@ public class LevelData {
 
         this.spaceData = new GameEnums.SPACE_DATA[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
         this.additionalSpaceData = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
-        this.baskets = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
+        this.basketsSpaceData = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
         this.goalKind = GameEnums.GOAL_KIND.ORDERS;
         for (y = 0; y < Constants.FIELD_YLENGTH; y++) {
             for (x = 0; x < Constants.FIELD_XLENGTH; x++) {
                 this.spaceData[y][x] = GameEnums.SPACE_DATA.FRUIT;
-                this.baskets[y][x] = 0;
+                this.basketsSpaceData[y][x] = 0;
             }
         }
 
@@ -103,25 +117,26 @@ public class LevelData {
         this.outFallTeleporters = new ArrayList<>();
         this.locksDuration = new ArrayList<>();
 
-        String[] obtainedStrings = this.contents.split(" ");
+        // Field part
+        String[] obtainedStrings = this.fieldContents.split(" ");
         for (String token : obtainedStrings) {
+            if (token.length() == 0) {
+                continue;
+            }
             switch(token.charAt(0)) {
-
-                // Level data
-                case 'f' : interpretStringFruits(token.substring(1));
-                    break;
-                case 'l' : interpretStringLockLength(token.substring(1));
-                    break;
-                case 'i' : this.charsForTransition = (token.substring(1));
-                    break;
-                case 'm' : interpretStringMissions(token.substring(1));
-                    break;
 
                 // Field data
                 case 'b' : interpretStringBlockSpawn1stRow(token.substring(1));
                     break;
                 case 't' : interpretStringTeleporters(token.substring(1));
                     break;
+
+                // Tool data
+                case 'c' : interpretStringCopy(token.substring(1));
+                    break;
+                case 'v' :
+                    interpretStringPaste(token.substring(1));
+                break;
 
                 // Space data
                 case 'B' : interpretStringBaskets(token.substring(1));
@@ -132,6 +147,25 @@ public class LevelData {
             } 
         }
 
+        // Infos part
+        obtainedStrings = this.infos.split(" ");
+        for (String token : obtainedStrings) {
+            if (token.length() == 0) {
+                continue;
+            }
+            switch(token.charAt(0)) {
+                // Level data
+                case 'f' : interpretStringFruits(token.substring(1));
+                    break;
+                case 'l' : interpretStringLockLength(token.substring(1));
+                    break;
+                case 'i' : this.charsForTransition = (token.substring(1));
+                    break;
+                case 'm' : interpretStringMissions(token.substring(1));
+                    break;
+            }
+        }
+        // Default infos part
         if (this.numberOfMissions == 0) {
             this.numberOfMissions = 1;
             this.kindsOfMissions[0] = GameEnums.ORDER_KIND.LIGHTNING_LIGHTNING;
@@ -139,12 +173,63 @@ public class LevelData {
         }
     }
 
+    // Offensive programming ! Don't put something out of bounds !
+    private void interpretStringPaste(String tokenBody) {
+        int xS, yS;
+        SpatialTransformation transformation;
+        switch (tokenBody.charAt(0)) {
+            case 'h' :
+                xS = charToInt(tokenBody, 1);
+                yS = charToInt(tokenBody, 2);
+                transformation = new SpatialTransformationHorizMirror(xS, yS, xS + widthClipBoard - 1, yS + heightClipBoard - 1);
+            break;
+            case 'x' :
+                xS = charToInt(tokenBody, 1);
+                yS = charToInt(tokenBody, 2);
+                transformation = new SpatialTransformationUTurn(xS, yS, xS + widthClipBoard - 1, yS + heightClipBoard - 1);
+            break;
+            default :
+                xS = charToInt(tokenBody, 0);
+                yS = charToInt(tokenBody, 1);
+                transformation = new SpatialTransformationNone(xS, yS, xS + widthClipBoard - 1, yS + heightClipBoard - 1);
+            break; // TODO : not all possible transformations have been added, notably, vertical one is missing
+        }
+        SpaceCoors transCoors;
+        int x, y;
+        for (y = yS; y < yS + heightClipBoard; y++) {
+            for (x = xS; x < xS + widthClipBoard; x++) {
+                transCoors = transformation.transform(x, y);
+                this.spaceData[transCoors.y][transCoors.x] = clipBoard[y-yS][x-xS];
+                this.additionalSpaceData[transCoors.y][transCoors.x] = additionalClipBoard[y-yS][x-xS];
+                this.basketsSpaceData[transCoors.y][transCoors.x] = basketsClipBoard[y-yS][x-xS];
+            }
+        }
+    }
+
+    private void interpretStringCopy(String tokenBody) {
+        int x1 = charToInt(tokenBody, 0);
+        int y1 = charToInt(tokenBody, 1);
+        int x2 = charToInt(tokenBody, 2);
+        int y2 = charToInt(tokenBody, 3);
+        int x, y;
+        for (y = y1; y <= y2; y++) {
+            for (x = x1; x <= x2; x++) {
+                clipBoard[y-y1][x-x1] = this.spaceData[y][x];
+                additionalClipBoard[y-y1][x-x1] = this.additionalSpaceData[y][x];
+                basketsClipBoard[y-y1][x-x1] = this.basketsSpaceData[y][x];
+            }
+        }
+        heightClipBoard = y2-y1+1;
+        widthClipBoard = x2-x1+1;
+    }
+
     private void interpretStringMissions(String tokenBody) {
         GameEnums.ORDER_KIND kind = GameEnums.ORDER_KIND.NONE;
         int amount = 5;
 
         switch(tokenBody.charAt(0)) {
-            case '0' : kind = GameEnums.ORDER_KIND.FRUITS_ANY; break;
+            case 'a' : kind = GameEnums.ORDER_KIND.FRUITS_ANY; break;
+            case '0' : kind = GameEnums.ORDER_KIND.FRUIT_0; break;
             case '1' : kind = GameEnums.ORDER_KIND.FRUIT_1; break;
             case '2' : kind = GameEnums.ORDER_KIND.FRUIT_2; break;
             case '3' : kind = GameEnums.ORDER_KIND.FRUIT_3; break;
@@ -152,7 +237,6 @@ public class LevelData {
             case '5' : kind = GameEnums.ORDER_KIND.FRUIT_5; break;
             case '6' : kind = GameEnums.ORDER_KIND.FRUIT_6; break;
             case '7' : kind = GameEnums.ORDER_KIND.FRUIT_7; break;
-            case '8' : kind = GameEnums.ORDER_KIND.FRUIT_8; break;
             case 'l' : kind = GameEnums.ORDER_KIND.LIGHTNING; break;
             case 'f' : kind = GameEnums.ORDER_KIND.FIRE; break;
             case 'o' : kind = GameEnums.ORDER_KIND.OMEGA; break;
@@ -192,7 +276,7 @@ public class LevelData {
 
     private void interpretStringBaskets(String tokenBody) {
         this.goalKind = GameEnums.GOAL_KIND.BASKETS;
-        this.fillRectangleAreaInArray(this.baskets, tokenBody);
+        this.fillRectangleAreaInArray(this.basketsSpaceData, tokenBody);
     }
 
     private void fillRectangleAreaInArray(int[][] array, String tokenBody) {
@@ -304,7 +388,7 @@ public class LevelData {
     }
 
     public int getBaskets(int x, int y) {
-        return this.baskets[y][x];
+        return this.basketsSpaceData[y][x];
     }
 
     public GameEnums.GOAL_KIND getGoalKind() {

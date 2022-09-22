@@ -29,21 +29,24 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Précédent" />
+                    android:text="Précédent"
+                    android:textSize="12sp" />
 
                 <Button
                     android:id="@+id/buttonModeRestart"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Redémarrer" />
+                    android:text="Redémarrer"
+                    android:textSize="12sp" />
 
                 <Button
                     android:id="@+id/buttonModeNext"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Suivant" />
+                    android:text="Suivant"
+                    android:textSize="12sp" />
             </LinearLayout>
 
             <LinearLayout
@@ -84,10 +87,18 @@
             android:layout_weight="1">
 
             <Button
+                android:id="@+id/buttonPause"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="Pause" />
+
+            <Button
                 android:id="@+id/buttonLevelChoice"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:text="Choix du niveau" />
+                android:layout_weight="1"
+                android:text="Choix niveau" />
         </LinearLayout>
 
     </LinearLayout>

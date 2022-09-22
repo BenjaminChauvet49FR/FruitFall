@@ -89,5 +89,9 @@ class MainActivity : AppCompatActivity() {
                 true
             }
         }
+
+        findViewById<Button>(R.id.buttonPause).setOnClickListener {
+            myView.setPause()
+        }
     }
 }

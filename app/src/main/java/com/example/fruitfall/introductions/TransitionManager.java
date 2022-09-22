@@ -7,6 +7,8 @@ public class TransitionManager {
             case 'r' : return new TransitionRandom();
             case 'h' : return new TransitionLineHorizUD();
             case 't' : return new TransitionRandomFromLeft();
+            case 's' : return new TransitionSpiral();
+            case 'd' : return new TransitionDiagonal();
             default : return new TransitionRandom();
         }
     }

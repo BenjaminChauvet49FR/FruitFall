@@ -22,4 +22,6 @@
     <color name="title">#440044</color>
     <color name="animationFire">#ff0000</color>
     <color name="animationLightning">#ffff00</color>
+    <color name="entranceWarps">#880044</color>
+    <color name="exitWarps">#448800</color>
 </resources>

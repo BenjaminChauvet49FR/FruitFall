@@ -6,6 +6,24 @@ import java.util.List;
 
 public abstract class Transition {
 
+    /*
+    TODO transitions existantes : (nombre d'orientations)
+    Diagonale (*8)
+    Spirale
+    Upward 12121 (*4)
+    Line Horiz HD (*4)
+
+    TODO futures transitions :
+    losanges sortant de terre (*8 avec astuce)
+    4 fois (5 fois 5) (*8)
+    Whirl (*8)
+    Losanges dont les pointes sortent du bas et du haut (*2)
+    Double spirale (*4)
+    Double spirale qui sort de terre (*4)
+    Zigzag général (*8)
+    3 bandes puis retombée en bas
+    */
+
     // array of values between 0 and 1;
     protected float[][] spaces;
 
@@ -34,6 +52,9 @@ public abstract class Transition {
     public float getProgressThreshold(int x, int y) {
         return this.spaces[y][x];
     }
+
+    // If some transitions should be longer, multiply the length with the factor here
+    public float relativeTransitionLength() {return (float)1.0;}
 
     // NOTE : utilitary method
     // randSource values are supposed to be in strictly ascending order.
