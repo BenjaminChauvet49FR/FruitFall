@@ -40,9 +40,10 @@ public class DelayedLock extends SpaceFiller {
         paint.setColor(view.getColorLockDuration());
         paint.setTextSize(Pix.hLockDuration);
         paint.setStyle(Paint.Style.FILL_AND_STROKE);
+        // Remember : text has been centered !
         canvas.drawText(String.valueOf(this.count),
-                rectDestination.left + 2,
-                rectDestination.bottom - Pix.hMainSpace/2, // rectDestination = where the space needs to be drawn
+                (rectDestination.left + rectDestination.right)/2,
+                (rectDestination.top + rectDestination.bottom)/2, // rectDestination = where the space needs to be drawn
                 paint);
     }
 

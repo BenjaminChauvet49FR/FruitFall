@@ -20,9 +20,7 @@ public class Pix {
     public static int yStartActiveLight = 22;
     public static float xScore = xStartSpaces + 50;
     public static float hText = yStartSpaces * (float)0.3;
-    public static float basketSpaceMargin = wMainSpace * (float)0.5;
-    public static int basketSpaceBGMargin = wMainSpace * 2 / 5;
-    public static int basketSpaceSide = wMainSpace / 2;
+
     public static float yScore = 10+hText;
     public static float xTime = xScore + 300;
     public static float yTime = yScore;
@@ -32,9 +30,17 @@ public class Pix {
 
     public static float hScoreSpace = hText;
     public static float hTextTeleporters = hText;
+    public static int pauseFieldInfoSide = (int)hTextTeleporters*3/2;
+
     public static float hLockDuration = hText * (float)1.2;
     public static int wActiveLight = 22;
     public static int hActiveLight = 22;
+
+    public static float basketSpaceMargin = wMainSpace * (float)0.5;
+    public static int basketSpaceBGMargin = 0;// wMainSpace * 2 / 5;
+    public static int basketSpaceSide = wMainSpace;//wMainSpace / 2;
+    public static float pipSide = 10;
+    public static float pipPadding = 5;
 
     public static float selectionFrame = 4f;
     public static float backgroundFrame = 1f;
@@ -46,8 +52,6 @@ public class Pix {
     public static float thicknessInnerBeam = 4f;
 
     public static int squareSide = 128;
-    public static int pauseFieldInfoSide = 128;
-
     public static int resourceLittleSide = 64;
     public static int xGapBetweenGoals = 64;
     public static float yCommandsText = yScore + hText*(float)1.2;
@@ -82,7 +86,7 @@ public class Pix {
         return yUpMainSpace(y) + Pix.hMainSpace;
     }
     public static int xCenter(int x) {
-        return xLeftMainSpace(x) + Pix.hMainSpace/2;
+        return xLeftMainSpace(x) + Pix.wMainSpace/2;
     }
     public static int yCenter(int y) { return yUpMainSpace(y) + Pix.hMainSpace/2; }
 }

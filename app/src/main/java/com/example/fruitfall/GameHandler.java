@@ -10,6 +10,7 @@ import com.example.fruitfall.spaces.BreakableBlock;
 import com.example.fruitfall.spaces.EmptySpace;
 import com.example.fruitfall.spaces.Fruit;
 import com.example.fruitfall.spaces.DelayedLock;
+import com.example.fruitfall.spaces.HostageLock;
 import com.example.fruitfall.spaces.OmegaSphere;
 import com.example.fruitfall.spaces.SpaceFiller;
 import com.example.fruitfall.spaces.VoidSpace;
@@ -101,6 +102,7 @@ public class GameHandler {
         return (this.getIdFruit(x, y) == this.getIdFruit(x2, y2) && this.getIdFruit(x, y) == this.getIdFruit(x3, y3));
     }
 
+    // Check if a space has a FREE fruit
     public boolean hasFruit(int x, int y) {
         return (this.arrayField[y][x] instanceof Fruit);
     }
@@ -126,6 +128,10 @@ public class GameHandler {
     // Should be considered empty for fall calculations
     private boolean isEmpty(int x, int y) {
         return this.arrayField[y][x] instanceof EmptySpace;
+    }
+
+    private boolean isHostage(int x, int y) {
+        return this.arrayField[y][x] instanceof HostageLock;
     }
 
     private void testAndAlertAboutAlignedFruits(int x1, int y1, int x2, int y2, int x3, int y3) {
@@ -237,34 +243,37 @@ public class GameHandler {
         // Setup field !
         // conditions (to be completed) : teleports done.
         boolean shouldGainSpawn;
-        GameEnums.SPACE_DATA data;
+        GameEnums.SPACE_DATA mainData;
         for (y = 0 ; y < Constants.FIELD_YLENGTH ; y++) {
             for (x = 0; x < Constants.FIELD_XLENGTH; x++) {
                 shouldGainSpawn = shouldHaveSpawn(ld, x, y);
-                data = ld.getData(x, y);
-                if (data == GameEnums.SPACE_DATA.FRUIT) {
+                mainData = ld.getData(x, y);
+                if (mainData == GameEnums.SPACE_DATA.FRUIT) {
                     // Generate fruit
                     this.arrayField[y][x] = new Fruit(rand.nextInt(this.numberOfFruitKinds));
-                    if (x >= 2) {
-                        testAndAlertAboutAlignedFruits(x, y, x-1, y, x-2, y);
-                    }
-                    if (y >= 2) {
-                        testAndAlertAboutAlignedFruits(x, y, x, y-1, x, y-2);
-                    }
-                } else if (data == GameEnums.SPACE_DATA.DELAYED_LOCK) {
+                } else if (mainData == GameEnums.SPACE_DATA.DELAYED_LOCK) {
                     this.arrayField[y][x] = new DelayedLock(ld.getLockDuration(x, y));
                     this.countRemainingLocks++;
                     this.listDelayedLocks.add(new SpaceCoors(x, y));
-                } else if (data == GameEnums.SPACE_DATA.BREAKABLE_BLOCK) {
+                } else if (mainData == GameEnums.SPACE_DATA.BREAKABLE_BLOCK) {
                     this.arrayField[y][x] = new BreakableBlock(ld.getBreakableBlockLevel(x, y));
                     // Note : the list of coors may be actually useless, unlike locks which are discounted each turn
-                } else if (data == GameEnums.SPACE_DATA.EMPTY) {
+                } else if (mainData == GameEnums.SPACE_DATA.EMPTY) {
                     this.arrayField[y][x] = new EmptySpace();
                 } else {
                     // Not a space able to handle fruits ; still need to initialize arrays.
                     this.arrayField[y][x] = new VoidSpace();
                     this.arrayShouldFruitsBeSpawned[y][x] = false;
                     shouldGainSpawn = false;
+                }
+                // Should put test alignment here, after fruits are known
+                if (this.arrayField[y][x].getIdFruit() != Constants.NOT_A_FRUIT) {
+                    if (x >= 2) {
+                        testAndAlertAboutAlignedFruits(x, y, x-1, y, x-2, y);
+                    }
+                    if (y >= 2) {
+                        testAndAlertAboutAlignedFruits(x, y, x, y-1, x, y-2);
+                    }
                 }
                 this.arrayShouldFruitsBeSpawned[y][x] = shouldGainSpawn;
             }
@@ -299,10 +308,23 @@ public class GameHandler {
             // Renew fruits
             for (SpaceCoors coors : formerListGetAlignedFruit) {
                 this.arrayField[coors.y][coors.x] = new Fruit(rand.nextInt(this.numberOfFruitKinds));
+                // Remember, hostages are managed at the end
             }
             // So... what's next with new fruits ?
             for (SpaceCoors coors : formerListGetAlignedFruit) {
                 testAndAlertAboutAlignedFruitsAroundSpace(coors.x, coors.y);
+            }
+        }
+        // Now, the hostage locks
+        int hostageLevel;
+        SpaceFiller spaceF;
+        for (y = 0 ; y < Constants.FIELD_YLENGTH ; y++) {
+            for (x = 0; x < Constants.FIELD_XLENGTH; x++) {
+                hostageLevel = ld.getHostage(x, y);
+                spaceF = this.arrayField[y][x];
+                if (spaceF.isASpace() && hostageLevel > 0) {
+                    this.arrayField[y][x] = new HostageLock(spaceF, hostageLevel);
+                }
             }
         }
 
@@ -325,7 +347,7 @@ public class GameHandler {
 
     /*
         Important : here are how thing works :
-        // Input method (GH) -> start method; data of game not affected
+        // Input method (GH) -> start method; F of game not affected
         // start method (GTH) -> change state, initialize frames that will be increased by step
         // step method (GTH) -> increases one variable (unless normal state). Once counter has reached threshold, change state :  trigger method
         // trigger method (GH) -> stop method ; data of game affected ; start method or end methods
@@ -629,8 +651,8 @@ public class GameHandler {
         int x, y, currentFruit, xAft, yAft, xx, yy; // x After, y After last fruit
         for (y = 0 ; y < Constants.FIELD_YLENGTH ; y++) {
             for (x = 0 ; x < Constants.FIELD_XLENGTH ; x++) {
-                if (this.hasFruit(x, y)) {
-                    currentFruit = this.getIdFruit(x, y);
+                currentFruit = this.getIdFruit(x, y);
+                if (currentFruit != Constants.NOT_A_FRUIT) {
                     // Horizontal check
                     if (x == 0 || this.getIdFruit(x-1, y) != currentFruit) {
                         xAft = x+1;
@@ -681,8 +703,23 @@ public class GameHandler {
         }
     }
 
+    // Supposed goal : take down 1 level of the lock ; replace it if it is empty
+    private void attackHostage(int x, int y) {
+        HostageLock h = (HostageLock) this.arrayField[y][x];
+        h.downgrade();
+        if (h.getCount() == 0) {
+            if (this.isEmpty(x, y)) {
+                this.checkerToBeEmptiedSpaces.add(x, y);
+            } else {
+                this.arrayField[y][x] = h.getHostage();
+            }
+        }
+    }
+
     private void destroyByAlignment(int x, int y) {
-        if (this.checkerToBeEmptiedSpaces.add(x, y)) {
+        if (this.isHostage(x, y)) { // Instance of hostage lock
+            this.attackHostage(x, y);
+        } else if (this.checkerToBeEmptiedSpaces.add(x, y)) {
             if (!this.isSpecialFruit(x, y)) {
                 // Philosophie : Considérer que si on a un fruit spécial ici on ne doit pas faire tout ce qui suit...
                 this.catchBasket(x, y);
@@ -1088,9 +1125,13 @@ public class GameHandler {
             }
         }
 
-        // Collect a basket even if no fruit is found there
-        this.catchBasket(x, y);
-        this.tryToDecreaseBreakableBlock(x, y);
+        if (this.isHostage(x, y)) {
+            this.attackHostage(x, y);
+        } else {
+            // Collect a basket even if no fruit is found there
+            this.catchBasket(x, y);
+            this.tryToDecreaseBreakableBlock(x, y);
+        }
     }
 
     /*

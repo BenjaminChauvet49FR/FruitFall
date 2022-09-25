@@ -2,21 +2,16 @@ package com.example.fruitfall
 
 import android.content.Context
 import android.graphics.*
-import android.graphics.drawable.Drawable
 import android.os.Build
 import android.view.MotionEvent
 import android.view.View
 import androidx.annotation.RequiresApi
 import androidx.core.content.res.ResourcesCompat
-import androidx.core.content.res.ResourcesCompat.getColor
-import com.example.fruitfall.animations.*
+import com.example.fruitfall.animations.SpaceAnimation
 import com.example.fruitfall.introductions.Transition
 import com.example.fruitfall.introductions.TransitionRandom
-import com.example.fruitfall.introductions.TransitionUpward12121
 import com.example.fruitfall.level.LevelData
 import com.example.fruitfall.level.LevelManager
-import com.example.fruitfall.spaces.OmegaSphere
-import kotlin.math.roundToInt
 
 private const val SPACE_UNDEFINED = -1
 
@@ -39,14 +34,15 @@ class MyCanvasView(context: Context) : View(context) {
     private val colorBGSpaces = arrayOf(ResourcesCompat.getColor(resources, R.color.spaceBG1, null), ResourcesCompat.getColor(resources, R.color.spaceBG2, null))
     private val colorBGSpaceFrame = ResourcesCompat.getColor(resources, R.color.spaceBGFrame, null)
     val colorLockDuration = ResourcesCompat.getColor(resources, R.color.colorLockDuration, null)
+    val colorLockHostage = ResourcesCompat.getColor(resources, R.color.colorLockHostage, null)
 
 
     private val rectSource = Rect(0, 0, Pix.resourceSide, Pix.resourceSide)
     private val rectSourceVariable = Rect(0, 0, Pix.resourceSide, Pix.resourceSide)
     private val rectDest = Rect(0, 0, 0, 0)
     private val rectDestMini = Rect(0, 0, 0, 0)
+    private val rectPips = RectF(0.0.toFloat(), 0.0.toFloat(), 0.0.toFloat(), 0.0.toFloat())
     private val rectFrame = Rect(0, 0, 0, 0)
-    private val rectAnim = Rect(0, 0, 0, 0)
 
     private var pixMotionTouchEventX = 0f
     private var pixMotionTouchEventY = 0f
@@ -89,14 +85,15 @@ class MyCanvasView(context: Context) : View(context) {
     val bitmapImageLightH = makeResizedImage(R.drawable.lightning_h, Pix.squareSide)
     val bitmapImageLightV = makeResizedImage(R.drawable.lightning_v, Pix.squareSide)
     val bitmapImageSphereOmega = BitmapFactory.decodeResource(resources, R.drawable.sphere_omega)
-    val bitmapImageLocking = BitmapFactory.decodeResource(resources, R.drawable.locking)
+    val bitmapImageLocking = BitmapFactory.decodeResource(resources, R.drawable.locking) // TODO celui là a besoin d'uniformisations
     val bitmapImageBreakableBlock = BitmapFactory.decodeResource(resources, R.drawable.crushable)
+    val bitmapImageHostageLock = BitmapFactory.decodeResource(resources, R.drawable.hostage_locking)
     val bitmapOrderAny = makeResizedImage(R.drawable.losange_any, Pix.squareSide)
     val bitmapOrderMix = makeResizedImage(R.drawable.losange_mix, Pix.squareSide)
     val bitmapOrderSimple = makeResizedImage(R.drawable.losange_simple, Pix.squareSide)
     val bitmapOrderSpecial = makeResizedImage(R.drawable.losange_special, Pix.squareSide)
     val bitmapOrderWild = makeResizedImage(R.drawable.losange_wild, Pix.squareSide)
-    val bitmapArrowSpawn = makeResizedImage(R.drawable.arrow_spawn, Pix.pauseFieldInfoSide) // TODO taille optimisable
+    val bitmapArrowSpawn = makeResizedImage(R.drawable.arrow_spawn, Pix.pauseFieldInfoSide) // TODO flèche mal dimensionnée...
 
     // Search for a font on my computer : https://www.pcmag.com/how-to/how-to-manage-your-fonts-in-windows
     // Font handling : https://developer.android.com/guide/topics/ui/look-and-feel/fonts-in-xml#kotlin
@@ -168,6 +165,8 @@ class MyCanvasView(context: Context) : View(context) {
         paint.setTextSize(Pix.hText);
         paint.setTypeface(mainFont)
         paint.setStyle(Paint.Style.FILL)// How to avoid awful outlined texts : https://stackoverflow.com/questions/31877417/android-draw-text-with-solid-background-onto-canvas-to-be-used-as-a-bitmap
+        paint.setTextAlign(Paint.Align.LEFT)
+        // Convention for text drawing is easy : draw on fields = center, draw outside fields aligned left !
         canvas.drawText("Score : " + gh.getScore(), Pix.xScore, Pix.yScore, paint);
         canvas.drawText("Temps : " + gh.gth.getTimeToDisplay() + " (" + gh.getElapsedMoves() + ")", Pix.xTime, Pix.yTime, paint);
         drawMission(canvas)
@@ -190,6 +189,7 @@ class MyCanvasView(context: Context) : View(context) {
         if (gh.gth.isInIntro()) {
             drawProgressiveCheckerboard(canvas)
         } else {
+            paint.setTextAlign(Paint.Align.CENTER)
             drawAllSpaceContents(canvas)
             if (!gh.gth.pause) {
                 drawSpaceAnimations(canvas, gh.gth.animations1List)// TODO devrait être dessiné APRES les cases et AVANT les contenus dans l'idéal.
@@ -312,15 +312,18 @@ class MyCanvasView(context: Context) : View(context) {
 
     private fun drawBaskets(canvas: Canvas) {
         var baskets : Int
+        var nbBasketsDown : Int // Number of baskets in the bottom part of the space
+        var nbBasketsUp : Int // The remaining baskets
         val pixXLeftStart = Pix.xLeftMainSpace(0) + Pix.basketSpaceBGMargin
         val pixXRightStart = pixXLeftStart + Pix.basketSpaceSide
-        paint.setTextSize(Pix.hScoreSpace);
         paint.setStyle(Paint.Style.FILL_AND_STROKE)
         val formerAlpha = paint.alpha
         rectDest.left = pixXLeftStart
         rectDest.right = pixXRightStart
         rectDest.top = Pix.yUpMainSpace(0)
         rectDest.bottom = rectDest.top + Pix.basketSpaceSide
+        var pixXPip : Float = 0.0.toFloat()
+        var pixYPip : Float = 0.0.toFloat()
         for (y in 0 until Constants.FIELD_YLENGTH) {
             for (x in 0 until Constants.FIELD_XLENGTH) {
                 baskets = gh.getBaskets(x, y)
@@ -329,10 +332,20 @@ class MyCanvasView(context: Context) : View(context) {
                     paint.alpha = 127
                     canvas.drawRect(rectDest, paint)
                     paint.setColor(colorBasketsSpaceFG);
-                    canvas.drawText(baskets.toString(),
-                        Pix.xLeftMainSpace(x).toFloat() + Pix.basketSpaceMargin,
-                        Pix.yUpMainSpace(y) + Pix.hScoreSpace,
-                        paint);
+                    nbBasketsDown = baskets/2
+                    nbBasketsUp = baskets-nbBasketsDown
+                    pixYPip = Pix.yUpMainSpace(y) + Pix.pipPadding
+                    for (i in 0 until nbBasketsUp) {
+                        pixXPip = Pix.xCenter(x) - Pix.pipSide/2.toFloat() + centeringProgression(nbBasketsUp, i)*Pix.pipSide*1.5.toFloat()
+                        rectPips.set(pixXPip, pixYPip, pixXPip+Pix.pipSide, pixYPip+Pix.pipSide)
+                        canvas.drawOval(rectPips, paint)
+                    }
+                    pixYPip = Pix.yDownMainSpace(y) - Pix.pipPadding - Pix.pipSide
+                    for (i in 0 until nbBasketsDown) { // Yet another affine translating
+                        pixXPip = Pix.xCenter(x) - Pix.pipSide/2.toFloat() + centeringProgression(nbBasketsDown, i)*Pix.pipSide*1.5.toFloat()
+                        rectPips.set(pixXPip, pixYPip, pixXPip+Pix.pipSide, pixYPip+Pix.pipSide)
+                        canvas.drawOval(rectPips, paint)
+                    }
                 }
                 rectDest.left += Pix.wSpace
                 rectDest.right += Pix.wSpace
@@ -709,6 +722,12 @@ class MyCanvasView(context: Context) : View(context) {
 
     private fun isSpaceSelected() : Boolean {
         return (selectedSpaceX != SPACE_UNDEFINED)
+    }
+
+    // Shifting 0, 1, 2, .. (n-1) (because there are n items) to n terms equally split around 0
+    // 0 1 2 3 -> -1.5 -0.5 0.5 1.5. Affine translating
+    fun centeringProgression(numberTerms : Int, index : Int) : Float {
+        return -(numberTerms-1)/2.toFloat() + index;
     }
 
 /*companion object {

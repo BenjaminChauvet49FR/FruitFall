@@ -1,22 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--
-    Changed game icon for the one with 8 fruits + omega sphere
-    Added copy-paste in levels
-    Splitted level informations between fields and infos
-    Added transformations for copies (not all, though)
-
-    Order of fruit collecting
-    Enum for order kind
-    Having images of sizes different from the ones loaded
-    Orders have images instead of something textual now
-
-    Some new transitions
-    Corrected a bug on the obtention of a transition (previously, the transition of a level was obtained before it was deployed)
-    Allowed to create longer transitions
-    Also added the transformations mentioned above
-
-    A true pause menu with relevant information (spawn spaces + teleports)
-    Reviewed buttons : match_parent for horizontal alignment. For the "Précédent Redémarrer Suivant" trio I actually resized the texts in them...
+    Added a TODO about the spawning arrow (which wasn't correct in the previous commit and still isn't) + corrected an unreferenced incorrect value in Pix (xCenter).
+    Added hostage locks
+    Modified the level data such that single-space areas can be represented with 2 characters instead of a rectangle
+    Changed how baskets should be drawn : dots instead of digits + recentered text of locks
     -->
 </resources>
