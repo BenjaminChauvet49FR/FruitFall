@@ -16,6 +16,7 @@
     <color name="scoreFallSpace">#FF0000FF</color>
     <color name="scoreBasketsSpaceFG">#FF55AAFF</color>
     <color name="scoreBasketsSpaceBG">#FFE0F0FF</color>
+    <color name="scoreNutDropsSpaceBG">#FFC0F088</color>
     <color name="scoreDestructionSpace">#FF440000</color>
     <color name="colorLockDuration">#FF440000</color>
     <color name="colorLockHostage">#FF8800CC</color>

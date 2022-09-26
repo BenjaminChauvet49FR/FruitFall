@@ -13,8 +13,8 @@ public class BreakableBlock extends SpaceFiller {
 
     private int count;
 
-    public BreakableBlock(int level) {
-        this.count = level;
+    public BreakableBlock(int count) {
+        this.count = count;
     }
 
     public int getCount() {

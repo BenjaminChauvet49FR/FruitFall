@@ -12,6 +12,7 @@ import com.example.fruitfall.introductions.Transition
 import com.example.fruitfall.introductions.TransitionRandom
 import com.example.fruitfall.level.LevelData
 import com.example.fruitfall.level.LevelManager
+import com.example.fruitfall.spaces.SpaceFiller
 
 private const val SPACE_UNDEFINED = -1
 
@@ -23,6 +24,7 @@ class MyCanvasView(context: Context) : View(context) {
     private val colorFrameRect = ResourcesCompat.getColor(resources, R.color.frameRect, null)
     private val colorScoreFallSpace = ResourcesCompat.getColor(resources, R.color.scoreFallSpace, null)
     private val colorBasketsSpaceFG = ResourcesCompat.getColor(resources, R.color.scoreBasketsSpaceFG, null)
+    private val colorNutDropsBG = ResourcesCompat.getColor(resources, R.color.scoreNutDropsSpaceBG, null)
     private val colorBasketsSpaceBG = ResourcesCompat.getColor(resources, R.color.scoreBasketsSpaceBG, null)
     private val colorEntranceWarps = ResourcesCompat.getColor(resources, R.color.entranceWarps, null)
     private val colorExitWarps = ResourcesCompat.getColor(resources, R.color.exitWarps, null)
@@ -87,6 +89,7 @@ class MyCanvasView(context: Context) : View(context) {
     val bitmapImageSphereOmega = BitmapFactory.decodeResource(resources, R.drawable.sphere_omega)
     val bitmapImageLocking = BitmapFactory.decodeResource(resources, R.drawable.locking) // TODO celui là a besoin d'uniformisations
     val bitmapImageBreakableBlock = BitmapFactory.decodeResource(resources, R.drawable.crushable)
+    val bitmapImageNut = BitmapFactory.decodeResource(resources, R.drawable.f_noix)
     val bitmapImageHostageLock = BitmapFactory.decodeResource(resources, R.drawable.hostage_locking)
     val bitmapOrderAny = makeResizedImage(R.drawable.losange_any, Pix.squareSide)
     val bitmapOrderMix = makeResizedImage(R.drawable.losange_mix, Pix.squareSide)
@@ -201,6 +204,9 @@ class MyCanvasView(context: Context) : View(context) {
             if (gh.goalKind == GameEnums.GOAL_KIND.BASKETS) {
                 drawBaskets(canvas)
             }
+            if (gh.goalKind == GameEnums.GOAL_KIND.NUTS) {
+                drawNutDrops(canvas)
+            }
             if (!gh.gth.pause) {
                 drawScoresOnField(canvas)
             }
@@ -218,6 +224,17 @@ class MyCanvasView(context: Context) : View(context) {
         when (gh.goalKind) {
             GameEnums.GOAL_KIND.BASKETS -> {
                 canvas.drawText("Paniers : " + gh.basketsCount, Pix.xCommands, Pix.yCommandsText, paint);
+            }
+            GameEnums.GOAL_KIND.NUTS -> {
+                canvas.drawText("Noix : " + gh.nutsHealthCount, Pix.xNuts, Pix.yNutText, paint);
+                for (i in 0 until gh.listWaitingNutData.size) {
+                    rectDest.left = Pix.xNutWaitingPicture(i).toInt()
+                    rectDest.top = Pix.yNutWaitingPicture.toInt()
+                    rectDest.right = rectDest.left + Pix.resourceSide/3
+                    rectDest.bottom = rectDest.top + Pix.resourceSide/3
+                    canvas.drawBitmap(bitmapImageNut, rectSource, rectDest, paint)
+                    canvas.drawText(gh.listWaitingNutData.get(i).delay.toString(), Pix.xNutWaitingText(i), Pix.yNutText, paint)
+                }
             }
             else -> {
                 var pixWRectShrink : Int
@@ -287,11 +304,11 @@ class MyCanvasView(context: Context) : View(context) {
                     }
                     rectDest.left = Pix.xCommandsKind(i).toInt()
                     rectDest.top = Pix.yCommandsKind.toInt()
-                    rectDest.right = rectDest.left + Pix.resourceSide/3 // TODO passer ces valeurs en dur
+                    rectDest.right = rectDest.left + Pix.resourceSide/3
                     rectDest.bottom = rectDest.top + Pix.resourceSide/3
+                    canvas.drawBitmap(backBitmap, rectSource, rectDest, paint)
                     pixWRectShrink = (rectDest.width()*0.2).toInt()
                     pixHRectShrink = (rectDest.height()*0.2).toInt()
-                    canvas.drawBitmap(backBitmap, rectSource, rectDest, paint)
                     rectDest.left += pixWRectShrink
                     rectDest.top += pixHRectShrink
                     rectDest.right -= pixWRectShrink
@@ -308,6 +325,20 @@ class MyCanvasView(context: Context) : View(context) {
                 }
             }
         }
+    }
+
+    private fun drawNutDrops(canvas: Canvas) {
+        val formerAlpha = paint.alpha
+        paint.setColor(colorNutDropsBG)
+        paint.alpha = 127
+        paint.setStyle(Paint.Style.FILL_AND_STROKE)
+        for (coors in this.gh.coorsForNutDrops) {
+            val x = coors.x
+            val y = coors.y
+            rectDest.set(Pix.xLeftMainSpace(x), Pix.yUpMainSpace(y), Pix.xRightMainSpace(x), Pix.yDownMainSpace(y))
+            canvas.drawRect(rectDest, paint)
+        }
+        paint.alpha = formerAlpha
     }
 
     private fun drawBaskets(canvas: Canvas) {
@@ -332,6 +363,7 @@ class MyCanvasView(context: Context) : View(context) {
                     paint.alpha = 127
                     canvas.drawRect(rectDest, paint)
                     paint.setColor(colorBasketsSpaceFG);
+                    paint.alpha = 127
                     nbBasketsDown = baskets/2
                     nbBasketsUp = baskets-nbBasketsDown
                     pixYPip = Pix.yUpMainSpace(y) + Pix.pipPadding
@@ -472,7 +504,7 @@ class MyCanvasView(context: Context) : View(context) {
             for (coors in gh.spawningFruitsCoors) {
                 xEndFall = coors.x
                 yEndFall = coors.y
-                drawBotFruitInSpawnSpace(xEndFall, yEndFall, getBitmapFruitToDrawFromIndex(gh.spawn(xEndFall, yEndFall)), pixYSplitImgSrc, pixYSplitImgDst, canvas)
+                drawBotFruitInSpawnSpace(xEndFall, yEndFall, gh.spawn(xEndFall, yEndFall), pixYSplitImgSrc, pixYSplitImgDst, canvas)
             }
         }
     }
@@ -625,14 +657,14 @@ class MyCanvasView(context: Context) : View(context) {
     }
 
     // Note : it should be possible to factorize this with the previous !
-    private fun drawBotFruitInSpawnSpace(xSpaceTarget : Int, ySpaceTarget : Int, image : Bitmap, pixYSplitImgSrc : Int, pixYSplitImgDst : Int, canvas : Canvas) {
+    private fun drawBotFruitInSpawnSpace(xSpaceTarget : Int, ySpaceTarget : Int, space : SpaceFiller, pixYSplitImgSrc : Int, pixYSplitImgDst : Int, canvas : Canvas) {
         rectDest.left = Pix.xLeftMainSpace(xSpaceTarget)
         rectDest.right = rectDest.left + Pix.wMainSpace
         rectDest.top = Pix.yUpMainSpace(ySpaceTarget)
         rectDest.bottom = rectDest.top + pixYSplitImgDst
         rectSourceVariable.top = pixYSplitImgSrc
         rectSourceVariable.bottom = Pix.resourceSide
-        canvas.drawBitmap(image, rectSourceVariable, rectDest, paint)
+        space.paintStill(this, canvas, rectSourceVariable, rectDest, paint)
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {

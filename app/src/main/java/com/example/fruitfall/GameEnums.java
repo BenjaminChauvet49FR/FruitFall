@@ -97,6 +97,7 @@ public class GameEnums {
 
     public enum GOAL_KIND {
         BASKETS,
+        NUTS,
         ORDERS
     }
 }

@@ -24,6 +24,8 @@ public class LevelData {
     // IMPORTANT : coordinate in position (i) in inFallTeleporters must be at a base, otherwise it can be very confusing. And coordinate in position (i) in outFallTeleporters must be at a summit.
     private List<SpaceCoors> inFallTeleporters;
     private List<SpaceCoors> outFallTeleporters;
+    private List<SpaceCoors> nutsCoors;
+    private List<Integer> nutsValues;
     private GameEnums.SPACE_DATA[] topRowSpawn;
     private String charsForTransition;
 
@@ -98,6 +100,9 @@ public class LevelData {
             this.kindsOfMissions[i] = GameEnums.ORDER_KIND.NONE;
         }
 
+        this.nutsCoors = new ArrayList<>();
+        this.nutsValues = new ArrayList<>();
+
         int x, y;
         this.forcedIndexes = new ArrayList<>();
         this.topRowSpawn = new GameEnums.SPACE_DATA[Constants.FIELD_XLENGTH];
@@ -149,7 +154,10 @@ public class LevelData {
                     break;
                 case 'H' : interpretStringHostage(token.substring(1));
                     break;
-
+                case 'N' : interpretStringNutCoorsFirst(token.substring(1));
+                    break;
+                case 'O' : interpretStringBasketsNuts(token.substring(1));
+                    break;
                 default : interpretStringClassic(token);
                     break;
             } 
@@ -277,6 +285,13 @@ public class LevelData {
         }
     }
 
+    // Warning : this function totally exploits (but it isn't the only one) the fact that coordinates are labelled on one space !
+    private void interpretStringNutCoorsFirst(String tokenBody) {
+        this.goalKind = GameEnums.GOAL_KIND.NUTS;
+        this.nutsCoors.add(new SpaceCoors(charToInt(tokenBody, 0), charToInt(tokenBody, 1)));
+        this.nutsValues.add(Integer.parseInt(tokenBody.substring(2)));
+    }
+
     private void interpretStringBlockSpawn1stRow(String tokenBody) {
         for ( int i = 0 ; i < tokenBody.length() ; i++) {
             this.topRowSpawn[charToInt(tokenBody, i)] = GameEnums.SPACE_DATA.VOID;
@@ -288,6 +303,11 @@ public class LevelData {
         this.goalKind = GameEnums.GOAL_KIND.BASKETS;
         this.fillRectangleAreaInArray(this.basketsSpaceData, tokenBody);
     }
+
+    private void interpretStringBasketsNuts(String tokenBody) {
+        this.fillRectangleAreaInArray(this.basketsSpaceData, tokenBody); // Note : number of turns the fruit will be suspended (TODO : now, baskets officially has a double meaning)
+    }
+
 
     private void interpretStringHostage(String tokenBody) {
         this.fillRectangleAreaInArray(this.hostagesSpaceData, tokenBody);
@@ -420,7 +440,13 @@ public class LevelData {
     public int getBaskets(int x, int y) {
         return this.basketsSpaceData[y][x];
     }
+    public int getNutDropsStrength(int x, int y) {
+        return this.basketsSpaceData[y][x]; // Number of turns you should wait...
+    }
     public int getHostage(int x, int y) {return this.hostagesSpaceData[y][x];}
+
+    public List<SpaceCoors> getNutsCoors() { return this.nutsCoors; }
+    public List<Integer> getNutsValues() { return this.nutsValues; }
 
     public GameEnums.GOAL_KIND getGoalKind() {
         return this.goalKind;

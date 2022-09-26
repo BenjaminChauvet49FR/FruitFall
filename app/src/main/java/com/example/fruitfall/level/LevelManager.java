@@ -14,6 +14,9 @@ public class LevelManager {
     public static void init() {
         levelNumber = 0;
         levelLists = new ArrayList<>();
+        levelLists.add(new LevelData(LEVELS_TO_BE,"X4059 t09604 N007 N107 N207 N307 O76999", "f5 ih", "Malheur si tu les laisses tomber"));
+        levelLists.add(new LevelData(LEVELS_TO_BE,"E0999 S10898 S21787 S32676 N455 N555 N405 N505 H34050 O20999", "f5 ih", "Casse ces noix"));
+        levelLists.add(new LevelData(LEVELS_TO_BE,"N2640 N3840 N4740 N4840 N5740 N5840 N6840 N7640 O20999", "f4", "Bam bam noix"));
         levelLists.add(new LevelData(FUN,"B30099 B43366", "f5", "Paniers garnis"));
         levelLists.add(new LevelData(LEVELS_TO_BE, "H107 H116 H127 H136 H147 H25559 X6899 X8697 F68 F86 c0599 vx00", "f5 id m1150 ml20", "Libérez les otages !"));
         levelLists.add(new LevelData(LEVELS_TO_BE, "B20099 H13366 H27799 H20729 H31122 H37182", "f5 id", "Libérez les otages !"));

@@ -16,6 +16,7 @@ import com.example.fruitfall.animations.SpaceAnimationOmegaLightning;
 import com.example.fruitfall.animations.SpaceAnimationOmegaSphere;
 import com.example.fruitfall.animations.SwapAnimationFireElectric;
 import com.example.fruitfall.animations.SwapAnimationFireFire;
+import com.example.fruitfall.checkers.Checker;
 
 import java.util.ArrayList;
 import java.util.Arrays;

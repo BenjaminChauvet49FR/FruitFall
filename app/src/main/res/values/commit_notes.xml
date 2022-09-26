@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--
-    Added a TODO about the spawning arrow (which wasn't correct in the previous commit and still isn't) + corrected an unreferenced incorrect value in Pix (xCenter).
-    Added hostage locks
-    Modified the level data such that single-space areas can be represented with 2 characters instead of a rectangle
-    Changed how baskets should be drawn : dots instead of digits + recentered text of locks
+    Nuts + areas
+    Generalized checkers
+    Fixed "Pix.xRightMainSpace", surprise !
     -->
 </resources>
