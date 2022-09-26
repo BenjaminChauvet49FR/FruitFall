@@ -1,5 +1,6 @@
 package com.example.fruitfall
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.os.Build
@@ -33,6 +34,9 @@ class MyCanvasView(context: Context) : View(context) {
     private val colorTitle = ResourcesCompat.getColor(resources, R.color.title, null)
     val colorAnimationLightning = ResourcesCompat.getColor(resources, R.color.animationLightning, null)
     val colorAnimationFire = ResourcesCompat.getColor(resources, R.color.animationFire, null)
+    val colorDotStickyBomb = ResourcesCompat.getColor(resources, R.color.colorDotStickyBomb, null)
+    val colorVeilStickyBomb = ResourcesCompat.getColor(resources, R.color.colorVeilStickyBomb, null)
+    val colorVeilStickyBombEmpty = ResourcesCompat.getColor(resources, R.color.colorVeilStickyBombEmpty, null)  //TODO et si on pouvait se passer des setAlpha en mettant directment la transparence dans les couleurs ? (Bon, j'ai essayé, c'est compliqué, je me remettrai plus tard)
     private val colorBGSpaces = arrayOf(ResourcesCompat.getColor(resources, R.color.spaceBG1, null), ResourcesCompat.getColor(resources, R.color.spaceBG2, null))
     private val colorBGSpaceFrame = ResourcesCompat.getColor(resources, R.color.spaceBGFrame, null)
     val colorLockDuration = ResourcesCompat.getColor(resources, R.color.colorLockDuration, null)
@@ -66,7 +70,7 @@ class MyCanvasView(context: Context) : View(context) {
         BitmapFactory.decodeResource(resources, R.drawable.f_mure),
     )
 
-    public fun getBitmapImages() :  Array<Bitmap> {
+    fun getBitmapImages() :  Array<Bitmap> {
         return bitmapFruits
     }
 
@@ -75,28 +79,25 @@ class MyCanvasView(context: Context) : View(context) {
         return Bitmap.createScaledBitmap(BitmapFactory.decodeResource(resources, drawRessource), pixNewSize, pixNewSize, true)
     }
 
-    private fun makeResizedImage(drawRessource : Bitmap, pixNewSize : Int) : Bitmap {
-        return Bitmap.createScaledBitmap(drawRessource, pixNewSize, pixNewSize, true)
-    }
-
-    val bitmapImageLightActive = BitmapFactory.decodeResource(resources, R.drawable.light_up)
-    val bitmapImageLightInactive = BitmapFactory.decodeResource(resources, R.drawable.light_down)
-    val bitmapImageLightPenalty = BitmapFactory.decodeResource(resources, R.drawable.light_comeback)
-    val bitmapAllFruits = makeResizedImage(R.drawable.all_fruits, Pix.squareSide)
+    val bitmapImageLightActive : Bitmap = BitmapFactory.decodeResource(resources, R.drawable.light_up)
+    val bitmapImageLightInactive : Bitmap = BitmapFactory.decodeResource(resources, R.drawable.light_down)
+    val bitmapImageLightPenalty : Bitmap = BitmapFactory.decodeResource(resources, R.drawable.light_comeback)
+    val bitmapAllFruits : Bitmap = makeResizedImage(R.drawable.all_fruits, Pix.squareSide)
     val bitmapImageFire = makeResizedImage(R.drawable.on_fire, Pix.squareSide)
     val bitmapImageLightH = makeResizedImage(R.drawable.lightning_h, Pix.squareSide)
     val bitmapImageLightV = makeResizedImage(R.drawable.lightning_v, Pix.squareSide)
-    val bitmapImageSphereOmega = BitmapFactory.decodeResource(resources, R.drawable.sphere_omega)
-    val bitmapImageLocking = BitmapFactory.decodeResource(resources, R.drawable.locking) // TODO celui là a besoin d'uniformisations
-    val bitmapImageBreakableBlock = BitmapFactory.decodeResource(resources, R.drawable.crushable)
-    val bitmapImageNut = BitmapFactory.decodeResource(resources, R.drawable.f_noix)
-    val bitmapImageHostageLock = BitmapFactory.decodeResource(resources, R.drawable.hostage_locking)
-    val bitmapOrderAny = makeResizedImage(R.drawable.losange_any, Pix.squareSide)
-    val bitmapOrderMix = makeResizedImage(R.drawable.losange_mix, Pix.squareSide)
-    val bitmapOrderSimple = makeResizedImage(R.drawable.losange_simple, Pix.squareSide)
-    val bitmapOrderSpecial = makeResizedImage(R.drawable.losange_special, Pix.squareSide)
-    val bitmapOrderWild = makeResizedImage(R.drawable.losange_wild, Pix.squareSide)
-    val bitmapArrowSpawn = makeResizedImage(R.drawable.arrow_spawn, Pix.pauseFieldInfoSide) // TODO flèche mal dimensionnée...
+    val bitmapImageSphereOmega : Bitmap = BitmapFactory.decodeResource(resources, R.drawable.sphere_omega)
+    val bitmapImageLocking : Bitmap = BitmapFactory.decodeResource(resources, R.drawable.locking) // TODO celui là a besoin d'uniformisations
+    val bitmapImageBreakableBlock : Bitmap = BitmapFactory.decodeResource(resources, R.drawable.crushable)
+    val bitmapImageNut : Bitmap = BitmapFactory.decodeResource(resources, R.drawable.f_noix)
+    val bitmapImageHostageLock : Bitmap = BitmapFactory.decodeResource(resources, R.drawable.hostage_locking)
+    val bitmapImageStickyBomb = makeResizedImage(R.drawable.sticky_bomb, Pix.squareSide)
+    val bitmapOrderAny : Bitmap = makeResizedImage(R.drawable.losange_any, Pix.squareSide)
+    val bitmapOrderMix : Bitmap = makeResizedImage(R.drawable.losange_mix, Pix.squareSide)
+    val bitmapOrderSimple : Bitmap = makeResizedImage(R.drawable.losange_simple, Pix.squareSide)
+    val bitmapOrderSpecial : Bitmap = makeResizedImage(R.drawable.losange_special, Pix.squareSide)
+    val bitmapOrderWild : Bitmap = makeResizedImage(R.drawable.losange_wild, Pix.squareSide)
+    val bitmapArrowSpawn : Bitmap = makeResizedImage(R.drawable.arrow_spawn, Pix.pauseFieldInfoSide) // TODO flèche mal dimensionnée...
 
     // Search for a font on my computer : https://www.pcmag.com/how-to/how-to-manage-your-fonts-in-windows
     // Font handling : https://developer.android.com/guide/topics/ui/look-and-feel/fonts-in-xml#kotlin
@@ -113,29 +114,29 @@ class MyCanvasView(context: Context) : View(context) {
     }
 
     private fun drawSpaceContent(x : Int, y : Int, canvas : Canvas, rectSource : Rect, rectDest : Rect, paint : Paint) {
-        gh.getSpace(x, y).paintStill(this, canvas, rectSource, rectDest, paint);
+        gh.getSpace(x, y).paintStill(this, canvas, rectSource, rectDest, paint)
     }
 
     private val gh = GameHandler()
 
     fun startLevel() {
         val ld : LevelData = LevelManager.levelLists[LevelManager.levelNumber]
-        unselect(); // TODO surpris que les coordonnées du curseur soient gérées ici...
+        unselect() // TODO surpris que les coordonnées du curseur soient gérées ici...
         gh.start(ld)
         introTransition = ld.transition // Should be called AFTER gh.start because of the nature of deploy
         gh.gth.setRelativeTransitionLength(introTransition.relativeTransitionLength())
     }
 
     fun setTolerance() {
-        gh.setTolerance();
+        gh.setTolerance()
     }
 
     fun switchFallSpeed() {
-        gh.gth.switchFallSpeed();
+        gh.gth.switchFallSpeed()
     }
 
     fun setPause() {
-        gh.gth.switchPause();
+        gh.gth.switchPause()
     }
 
     // Set up the paint with which to draw.
@@ -164,17 +165,17 @@ class MyCanvasView(context: Context) : View(context) {
         canvas.drawBitmap(extraBitmap, 0f, 0f, null)
 
         // Draw variables
-        paint.setColor(colorTextMain);
-        paint.setTextSize(Pix.hText);
-        paint.setTypeface(mainFont)
-        paint.setStyle(Paint.Style.FILL)// How to avoid awful outlined texts : https://stackoverflow.com/questions/31877417/android-draw-text-with-solid-background-onto-canvas-to-be-used-as-a-bitmap
-        paint.setTextAlign(Paint.Align.LEFT)
+        paint.color = colorTextMain
+        paint.textSize = Pix.hText
+        paint.typeface = mainFont
+        paint.style = Paint.Style.FILL// How to avoid awful outlined texts : https://stackoverflow.com/questions/31877417/android-draw-text-with-solid-background-onto-canvas-to-be-used-as-a-bitmap
+        paint.textAlign = Paint.Align.LEFT
         // Convention for text drawing is easy : draw on fields = center, draw outside fields aligned left !
-        canvas.drawText("Score : " + gh.getScore(), Pix.xScore, Pix.yScore, paint);
-        canvas.drawText("Temps : " + gh.gth.getTimeToDisplay() + " (" + gh.getElapsedMoves() + ")", Pix.xTime, Pix.yTime, paint);
+        canvas.drawText("Score : " + gh.score, Pix.xScore, Pix.yScore, paint)
+        canvas.drawText("Temps : " + gh.gth.timeToDisplay + " (" + gh.elapsedMoves + ")", Pix.xTime, Pix.yTime, paint)
         drawMission(canvas)
-        paint.setColor(colorTitle);
-        canvas.drawText(gh.getTitleAndInfos(), Pix.xTitle, Pix.yTitle, paint);
+        paint.color = colorTitle
+        canvas.drawText(gh.titleAndInfos, Pix.xTitle, Pix.yTitle, paint)
 
         // Draw the status light
         rectDest.left = Pix.xStartActiveLight
@@ -189,10 +190,10 @@ class MyCanvasView(context: Context) : View(context) {
             canvas.drawBitmap(bitmapImageLightInactive, rectSource, rectDest, paint)
         }
 
-        if (gh.gth.isInIntro()) {
+        paint.textAlign = Paint.Align.CENTER
+        if (gh.gth.isInIntro) {
             drawProgressiveCheckerboard(canvas)
         } else {
-            paint.setTextAlign(Paint.Align.CENTER)
             drawAllSpaceContents(canvas)
             if (!gh.gth.pause) {
                 drawSpaceAnimations(canvas, gh.gth.animations1List)// TODO devrait être dessiné APRES les cases et AVANT les contenus dans l'idéal.
@@ -223,15 +224,15 @@ class MyCanvasView(context: Context) : View(context) {
         // Credits for the switch : https://kotlinlang.org/docs/control-flow.html#when-expression
         when (gh.goalKind) {
             GameEnums.GOAL_KIND.BASKETS -> {
-                canvas.drawText("Paniers : " + gh.basketsCount, Pix.xCommands, Pix.yCommandsText, paint);
+                canvas.drawText("Paniers : " + gh.basketsCount, Pix.xCommands, Pix.yCommandsText, paint)
             }
             GameEnums.GOAL_KIND.NUTS -> {
-                canvas.drawText("Noix : " + gh.nutsHealthCount, Pix.xNuts, Pix.yNutText, paint);
+                canvas.drawText("Noix : " + gh.nutsHealthCount, Pix.xNuts, Pix.yNutText, paint)
                 for (i in 0 until gh.listWaitingNutData.size) {
                     rectDest.left = Pix.xNutWaitingPicture(i).toInt()
                     rectDest.top = Pix.yNutWaitingPicture.toInt()
-                    rectDest.right = rectDest.left + Pix.resourceSide/3
-                    rectDest.bottom = rectDest.top + Pix.resourceSide/3
+                    rectDest.right = rectDest.left + Pix.resourceLittleSide
+                    rectDest.bottom = rectDest.top + Pix.resourceLittleSide
                     canvas.drawBitmap(bitmapImageNut, rectSource, rectDest, paint)
                     canvas.drawText(gh.listWaitingNutData.get(i).delay.toString(), Pix.xNutWaitingText(i), Pix.yNutText, paint)
                 }
@@ -301,11 +302,15 @@ class MyCanvasView(context: Context) : View(context) {
                                 else -> frontBitmap = bitmapAllFruits // Should not happen
                             }
                         }
+                        else -> {
+                            backBitmap = bitmapOrderAny
+                            frontBitmap = bitmapAllFruits // Should not happen
+                        }
                     }
                     rectDest.left = Pix.xCommandsKind(i).toInt()
                     rectDest.top = Pix.yCommandsKind.toInt()
-                    rectDest.right = rectDest.left + Pix.resourceSide/3
-                    rectDest.bottom = rectDest.top + Pix.resourceSide/3
+                    rectDest.right = rectDest.left + Pix.resourceLittleSide
+                    rectDest.bottom = rectDest.top + Pix.resourceLittleSide
                     canvas.drawBitmap(backBitmap, rectSource, rectDest, paint)
                     pixWRectShrink = (rectDest.width()*0.2).toInt()
                     pixHRectShrink = (rectDest.height()*0.2).toInt()
@@ -321,7 +326,7 @@ class MyCanvasView(context: Context) : View(context) {
                         rectDest.bottom += 6
                         canvas.drawBitmap(frontBitmap2, rectSource, rectDest, paint)
                     }
-                    canvas.drawText(gh.amountsOrder[i].toString(), Pix.xCommandsAmount(i), Pix.yCommandsText, paint);
+                    canvas.drawText(gh.amountsOrder[i].toString(), Pix.xCommandsAmount(i), Pix.yCommandsText, paint)
                 }
             }
         }
@@ -329,9 +334,9 @@ class MyCanvasView(context: Context) : View(context) {
 
     private fun drawNutDrops(canvas: Canvas) {
         val formerAlpha = paint.alpha
-        paint.setColor(colorNutDropsBG)
+        paint.color = colorNutDropsBG
         paint.alpha = 127
-        paint.setStyle(Paint.Style.FILL_AND_STROKE)
+        paint.style = Paint.Style.FILL_AND_STROKE
         for (coors in this.gh.coorsForNutDrops) {
             val x = coors.x
             val y = coors.y
@@ -347,22 +352,22 @@ class MyCanvasView(context: Context) : View(context) {
         var nbBasketsUp : Int // The remaining baskets
         val pixXLeftStart = Pix.xLeftMainSpace(0) + Pix.basketSpaceBGMargin
         val pixXRightStart = pixXLeftStart + Pix.basketSpaceSide
-        paint.setStyle(Paint.Style.FILL_AND_STROKE)
+        paint.style = Paint.Style.FILL_AND_STROKE
         val formerAlpha = paint.alpha
         rectDest.left = pixXLeftStart
         rectDest.right = pixXRightStart
         rectDest.top = Pix.yUpMainSpace(0)
         rectDest.bottom = rectDest.top + Pix.basketSpaceSide
-        var pixXPip : Float = 0.0.toFloat()
-        var pixYPip : Float = 0.0.toFloat()
+        var pixXPip : Float
+        var pixYPip : Float
         for (y in 0 until Constants.FIELD_YLENGTH) {
             for (x in 0 until Constants.FIELD_XLENGTH) {
                 baskets = gh.getBaskets(x, y)
                 if (baskets > 0) {
-                    paint.setColor(colorBasketsSpaceBG)
+                    paint.color = colorBasketsSpaceBG
                     paint.alpha = 127
                     canvas.drawRect(rectDest, paint)
-                    paint.setColor(colorBasketsSpaceFG);
+                    paint.color = colorBasketsSpaceFG
                     paint.alpha = 127
                     nbBasketsDown = baskets/2
                     nbBasketsUp = baskets-nbBasketsDown
@@ -394,29 +399,29 @@ class MyCanvasView(context: Context) : View(context) {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun drawScoresOnField(canvas: Canvas) {
         if (gh.gth.shouldDrawScore()) {
-            paint.setColor(colorScoreFallSpace);
-            paint.setTextSize(Pix.hScoreSpace);
-            paint.setTypeface(scoreFont)
-            paint.setStyle(Paint.Style.FILL_AND_STROKE)
+            paint.color = colorScoreFallSpace
+            paint.textSize = Pix.hScoreSpace
+            paint.typeface = scoreFont
+            paint.style = Paint.Style.FILL_AND_STROKE
             for (coors in this.gh.contributingSpacesScoreFall) {
-                val x = coors.x;
-                val y = coors.y;
+                val x = coors.x
+                val y = coors.y
                 canvas.drawText("+" + this.gh.scoreFallSpace(x, y),
                     Pix.xLeftMainSpace(x).toFloat(),
                     Pix.yUpMainSpace(y) + Pix.hScoreSpace,
-                    paint);
+                    paint)
             }
-            paint.setColor(colorScoreDestructionSpace);
-            paint.setTextSize(Pix.hScoreSpace);
-            paint.setTypeface(scoreFont)
-            paint.setStyle(Paint.Style.FILL_AND_STROKE)
+            paint.color = colorScoreDestructionSpace
+            paint.textSize = Pix.hScoreSpace
+            paint.typeface = scoreFont
+            paint.style = Paint.Style.FILL_AND_STROKE
             for (coors in this.gh.contributingSpacesScoreDestructionSpecial) {
-                val x = coors.x;
-                val y = coors.y;
+                val x = coors.x
+                val y = coors.y
                 canvas.drawText("+" + this.gh.scoreDestructionSpecialSpace(x, y),
                     Pix.xLeftMainSpace(x).toFloat(),
                     Pix.yUpMainSpace(y) + Pix.hScoreSpace,
-                    paint);
+                    paint)
             }
         }
     }
@@ -445,11 +450,11 @@ class MyCanvasView(context: Context) : View(context) {
     // Draw the cursor
     private fun drawCursor(canvas: Canvas) {
         if (isSpaceSelected()) {
-            var formerWidth = paint.strokeWidth
+            val formerWidth = paint.strokeWidth
             paint.strokeWidth = Pix.selectionFrame
             rectFrame.set(spaceXToPixXLeft(selectedSpaceX), spaceYToPixYUp(selectedSpaceY), spaceXToPixXRight(selectedSpaceX), spaceYToPixYDown(selectedSpaceY))
-            paint.setStyle(Paint.Style.STROKE)
-            paint.setColor(colorFrameRect)
+            paint.style = Paint.Style.STROKE
+            paint.color = colorFrameRect
             canvas.drawRect(rectFrame, paint)
             paint.strokeWidth = formerWidth
         }
@@ -525,7 +530,7 @@ class MyCanvasView(context: Context) : View(context) {
         for (y in 0 until Constants.FIELD_YLENGTH) {
             for (x in 0 until Constants.FIELD_XLENGTH) {
                 if (gh.isASpace(x, y)) {
-                    desiredThreshold = introTransition.getProgressThreshold(x, y);
+                    desiredThreshold = introTransition.getProgressThreshold(x, y)
                     progressiveIntro = gh.gth.ratioProgressiveIntroSpaces(desiredThreshold)
                     ghostSquare = ((1-progressiveIntro)*Pix.ghostSquareMargin).toInt()
                     rectVar.set(rectDest.left - ghostSquare, rectDest.top - ghostSquare, rectDest.right + ghostSquare, rectDest.bottom + ghostSquare)
@@ -556,14 +561,12 @@ class MyCanvasView(context: Context) : View(context) {
     // Draws different things depending on whether the game is paused or not
     private fun drawAllSpaceContents(canvas : Canvas) {
         paint.strokeWidth = Pix.backgroundFrame
-        var animation : SpaceAnimation?
-        var ratio : Float
         var outCoors : SpaceCoors?
         val pixXStart1 = Pix.xStartSpaces
         val pixYStart1 = Pix.yStartSpaces
         val pixXStart2 = Pix.xStartField
         val pixYStart2 = Pix.yStartField
-        var outsideTeleportersCoors = ArrayList<SpaceCoors>();
+        val outsideTeleportersCoors = ArrayList<SpaceCoors>()
         rectDest.set(pixXStart1, pixYStart1, pixXStart1+Pix.wMainSpace, pixYStart1+Pix.hMainSpace)
         val rectDestSpace = Rect(pixXStart2, pixYStart2, pixXStart2+Pix.wSpace, pixYStart2+ Pix.hSpace)
         for (y in 0 until Constants.FIELD_YLENGTH) {
@@ -588,14 +591,14 @@ class MyCanvasView(context: Context) : View(context) {
                     }
                     outCoors = gh.getDestination(x, y)
                     if (outCoors != null) {
-                        paint.color = colorEntranceWarps;
-                        paint.setTextSize(Pix.hTextTeleporters)
-                        paint.setStyle(Paint.Style.FILL_AND_STROKE)
+                        paint.color = colorEntranceWarps
+                        paint.textSize = Pix.hTextTeleporters
+                        paint.style = Paint.Style.FILL_AND_STROKE
                         outsideTeleportersCoors.add( SpaceCoors(outCoors.x, outCoors.y))
                         canvas.drawText(outsideTeleportersCoors.size.toString(),
                             Pix.xCenter(x).toFloat(),
                             Pix.yDownMainSpace(y).toFloat(), // TODO Int, float, double... un jour il faudra faire du ménage
-                            paint);
+                            paint)
                     }
                 }
                 rectDest.left += Pix.wSpace
@@ -614,13 +617,13 @@ class MyCanvasView(context: Context) : View(context) {
         }
 
         if (gh.gth.pause) {
-            paint.color = colorExitWarps;
+            paint.color = colorExitWarps
             // If not for this side trick, a teleporter exit could be overdrawn easily by spaces, which are drawn along as contents in reading order
             for (i in 0 until outsideTeleportersCoors.size) {
                 canvas.drawText((i+1).toString(),
                     Pix.xCenter(outsideTeleportersCoors[i].x).toFloat(),
                     Pix.yUpMainSpace(outsideTeleportersCoors[i].y).toFloat(),
-                    paint);
+                    paint)
             } // TODO existe-il un moyen intelligent d'organiser la numérotation des téléporteurs ?
             // Dans un niveau à quadrants pour l'instant les fruits entrent dans l'ordre dans la paire 1, puis la 9 puis la 5... ça n'a pas tellement de sens ! Si ce n'est le respect du simple ordre lexicographique.
         }
@@ -667,6 +670,7 @@ class MyCanvasView(context: Context) : View(context) {
         space.paintStill(this, canvas, rectSourceVariable, rectDest, paint)
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
         pixMotionTouchEventX = event.x
         pixMotionTouchEventY = event.y
@@ -759,7 +763,7 @@ class MyCanvasView(context: Context) : View(context) {
     // Shifting 0, 1, 2, .. (n-1) (because there are n items) to n terms equally split around 0
     // 0 1 2 3 -> -1.5 -0.5 0.5 1.5. Affine translating
     fun centeringProgression(numberTerms : Int, index : Int) : Float {
-        return -(numberTerms-1)/2.toFloat() + index;
+        return -(numberTerms-1)/2.toFloat() + index
     }
 
 /*companion object {

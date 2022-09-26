@@ -45,9 +45,7 @@ public class Fruit extends SpaceFiller {
 
     @Override
     public void paintStill(MyCanvasView view, Canvas canvas, Rect rectSource, Rect rectDestination, Paint paint) {
-        if (view.getBitmapImages() != null) {
-            canvas.drawBitmap(view.getBitmapFruitToDrawFromIndex(this.value), rectSource, rectDestination, paint);
-        }
+        canvas.drawBitmap(view.getBitmapFruitToDrawFromIndex(this.value), rectSource, rectDestination, paint);
         if (this.power == GameEnums.FRUITS_POWER.HORIZONTAL_LIGHTNING) {
             canvas.drawBitmap(view.getBitmapImageLightH(), rectSource, rectDestination, paint);
         }

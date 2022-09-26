@@ -35,23 +35,23 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.buttonModePrev).setOnClickListener {
             if (LevelManager.levelNumber != 0) {
-                LevelManager.levelNumber--;
-                myView.startLevel();
+                LevelManager.levelNumber--
+                myView.startLevel()
             }
         }
         findViewById<Button>(R.id.buttonModeRestart).setOnClickListener {
-            myView.startLevel();
+            myView.startLevel()
         }
         findViewById<Button>(R.id.buttonModeTolerance).setOnClickListener {
-            myView.setTolerance();
+            myView.setTolerance()
         }
         findViewById<Button>(R.id.buttonModeFallSpeed).setOnClickListener {
-            myView.switchFallSpeed();
+            myView.switchFallSpeed()
         }
         findViewById<Button>(R.id.buttonModeNext).setOnClickListener {
             if (LevelManager.levelNumber != LevelManager.levelLists.size-1) {
-                LevelManager.levelNumber++;
-                myView.startLevel();
+                LevelManager.levelNumber++
+                myView.startLevel()
             }
         }
 
@@ -65,12 +65,12 @@ class MainActivity : AppCompatActivity() {
             PopupMenu(this, myView),
             PopupMenu(this, myView)
         )
-        generalMenu.getMenu().add(LEVELS_TO_BE, LEVELS_TO_BE, LEVELS_TO_BE, "Futurs niveaux")
-        generalMenu.getMenu().add(DEBUG, DEBUG, DEBUG, "Débug")
-        generalMenu.getMenu().add(FUN, FUN, FUN, "Fun")
-        var levelNumber = 0;
+        generalMenu.menu.add(LEVELS_TO_BE, LEVELS_TO_BE, LEVELS_TO_BE, "Futurs niveaux")
+        generalMenu.menu.add(DEBUG, DEBUG, DEBUG, "Débug")
+        generalMenu.menu.add(FUN, FUN, FUN, "Fun")
+        var levelNumber = 0
         for (level in LevelManager.levelLists) {
-            submenus[level.category].getMenu().add(level.category, levelNumber, levelNumber, level.title)
+            submenus[level.category].menu.add(level.category, levelNumber, levelNumber, level.title)
             levelNumber++
         }
         findViewById<Button>(R.id.buttonLevelChoice).setOnClickListener {

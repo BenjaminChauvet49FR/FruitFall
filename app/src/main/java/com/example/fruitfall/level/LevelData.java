@@ -46,8 +46,10 @@ public class LevelData {
     private int[][] hostagesSpaceData;
     private GameEnums.SPACE_DATA[][] spaceData;
     private int[][] additionalSpaceData;
+    private int[][] additionalSpaceData2;
     private static GameEnums.SPACE_DATA[][] clipBoard = new GameEnums.SPACE_DATA[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
     private static int[][] additionalClipBoard = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
+    private static int[][] additionalClipBoard2 = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
     private static int[][] basketsClipBoard = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
     private static int[][] hostagesClipBoard = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
 
@@ -112,6 +114,7 @@ public class LevelData {
 
         this.spaceData = new GameEnums.SPACE_DATA[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
         this.additionalSpaceData = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
+        this.additionalSpaceData2 = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
         this.basketsSpaceData = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
         this.hostagesSpaceData = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
         this.goalKind = GameEnums.GOAL_KIND.ORDERS;
@@ -119,6 +122,7 @@ public class LevelData {
             for (x = 0; x < Constants.FIELD_XLENGTH; x++) {
                 this.spaceData[y][x] = GameEnums.SPACE_DATA.FRUIT;
                 this.additionalSpaceData = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
+                this.additionalSpaceData2 = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
                 this.basketsSpaceData[y][x] = 0;
                 this.hostagesSpaceData[y][x] = 0;
             }
@@ -217,6 +221,7 @@ public class LevelData {
                 transCoors = transformation.transform(x, y);
                 this.spaceData[transCoors.y][transCoors.x] = clipBoard[y-yS][x-xS];
                 this.additionalSpaceData[transCoors.y][transCoors.x] = additionalClipBoard[y-yS][x-xS];
+                this.additionalSpaceData2[transCoors.y][transCoors.x] = additionalClipBoard2[y-yS][x-xS];
                 this.basketsSpaceData[transCoors.y][transCoors.x] = basketsClipBoard[y-yS][x-xS];
                 this.hostagesSpaceData[transCoors.y][transCoors.x] = hostagesClipBoard[y-yS][x-xS];
             }
@@ -233,6 +238,7 @@ public class LevelData {
             for (x = x1; x <= x2; x++) {
                 clipBoard[y-y1][x-x1] = this.spaceData[y][x];
                 additionalClipBoard[y-y1][x-x1] = this.additionalSpaceData[y][x];
+                additionalClipBoard2[y-y1][x-x1] = this.additionalSpaceData2[y][x];
                 basketsClipBoard[y-y1][x-x1] = this.basketsSpaceData[y][x];
                 hostagesClipBoard[y-y1][x-x1] = this.hostagesSpaceData[y][x];
             }
@@ -356,6 +362,7 @@ public class LevelData {
     private void interpretStringClassic(String tokenBody) {
         char cType = tokenBody.charAt(0);
         int additionalData = 0;
+        int additionalData2 = 0;
         int position1stSizeChar = 1;
         GameEnums.SPACE_DATA data = null;
         if (cType == 'F') {
@@ -389,6 +396,24 @@ public class LevelData {
                 throw new IncorrectStringException(tokenBody);
             }
         }
+        if (cType == 'K') { // First the number of layers, then the content
+            position1stSizeChar = 3;
+            data = GameEnums.SPACE_DATA.STICKY_BOMB; // TODO un jour, on remplacera les "sticky bomb" par des "hostage fruits", qui bloquent simplement les fruits. Mais là je fais les sticky vides (qui donneront des cases vides) et les couleurs (qui exploseront) en bombes !
+            additionalData = charToInt(tokenBody, 1);
+            if (additionalData <= 0) {
+                throw new IncorrectStringException(tokenBody);
+            }
+            additionalData2 = charToInt(tokenBody, 2);
+        }
+        if (cType == 'k') { // The number of layers only
+            position1stSizeChar = 2;
+            data = GameEnums.SPACE_DATA.STICKY_BOMB;
+            additionalData = charToInt(tokenBody, 1);
+            if (additionalData <= 0) {
+                throw new IncorrectStringException(tokenBody);
+            }
+            additionalData2 = Constants.NOT_A_FRUIT;
+        }
         if (data == null) {
             throw new IncorrectStringException(tokenBody);
         } else if (charactersWithAndAfterIndex(tokenBody, position1stSizeChar) == 4) {
@@ -401,13 +426,15 @@ public class LevelData {
                 for (x = x1; x <= x2; x++) {
                     this.spaceData[y][x] = data;
                     this.additionalSpaceData[y][x] = additionalData;
+                    this.additionalSpaceData2[y][x] = additionalData2;
                 }
             }
         } else if (charactersWithAndAfterIndex(tokenBody, position1stSizeChar) == 2)  {
-            this.spaceData[charToInt(tokenBody, position1stSizeChar + 1)]
-                    [charToInt(tokenBody, position1stSizeChar)] = data;
-            this.additionalSpaceData[charToInt(tokenBody, position1stSizeChar+1)]
-                    [charToInt(tokenBody, position1stSizeChar)] = additionalData;
+            int x = charToInt(tokenBody, position1stSizeChar);
+            int y = charToInt(tokenBody, position1stSizeChar+1);
+            this.spaceData[y][x] = data;
+            this.additionalSpaceData[y][x] = additionalData;
+            this.additionalSpaceData2[y][x] = additionalData2;
         }
     }
 
@@ -436,6 +463,15 @@ public class LevelData {
     public int getBreakableBlockLevel(int x, int y) {
         return this.additionalSpaceData[y][x];
     }
+
+    public int getStickyBombLevel(int x, int y) {
+        return this.additionalSpaceData[y][x];
+    }
+
+    public int getStickyBombContent(int x, int y) {
+        return this.additionalSpaceData2[y][x];
+    }
+
 
     public int getBaskets(int x, int y) {
         return this.basketsSpaceData[y][x];

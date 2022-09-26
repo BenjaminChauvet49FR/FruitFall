@@ -4,6 +4,7 @@ import com.example.fruitfall.SpaceCoors;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class Checker  {
 
@@ -24,7 +25,6 @@ public class Checker  {
                 this.array[y][x] = false;
             }
         }
-
     }
 
     public boolean add(int x, int y) {

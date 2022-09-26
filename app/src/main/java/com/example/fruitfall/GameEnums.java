@@ -14,7 +14,7 @@ public class GameEnums {
         FALLING,
         DESTRUCTING_STASIS,
         DESTRUCTING_LOCKS,
-        RAY_ANIMATIONS,
+        BEAM_ANIMATIONS,
         PAUSED
     }
 
@@ -25,7 +25,8 @@ public class GameEnums {
         VOID,
         VOID_SPAWN,
         DELAYED_LOCK,
-        BREAKABLE_BLOCK
+        BREAKABLE_BLOCK,
+        STICKY_BOMB,
     }
 
     public enum FRUITS_POWER {

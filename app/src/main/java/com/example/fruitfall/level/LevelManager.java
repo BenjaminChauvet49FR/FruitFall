@@ -14,9 +14,20 @@ public class LevelManager {
     public static void init() {
         levelNumber = 0;
         levelLists = new ArrayList<>();
+        levelLists.add(new LevelData(LEVELS_TO_BE,"B21089 k30009 k39099 k311 k313 k322 k324 k215 k226 k217 k228 c1128 vh71", "f5", "Prêt à dégager de la place ?"));
+        levelLists.add(new LevelData(LEVELS_TO_BE,"S21738 B21188 S27688 k635 k646 k655 k666 c0599 vx00", "f6", "Prêt à dégager de la place ?"));
+        levelLists.add(new LevelData(LEVELS_TO_BE,"X0495 X4059 t03064 t09604 t63664 N0010 N1110 N2210 N3310 O56999", "f4", "Quadrants noix"));
+        levelLists.add(new LevelData(LEVELS_TO_BE,"X0099 F1188 k93366 F4455 B23366", "f5", "Déloge-moi si tu peux !"));
+        levelLists.add(new LevelData(LEVELS_TO_BE,"H10549 k25599 K1158 K1166 K1178 K1186 B30949", "f5", "Aile gauche ou aile droite ?")); // TODO annuler le "hostage"
+        levelLists.add(new LevelData(LEVELS_TO_BE,"N2625 N3825 N4725 N4825 N5725 N5825 N6825 N7625 O20999", "f4", "Bam bam noix"));
+        levelLists.add(new LevelData(LEVELS_TO_BE,"K4111 K4113 K4131 K4133 N2010 N4015 N5015 N7010 O40999 c1133 v61 v16 v66", "f5 is", "Noix et attaques"));
+        levelLists.add(new LevelData(LEVELS_TO_BE,"E0799 k20406 k21517 k22648 c0448 vh54 K3116 K4237 K4167 K4286", "f6 ih m150 m250 mF4", "'Wildfire' pour libérer de l'espace"));
+        levelLists.add(new LevelData(LEVELS_TO_BE,"k10709 k21316 c0319 v23 v43 v63 v83", "f5 ih ma2000", "Marais 2000"));
+        levelLists.add(new LevelData(LEVELS_TO_BE,"K4100 K4111 c0011 v22 v66 v88 K4209 K4218 c0819 v26 v44 v62 v80 K4144 K4155", "f6 ih ma500 m1100", "Les fruits qui collent, et un dilemme !")); // TODO faire une option pour rendre "transparent" la copie de fruits
+        levelLists.add(new LevelData(LEVELS_TO_BE,"K2133 k244 c3344 v35 v53 v55", "f5 ih", "Les fruits qui collent !"));
         levelLists.add(new LevelData(LEVELS_TO_BE,"X4059 t09604 N007 N107 N207 N307 O76999", "f5 ih", "Malheur si tu les laisses tomber"));
+        levelLists.add(new LevelData(LEVELS_TO_BE,"", "f4 ma9999", "On s'en fout"));
         levelLists.add(new LevelData(LEVELS_TO_BE,"E0999 S10898 S21787 S32676 N455 N555 N405 N505 H34050 O20999", "f5 ih", "Casse ces noix"));
-        levelLists.add(new LevelData(LEVELS_TO_BE,"N2640 N3840 N4740 N4840 N5740 N5840 N6840 N7640 O20999", "f4", "Bam bam noix"));
         levelLists.add(new LevelData(FUN,"B30099 B43366", "f5", "Paniers garnis"));
         levelLists.add(new LevelData(LEVELS_TO_BE, "H107 H116 H127 H136 H147 H25559 X6899 X8697 F68 F86 c0599 vx00", "f5 id m1150 ml20", "Libérez les otages !"));
         levelLists.add(new LevelData(LEVELS_TO_BE, "B20099 H13366 H27799 H20729 H31122 H37182", "f5 id", "Libérez les otages !"));
@@ -38,6 +49,7 @@ public class LevelManager {
         levelLists.add(new LevelData(FUN,"B21188","f8 iah", "Juste 8 fruits"));
         levelLists.add(new LevelData(FUN,"","f6 mX mL mF ias", "FeuEclair, feuWild, eclairWild"));
 
+        levelLists.add(new LevelData(DEBUG,"K1122 K1133 c2233 v66 K1227 H34759 K1236 c2637 v44 v62 K1144 K1155", "f6 ih ma500", "Les fruits qui collent (fragile)"));
         levelLists.add(new LevelData(DEBUG, "S92121 S91213 B21113 c1123 v35 vh37 vx52 ", "f5","Blocs et bugs"));
         levelLists.add(new LevelData(DEBUG, "S14049", "f5", "Barre fragile ultime"));
         levelLists.add(new LevelData(DEBUG, "S12277", "f5","Fragilité"));

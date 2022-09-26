@@ -46,7 +46,7 @@ public class Pix {
     public static float backgroundFrame = 1f;
 
     public static int resourceSide = 128;
-    public static int resourceLittleSide = 64;
+    public static int resourceLittleSide = Pix.resourceSide/3;
 
     public static float thicknessOuterBeam = 12f;
     public static float thicknessMidBeam = 8f;
@@ -64,7 +64,8 @@ public class Pix {
     public static float yNutWaitingPicture = yCommandsKind;
     public static float xNutWaitingTextStart = xNuts + 100;
     public static float xNutWaitingPicture(int i) {return xCommands + i*(resourceLittleSide + 2) + xNutWaitingTextStart;}
-    public static float xNutWaitingText(int i) {return xNutWaitingPicture(i);}
+    private static float xNutWaitingTextIn = resourceLittleSide/2;
+    public static float xNutWaitingText(int i) {return xNutWaitingPicture(i) + xNutWaitingTextIn;}
 
     // Draw pix
     public static int xLeftMainSpace(float x) {
