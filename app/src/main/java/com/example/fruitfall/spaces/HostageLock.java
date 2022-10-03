@@ -5,7 +5,6 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 
 import com.example.fruitfall.MyCanvasView;
-import com.example.fruitfall.Pix;
 
 public class HostageLock extends SpaceFiller {
 

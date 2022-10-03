@@ -3,19 +3,15 @@ package com.example.fruitfall.introductions;
 import com.example.fruitfall.Constants;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Random;
 
 public class TransitionRandomFromLeft extends Transition {
 
-
+    // IMPORTANT : from left to right, and with forced dimensions
     @Override
     protected boolean initialize() {
-        int x,y;
+        int y;
         Random rand = new Random();
-        List<Float> source1 =  Arrays.asList(0f, 1f);
-        List<Float> target1 =  Arrays.asList(0f, 0.5f);
-        List<Float> target2 =  Arrays.asList(0.5f, 1f);
         for (y = 0; y < Constants.FIELD_YLENGTH; y ++) {
             this.spaces[y][0] = affineTransformation(rand.nextFloat(), Arrays.asList(0f, 0.5f, 1f), Arrays.asList(0f, 0.1f, 0.6f));
             this.spaces[y][1] = affineTransformation(rand.nextFloat(), Arrays.asList(0f, 0.5f, 1f), Arrays.asList(0f, 0.2f, 0.7f));

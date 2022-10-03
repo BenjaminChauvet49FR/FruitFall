@@ -1,13 +1,10 @@
 package com.example.fruitfall.spaces;
 
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.graphics.RectF;
 
 import com.example.fruitfall.MyCanvasView;
-import com.example.fruitfall.Pix;
 
 public class BreakableBlock extends SpaceFiller {
 

@@ -35,14 +35,14 @@ public class SpaceAnimationLightning extends SpaceAnimation {
             rectDestination.set(
                     Pix.xLeftMainSpace((float)(x-((x+0.25-extremeCoor1)*ratioSpeed))),
                     Pix.yUpMainSpace((float) (y + 0.35 * ratio)),
-                    Pix.rightMainSpace((float)(x+(extremeCoor2+0.25-x)*ratioSpeed)),
+                    Pix.xRightMainSpace((float)(x+(extremeCoor2+0.25-x)*ratioSpeed)),
                     Pix.yDownMainSpace((float) (y - 0.35 * ratio))
             );
         } else {
             rectDestination.set(
                     Pix.xLeftMainSpace((float)(x + 0.35 * ratio)),
                     Pix.yUpMainSpace((float)(y-((y+0.25-extremeCoor1)*ratioSpeed)) ),
-                    Pix.rightMainSpace((float)(x - 0.35 * ratio)),
+                    Pix.xRightMainSpace((float)(x - 0.35 * ratio)),
                     Pix.yDownMainSpace((float)(y+(extremeCoor2+0.25-y)*ratioSpeed))
 
             );

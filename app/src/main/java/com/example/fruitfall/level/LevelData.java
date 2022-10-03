@@ -1,10 +1,10 @@
 package com.example.fruitfall.level;
 
-import android.widget.Space;
-
 import com.example.fruitfall.Constants;
 import com.example.fruitfall.GameEnums;
 import com.example.fruitfall.SpaceCoors;
+import com.example.fruitfall.checkers.Checker;
+import com.example.fruitfall.checkers.CheckerOneDimension;
 import com.example.fruitfall.exceptions.IncorrectStringException;
 import com.example.fruitfall.introductions.Transition;
 import com.example.fruitfall.introductions.TransitionManager;
@@ -15,9 +15,9 @@ import com.example.fruitfall.spatialTransformation.SpatialTransformationUTurn;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 public class LevelData {
+
     private int numberOfFruitKinds;
     private List<Integer> forcedIndexes;
     private List<Integer> locksDuration;
@@ -26,13 +26,15 @@ public class LevelData {
     private List<SpaceCoors> outFallTeleporters;
     private List<SpaceCoors> nutsCoors;
     private List<Integer> nutsValues;
+    private final Checker checkerPotentialFruitsInStickyBombs = new Checker(Constants.FIELD_XLENGTH, Constants.FIELD_YLENGTH);
+    private final CheckerOneDimension checkerReductibleColour = new CheckerOneDimension(Constants.RESOURCES_NUMBER_FRUITS);
     private GameEnums.SPACE_DATA[] topRowSpawn;
     private String charsForTransition;
 
-    private String name;
-    private int category;
-    private String infos;
-    private String fieldContents;
+    private final String name;
+    private final int category;
+    private final String infos;
+    private final String fieldContents;
 
     private int[] amountsMission;
     private int numberOfMissions;
@@ -40,23 +42,24 @@ public class LevelData {
     // See below for baskets
     private GameEnums.GOAL_KIND goalKind;
 
+    // Level infos
+    private int widthField = 0;
+    private int heightField = 0;
+
     private static int widthClipBoard = 0;
     private static int heightClipBoard = 0;
+
     private int[][] basketsSpaceData;
     private int[][] hostagesSpaceData;
     private GameEnums.SPACE_DATA[][] spaceData;
     private int[][] additionalSpaceData;
     private int[][] additionalSpaceData2;
-    private static GameEnums.SPACE_DATA[][] clipBoard = new GameEnums.SPACE_DATA[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
-    private static int[][] additionalClipBoard = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
-    private static int[][] additionalClipBoard2 = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
-    private static int[][] basketsClipBoard = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
-    private static int[][] hostagesClipBoard = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
+    private static final GameEnums.SPACE_DATA[][] clipBoard = new GameEnums.SPACE_DATA[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
+    private static final int[][] additionalClipBoard = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
+    private static final int[][] additionalClipBoard2 = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
+    private static final int[][] basketsClipBoard = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
+    private static final int[][] hostagesClipBoard = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
 
-
-    public int getFruitColours() {
-        return this.numberOfFruitKinds;
-    }
     public List<Integer> getForcedIndexes() {
         return this.forcedIndexes;
     }
@@ -98,6 +101,10 @@ public class LevelData {
         this.numberOfMissions = 0;
         this.kindsOfMissions = new GameEnums.ORDER_KIND[Constants.MAX_MISSIONS];
         this.amountsMission = new int[Constants.MAX_MISSIONS];
+
+        this.checkerPotentialFruitsInStickyBombs.clear();
+        this.checkerReductibleColour.clear();
+
         for (int i = 0 ; i < Constants.MAX_MISSIONS ; i++) {
             this.kindsOfMissions[i] = GameEnums.ORDER_KIND.NONE;
         }
@@ -191,7 +198,102 @@ public class LevelData {
             this.kindsOfMissions[0] = GameEnums.ORDER_KIND.LIGHTNING_LIGHTNING;
             this.amountsMission[1] = 5;
         }
+
+
+        // Now, the resizing part.
+        // First "active" space needs to be 0, 0
+
+        int xMin, yMin, xMax, yMax;
+        xMin = 0;
+        y = 0;
+        boolean empty = true;
+        while (empty) {
+            if (this.isNoSpace(xMin, y)) {
+                y++;
+                if (y == Constants.FIELD_YLENGTH) {
+                    xMin++;
+                    y = 0;
+                }
+            } else {
+                empty = false;
+            }
+        }
+        xMax = Constants.FIELD_XLENGTH-1;
+        y = 0;
+        empty = true;
+        while (empty) {
+            if (this.isNoSpace(xMax, y)) {
+                y++;
+                if (y == Constants.FIELD_YLENGTH) {
+                    xMax--;
+                    y = 0;
+                }
+            } else {
+                empty = false;
+            }
+        }
+        x = 0;
+        yMin = 0;
+        empty = true;
+        while (empty) {
+            if (this.isNoSpace(x, yMin)) {
+                x++;
+                if (x == Constants.FIELD_XLENGTH) {
+                    yMin++;
+                    x = 0;
+                }
+            } else {
+                empty = false;
+            }
+        }
+        x = 0;
+        yMax = Constants.FIELD_YLENGTH-1;
+        empty = true;
+        while (empty) {
+            if (this.isNoSpace(x, yMax)) {
+                x++;
+                if (x == Constants.FIELD_XLENGTH) {
+                    yMax--;
+                    x = 0;
+                }
+            } else {
+                empty = false;
+            }
+        }
+        // Then, the offset
+        this.widthField = xMax - xMin+1;
+        this.heightField = yMax - yMin+1;
+        if ((this.widthField != Constants.FIELD_XLENGTH) || (this.heightField != Constants.FIELD_YLENGTH)) {
+            for (y = 0 ; y < Constants.FIELD_YLENGTH-yMin ; y++) {
+                for (x = 0; x < Constants.FIELD_XLENGTH-xMin; x++) {
+                    this.spaceData[y][x] = this.spaceData[y + yMin][x + xMin];
+                    this.basketsSpaceData[y][x] = this.basketsSpaceData[y + yMin][x + xMin];
+                    this.additionalSpaceData[y][x] = this.additionalSpaceData[y + yMin][x + xMin];
+                    this.additionalSpaceData2[y][x] = this.additionalSpaceData2[y + yMin][x + xMin];
+                }
+            }
+        }
+
+        // Data collections (widthField and heightField above)
+
+        // Reductible colours;
+        int colour;
+        for (SpaceCoors coors : this.checkerPotentialFruitsInStickyBombs.getList()) {
+            x = coors.x-xMin; // Note : the x and y have been recorded before the xMin and yMin shift.
+            y = coors.y-yMin;
+            if (this.spaceData[y][x] == GameEnums.SPACE_DATA.STICKY_BOMB) {
+                colour = this.getStickyBombContent(x, y);
+                if (colour != Constants.NOT_A_FRUIT) {
+                    this.checkerReductibleColour.add(colour);
+                }
+            }
+        }
     }
+
+    private boolean isNoSpace(int x, int y) {
+        return this.spaceData[y][x] == GameEnums.SPACE_DATA.VOID || this.spaceData[y][x] == GameEnums.SPACE_DATA.VOID_SPAWN;
+    }
+
 
     // Offensive programming ! Don't put something out of bounds !
     private void interpretStringPaste(String tokenBody) {
@@ -365,8 +467,13 @@ public class LevelData {
         int additionalData2 = 0;
         int position1stSizeChar = 1;
         GameEnums.SPACE_DATA data = null;
+        boolean alternateMode = false;
         if (cType == 'F') {
             data = GameEnums.SPACE_DATA.FRUIT;
+            if (tokenBody.charAt(1) == '!') {
+                position1stSizeChar++;
+                alternateMode = true;
+            }
         }
         if (cType == 'E') {
             data = GameEnums.SPACE_DATA.EMPTY;
@@ -424,17 +531,26 @@ public class LevelData {
             int y2 = charToInt(tokenBody, position1stSizeChar + 3);
             for (y = y1; y <= y2; y++) {
                 for (x = x1; x <= x2; x++) {
-                    this.spaceData[y][x] = data;
-                    this.additionalSpaceData[y][x] = additionalData;
-                    this.additionalSpaceData2[y][x] = additionalData2;
+                    this.putData(x, y, data, additionalData, additionalData2);
                 }
             }
+
+            if (alternateMode) {
+                if (data == GameEnums.SPACE_DATA.FRUIT) {
+                    for (y = 0; y < Constants.FIELD_YLENGTH; y++) {
+                        for (x = 0; x < Constants.FIELD_XLENGTH; x++) {
+                            if (x < x1 || x > x2 || y < y1 || y > y2) {
+                                this.spaceData[y][x] = GameEnums.SPACE_DATA.VOID_SPAWN;
+                            }
+                        }
+                    }
+                }
+            }
+
         } else if (charactersWithAndAfterIndex(tokenBody, position1stSizeChar) == 2)  {
             int x = charToInt(tokenBody, position1stSizeChar);
             int y = charToInt(tokenBody, position1stSizeChar+1);
-            this.spaceData[y][x] = data;
-            this.additionalSpaceData[y][x] = additionalData;
-            this.additionalSpaceData2[y][x] = additionalData2;
+            this.putData(x, y, data, additionalData, additionalData2);
         }
     }
 
@@ -456,6 +572,18 @@ public class LevelData {
         // It's a character count, yup
     }
 
+    private void putData(int x, int y, GameEnums.SPACE_DATA data, int additional1, int additional2) {
+        this.spaceData[y][x] = data;
+        this.additionalSpaceData[y][x] = additional1;
+        this.additionalSpaceData2[y][x] = additional2;
+        if (data == GameEnums.SPACE_DATA.STICKY_BOMB && additional2 != Constants.NOT_A_FRUIT) {
+            this.checkerPotentialFruitsInStickyBombs.add(x, y);
+        }
+    }
+
+    // Getters
+
+    // Getters for level data
     public int getLockDuration(int x, int y) {
         return (this.locksDuration.get(this.additionalSpaceData[y][x]));
     }
@@ -484,16 +612,22 @@ public class LevelData {
     public List<SpaceCoors> getNutsCoors() { return this.nutsCoors; }
     public List<Integer> getNutsValues() { return this.nutsValues; }
 
+    // Getters for both level data and level sorting
     public GameEnums.GOAL_KIND getGoalKind() {
         return this.goalKind;
     }
-
-    public Transition getTransition() {
-        if (this.charsForTransition == null || this.charsForTransition.isEmpty()) {
-            return TransitionManager.getTransitionFromChar('X');
-        }
-        int i = new Random().nextInt(charsForTransition.length());
-        return TransitionManager.getTransitionFromChar(charsForTransition.charAt(i));
+    public int getFruitColours() {
+        return this.numberOfFruitKinds;
     }
+    public int getReductionFruitColours() { return this.checkerReductibleColour.getList().size(); }
+
+    // Getters for others
+    public Transition getTransition() {
+        return TransitionManager.getTransitionFromString(this.charsForTransition);
+    }
+
+    public int getWidthField() { return widthField; }
+
+    public int getHeightField() { return heightField; }
 
 }

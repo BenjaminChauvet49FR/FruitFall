@@ -26,12 +26,9 @@ import java.util.List;
 import java.util.Random;
 
 public class GameHandler {
-    private static final int[] coefDirectionalX = {-1, 0, 1, 0};
-    private static final int[] coefDirectionalY = {0, -1, 0, 1};
     private static final int[] coefDirectional8X = {0, 1, 1, 1, 0, -1, -1, -1};
     private static final int[] coefDirectional8Y = {-1, -1, 0, 1, 1, 1, 0, -1};
-    private static final int[] coefDirectionalClockwiseTurningX = {1, 1, -1, -1};
-    private static final int[] coefDirectionalClockwiseTurningY = {-1, 1, 1, -1};
+
 
     public GameTimingHandler gth;  // TODO le passer en privé et le rendre accessible par getters...
 
@@ -1190,14 +1187,14 @@ public class GameHandler {
                         int dist, step, dir;
                         for (dir = 0 ; dir <= 3 ; dir++) {
                             for (dist = 1 ; dist <= 3 ; dist++) {
-                                xx = this.xSwapCenter + dist*coefDirectionalX[dir];
-                                yy = this.ySwapCenter + dist*coefDirectionalY[dir];
+                                xx = this.xSwapCenter + dist*Constants.coefDirectionalX[dir];
+                                yy = this.ySwapCenter + dist*Constants.coefDirectionalY[dir];
                                 for (step = 0 ; step < dist ; step++) {
                                     if (areAcceptableCoordinates(xx, yy)) {
                                         this.activateSpecialFruitBlast(xx, yy, newListToBeActivated);
                                     }
-                                    xx += coefDirectionalClockwiseTurningX[dir];
-                                    yy += coefDirectionalClockwiseTurningY[dir];
+                                    xx += Constants.coefDirectionalClockwiseTurningX[dir];
+                                    yy += Constants.coefDirectionalClockwiseTurningY[dir];
                                 }
                             }
                         }

@@ -1,31 +1,31 @@
 package com.example.fruitfall;
 
+import com.example.fruitfall.level.LevelData;
+import com.example.fruitfall.level.LevelManager;
+
 public class Pix {
-    public static int xStartSpaces = 22;
-    public static int yStartSpaces = 84;
+    public static int xBaseStartSpaces = 22;
+    public static int yBaseStartSpaces = 84;
     public static int wGap = 4;
     public static int hGap = 4;
-    public static int xStartField = xStartSpaces-wGap/2;
-    public static int yStartField = yStartSpaces-hGap/2;
     public static int wMainSpace = 60;
     public static int hMainSpace = 60;
 
     public static int wSpace = wMainSpace + wGap;
     public static int hSpace = hMainSpace + hGap;
     public static int ghostSquareMargin = wSpace/2;
-    public static int xAfterSpaces = xStartSpaces + Constants.FIELD_XLENGTH * wSpace - wGap; // (xAfterSpaces, yAfterSpaces NOT within X)
-    public static int yAfterSpaces = yStartSpaces + Constants.FIELD_YLENGTH * hSpace - hGap;
+    public static int yAfterSpaces = yBaseStartSpaces + Constants.FIELD_YLENGTH * hSpace - hGap;
 
-    public static int xStartActiveLight = xStartSpaces;
+    public static int xStartActiveLight = xBaseStartSpaces;
     public static int yStartActiveLight = 22;
-    public static float xScore = xStartSpaces + 50;
-    public static float hText = yStartSpaces * (float)0.3;
+    public static float xScore = xBaseStartSpaces + 50;
+    public static float hText = yBaseStartSpaces * (float)0.3;
 
     public static float yScore = 10+hText;
     public static float xTime = xScore + 300;
     public static float yTime = yScore;
 
-    public static float xTitle = xStartSpaces;
+    public static float xTitle = xBaseStartSpaces;
     public static float yTitle = yAfterSpaces + hText*(float)1.2;
 
     public static float hScoreSpace = hText;
@@ -64,27 +64,43 @@ public class Pix {
     public static float yNutWaitingPicture = yCommandsKind;
     public static float xNutWaitingTextStart = xNuts + 100;
     public static float xNutWaitingPicture(int i) {return xCommands + i*(resourceLittleSide + 2) + xNutWaitingTextStart;}
-    private static float xNutWaitingTextIn = resourceLittleSide/2;
+    private static final float xNutWaitingTextIn = resourceLittleSide/2;
     public static float xNutWaitingText(int i) {return xNutWaitingPicture(i) + xNutWaitingTextIn;}
+
+    public static int getXLeftFirstSpace() {
+        return Pix.xBaseStartSpaces + (Constants.FIELD_XLENGTH - LevelManager.currentLevelWidth())*Pix.wSpace/2;
+    }
+
+    public static int getXLeftStartField() {
+        return getXLeftFirstSpace()-wGap/2;
+    }
+
+    public static int getYUpFirstSpace() {
+        return Pix.yBaseStartSpaces + (Constants.FIELD_YLENGTH - LevelManager.currentLevelHeight())*Pix.hSpace/2;
+    }
+
+    public static int getYUpStartField() {
+        return getYUpFirstSpace()-hGap/2;
+    }
 
     // Draw pix
     public static int xLeftMainSpace(float x) {
-        return Pix.xStartSpaces + (int)(x * Pix.wSpace); // Note : must return an int ?
+        return getXLeftFirstSpace() + (int)(x * Pix.wSpace); // Note : must return an int ?
     }
     public static int yUpMainSpace(float y) {
-        return Pix.yStartSpaces + (int)(y * Pix.hSpace);
+        return getYUpFirstSpace() + (int)(y * Pix.hSpace);
     }
-    public static int rightMainSpace(float x) {
+    public static int xRightMainSpace(float x) {
         return xLeftMainSpace(x) + Pix.wMainSpace;
     }
     public static int yDownMainSpace(float y) {
         return yUpMainSpace(y) + Pix.hMainSpace;
     }
     public static int xLeftMainSpace(int x) {
-        return Pix.xStartSpaces + (x * Pix.wSpace);
+        return getXLeftFirstSpace() + (x * Pix.wSpace);
     }
     public static int yUpMainSpace(int y) {
-        return Pix.yStartSpaces + (y * Pix.hSpace);
+        return getYUpFirstSpace() + (y * Pix.hSpace);
     }
     public static int xRightMainSpace(int x) {
         return xLeftMainSpace(x) + Pix.wMainSpace;

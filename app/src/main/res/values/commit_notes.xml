@@ -1,22 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--
-    Sticky bombs
+    Last spatial transformations
+    Spatial transformations of transitions (+ function to take account of spatial transformations)
+    New transitions : blooming, swirl, grid
 
-    Corrected a bug from the previous commit : making a valid swap between a nut and a fruit didn't cause the fruits to be collected, only the nut to disappear
-    Realigned text of waiting nuts + changed gap for levels with orders
-    Drawed animation of nut disappearing
+    Shrinking the area of play in case it fits in a box smaller than 10x10 (Pix methods)
+        ->Level data : Added F! to shorten the strings
 
-    Cleared warning here and there
+    Updated the selection of transitions to allow limited randomness of transformations
 
-    Corrected animation of Omega sphere (fruits disappearing and reappearing after an omega sphere)
-    Changed philosophy around omega spheres ! Now, omega animation is something different. (notably, mitigated the hijacking in GTH by adding a new list for animations + added in GH the "afterOmegaStasis")
+    Added new menus to select levels easily, including one linked to the number of colours starting and final,
+    the final level of colours involving creating a one-dimensional checker
 
-    Fixed a bug of hostage locks and (L+Omega) or (F+Omega) : the hostage lock was morphed (thanks to a =) into a special virtual fruit and that was it !
-
-    Corected a bug of the spaces where some fruits weren't blasted (virtual lightning, virtual fire, fire ; doesn't concern lignthing because of the for loop... for now)
-    Philosophy on special fruits and collecting : a coloured fruit is collected on fruit special creation AND on fruit special activation ! (centered in blast to allow collection of virtual special fruits first, even though real special fruits are collected too...)
-
-    Tried to handle simply colours, but not that easy !
+    Bugs :
+    renamed rightMainSpace -> xRightMainSpace (int -> float)
+    Added sticky_bomb.png which was missing from the previous commit
     -->
 </resources>

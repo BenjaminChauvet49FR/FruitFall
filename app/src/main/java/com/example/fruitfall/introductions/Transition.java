@@ -1,12 +1,16 @@
 package com.example.fruitfall.introductions;
 
 import com.example.fruitfall.Constants;
+import com.example.fruitfall.spatialTransformation.SpatialTransformation;
 
 import java.util.List;
+import java.util.Random;
 
 public abstract class Transition {
 
     /*
+    // Philosophie : les numéros de cases partent de 0,0 et vont jusqu'à LevelManager.currentLevelHeight() et LevelManager.currentLevelWidth()
+
     TODO transitions existantes : (nombre d'orientations)
     Diagonale (*8)
     Spirale
@@ -14,8 +18,6 @@ public abstract class Transition {
     Line Horiz HD (*4)
 
     TODO futures transitions :
-    losanges sortant de terre (*8 avec astuce)
-    4 fois (5 fois 5) (*8)
     Whirl (*8)
     Losanges dont les pointes sortent du bas et du haut (*2)
     Double spirale (*4)
@@ -28,6 +30,11 @@ public abstract class Transition {
     protected float[][] spaces;
 
     public Transition() {
+        this.possibleSpatialTransformationsString = "";
+    }
+
+    // Mandatory call !
+    public void deploy() {
         this.spaces = new float[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
         boolean refitNeeded = this.initialize();
         if (refitNeeded) {
@@ -74,4 +81,19 @@ public abstract class Transition {
         }
         return randTarget.get(last); // TODO : make exception ?
     }
+
+    private String possibleSpatialTransformationsString;
+    protected SpatialTransformation getSpatialTransformation(int x1, int y1, int x2, int y2) {
+        if (possibleSpatialTransformationsString.isEmpty()) {
+            return TransitionManager.randomTransformation(x1, y1, x2, y2);
+        } else {
+            char c = this.possibleSpatialTransformationsString.charAt(new Random().nextInt(this.possibleSpatialTransformationsString.length()));
+            return TransitionManager.getSpatialTransformationFromChar(c, x1, y1, x2, y2);
+        }
+    }
+
+    public void addTransformationChar(char charSpatialTrans) {
+        this.possibleSpatialTransformationsString += charSpatialTrans;
+    }
+
 }

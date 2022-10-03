@@ -93,12 +93,27 @@
                 android:layout_weight="1"
                 android:text="Pause" />
 
-            <Button
-                android:id="@+id/buttonLevelChoice"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="Choix niveau" />
+                android:orientation="vertical">
+
+                <Button
+                    android:id="@+id/buttonLevelChoice"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="Choix niv. par catégorie" />
+
+                <Button
+                    android:id="@+id/buttonLevelChoice3"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="(bouton inutilisé)" />
+            </LinearLayout>
+
         </LinearLayout>
 
     </LinearLayout>

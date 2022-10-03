@@ -21,7 +21,6 @@ public class Constants {
 
     public static final int FIELD_YLENGTH = 10;
     public static final int FIELD_XLENGTH = 10;
-    public static final int FIELD_NUMBER_SPACES = FIELD_XLENGTH*FIELD_YLENGTH;
     public static final int MAX_MISSIONS = 3;
 
     public static final int MAX_ANGLE_IN_DEGREES = 480;
@@ -29,6 +28,12 @@ public class Constants {
     public static final int NOT_A_FRUIT = -1;
     public static final int ANY_FRUIT = -2;
     public static final int NOT_A_SPACE_COOR = -1;
+
+
+    public static final int[] coefDirectionalX = {-1, 0, 1, 0};
+    public static final int[] coefDirectionalY = {0, -1, 0, 1};
+    public static final int[] coefDirectionalClockwiseTurningX = {1, 1, -1, -1};
+    public static final int[] coefDirectionalClockwiseTurningY = {-1, 1, 1, -1};
 
     public static final int DUMMY_BOOST_FRUIT_COUNT = FIELD_YLENGTH * FIELD_XLENGTH;
 }

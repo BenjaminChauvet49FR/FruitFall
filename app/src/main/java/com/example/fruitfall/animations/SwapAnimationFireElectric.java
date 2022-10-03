@@ -69,7 +69,7 @@ public class SwapAnimationFireElectric extends SpaceAnimation {
         rectDestination.set(
             Pix.xLeftMainSpace((float)(x-((x+0.25-finalXLeft)*ratioSpeed))),
             Pix.yUpMainSpace((float) (y + 0.35 * ratio)),
-            Pix.rightMainSpace((float)(x+(finalXRight+0.25-x)*ratioSpeed)),
+            Pix.xRightMainSpace((float)(x+(finalXRight+0.25-x)*ratioSpeed)),
             Pix.yDownMainSpace((float) (y - 0.35 * ratio))
         );
         canvas.drawRect(rectDestination, paint);
@@ -77,18 +77,18 @@ public class SwapAnimationFireElectric extends SpaceAnimation {
         rectDestination.set(
                     Pix.xLeftMainSpace((float)(x + 0.35 * ratio)),
                     Pix.yUpMainSpace((float)(y-((y+0.25-finalYUp)*ratioSpeed)) ),
-                    Pix.rightMainSpace((float)(x - 0.35 * ratio)),
+                    Pix.xRightMainSpace((float)(x - 0.35 * ratio)),
                     Pix.yDownMainSpace((float)(y+(finalYDown+0.25-y)*ratioSpeed))
 
         );
         canvas.drawRect(rectDestination, paint);
         // Fun part
         canvas.save();
-        int[] pixX = {Pix.xCenter(finalXLU), Pix.xLeftMainSpace(finalXLU), Pix.xCenter(finalXRD), Pix.rightMainSpace(finalXRD)};
+        int[] pixX = {Pix.xCenter(finalXLU), Pix.xLeftMainSpace(finalXLU), Pix.xCenter(finalXRD), Pix.xRightMainSpace(finalXRD)};
         int[] pixY = {Pix.yUpMainSpace(finalYLU), Pix.yCenter(finalYLU), Pix.yDownMainSpace(finalYRD), Pix.yCenter(finalYRD)};
         Path path = new Path();
         drawPolygonFromPath(canvas, pixX, pixY, path, paint);
-        pixX = new int[]{Pix.xCenter(finalXRU), Pix.rightMainSpace(finalXRU), Pix.xCenter(finalXLD), Pix.xLeftMainSpace(finalXLD)};
+        pixX = new int[]{Pix.xCenter(finalXRU), Pix.xRightMainSpace(finalXRU), Pix.xCenter(finalXLD), Pix.xLeftMainSpace(finalXLD)};
         pixY = new int[]{Pix.yUpMainSpace(finalYRU), Pix.yCenter(finalYRU), Pix.yDownMainSpace(finalYLD), Pix.yCenter(finalYLD)};
         drawPolygonFromPath(canvas, pixX, pixY, path, paint);
     }

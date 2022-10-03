@@ -43,8 +43,8 @@ public class Nut extends SpaceFiller {
             paint.setStyle(Paint.Style.FILL_AND_STROKE);
             // Remember : text has been centered !
             canvas.drawText(String.valueOf(this.count),
-                    (rectDestination.left + rectDestination.right)/2,
-                    (rectDestination.top + rectDestination.bottom)/2, // rectDestination = where the space needs to be drawn
+                    (float)(rectDestination.left + rectDestination.right)/2,
+                    (float)(rectDestination.top + rectDestination.bottom)/2, // rectDestination = where the space needs to be drawn
                     paint);
         }
     }

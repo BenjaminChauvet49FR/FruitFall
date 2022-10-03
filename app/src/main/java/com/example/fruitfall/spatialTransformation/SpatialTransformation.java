@@ -28,16 +28,16 @@ public abstract class SpatialTransformation {
         this.yCenterTimes2 = y1+y2;
     }
 
-    public static SpatialTransformation randomTransformation(int x1, int y1, int x2, int y2) {
-        Random rand = new Random();
-        int chance = rand.nextInt(4);
-        switch (chance) {
-            case 1 : return new SpatialTransformationHorizMirror(x1, y1, x2, y2);
-            case 2 : return new SpatialTransformationUTurn(x1, y1, x2, y2);
-            case 3 : return new SpatialTransformationMainDiagonalMirror(x1, y1, x2, y2);
-            case 4 : return new SpatialTransformationRotationCW(x1, y1, x2, y2);
-            default : return new SpatialTransformationNone(x1, y1, x2, y2);
-        }
+    private static SpaceCoors coors = new SpaceCoors(0, 0);
+
+    // Credits : https://docs.oracle.com/javase/tutorial/extra/generics/methods.html
+    public static <T> void affectWithTransformation(T[][] array, SpatialTransformation transformation, int xSource, int ySource, T value) {
+        coors = transformation.transform(xSource, ySource);
+        array[coors.y][coors.x] = value;
     }
 
+    public static void affectWithTransformation(float[][] array, SpatialTransformation transformation, int xSource, int ySource, float value) {
+        coors = transformation.transform(xSource, ySource);
+        array[coors.y][coors.x] = value;
+    }
 }

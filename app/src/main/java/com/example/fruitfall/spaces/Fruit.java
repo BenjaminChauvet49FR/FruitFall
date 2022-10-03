@@ -5,7 +5,6 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 
 import com.example.fruitfall.GameEnums;
-import com.example.fruitfall.GameHandler;
 import com.example.fruitfall.MyCanvasView;
 
 public class Fruit extends SpaceFiller {

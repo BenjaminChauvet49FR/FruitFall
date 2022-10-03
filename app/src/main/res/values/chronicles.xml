@@ -10,5 +10,9 @@
     Marci 26 septembre (matin) : corrections sur les noix par là + netoyyage de warning sur GameTimingHandler
     Mardi 26 septembre (après-midi) : corrections furieuses sur les animations et les sphères Oméga (changement de philosophie)
     Mer-jeu : blast sur les fruits spéciaux + changement philo (simple) + nettoyage code (simple) + opération couleur (mauvaise idée)
+
+    Lundi 4 octobre : Transitions et transfo aléatoire
+    Mardi 5 : transfo aléatoire 2 + ajout d'un nouveau menu (enfin bref...) (bug de déploiement nécessaire + bug de tout déployer + revue de "hauteur / largeur current level")
+    Mercredi 6 : dans l'aprèm, correction bug lié aux transitions aléatoires ; le soir, ajout menu voulu + menu de menus + SURTOUT nettoyage code.
     -->
 </resources>

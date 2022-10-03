@@ -517,13 +517,13 @@ class MyCanvasView(context: Context) : View(context) {
     private fun drawProgressiveCheckerboard(canvas : Canvas) {
         // Note : checkerboard spaces must match field areas
         paint.strokeWidth = Pix.backgroundFrame
-        val pixStartLeft = Pix.xStartField
+        val pixStartLeft = Pix.getXLeftFirstSpace()-Pix.wGap/2;
         val pixStartRight = pixStartLeft+Pix.wSpace-1
         var progressiveIntro : Float
         var desiredThreshold : Float
         rectDest.left = pixStartLeft
         rectDest.right = pixStartRight
-        rectDest.top = Pix.yStartField
+        rectDest.top = Pix.getYUpFirstSpace()-Pix.hGap/2;
         rectDest.bottom = rectDest.top+Pix.hSpace-1
         val rectVar = Rect(0, 0, 0, 0)
         var ghostSquare : Int
@@ -562,10 +562,10 @@ class MyCanvasView(context: Context) : View(context) {
     private fun drawAllSpaceContents(canvas : Canvas) {
         paint.strokeWidth = Pix.backgroundFrame
         var outCoors : SpaceCoors?
-        val pixXStart1 = Pix.xStartSpaces
-        val pixYStart1 = Pix.yStartSpaces
-        val pixXStart2 = Pix.xStartField
-        val pixYStart2 = Pix.yStartField
+        val pixXStart1 = Pix.getXLeftFirstSpace()
+        val pixYStart1 = Pix.getYUpFirstSpace()
+        val pixXStart2 = Pix.getXLeftStartField()
+        val pixYStart2 = Pix.getYUpStartField()
         val outsideTeleportersCoors = ArrayList<SpaceCoors>()
         rectDest.set(pixXStart1, pixYStart1, pixXStart1+Pix.wMainSpace, pixYStart1+Pix.hMainSpace)
         val rectDestSpace = Rect(pixXStart2, pixYStart2, pixXStart2+Pix.wSpace, pixYStart2+ Pix.hSpace)
@@ -706,27 +706,27 @@ class MyCanvasView(context: Context) : View(context) {
 
     // Tactile pix
     private fun pixXToSpaceX(pixX : Float): Int {
-        return ((pixX.toDouble()-Pix.wGap/2-Pix.xStartField)/Pix.wSpace).toInt()
+        return ((pixX.toDouble()-Pix.wGap/2-Pix.getXLeftStartField())/Pix.wSpace).toInt()
     }
 
     private fun pixYToSpaceY(pixY : Float): Int {
-        return ( (pixY.toDouble()-Pix.hGap/2-Pix.yStartField)/Pix.hSpace).toInt()
+        return ( (pixY.toDouble()-Pix.hGap/2-Pix.getYUpStartField())/Pix.hSpace).toInt()
     }
 
     private fun spaceXToPixXLeft(spaceX : Int) : Int {
-        return Pix.xStartField + Pix.wSpace * spaceX
+        return Pix.getXLeftStartField() + Pix.wSpace * spaceX
     }
 
     private fun spaceXToPixXRight(spaceX : Int) : Int {
-        return Pix.xStartField + Pix.wSpace * (spaceX + 1)
+        return Pix.getXLeftStartField() + Pix.wSpace * (spaceX + 1)
     }
 
     private fun spaceYToPixYUp(spaceY : Int) : Int {
-        return Pix.yStartField + Pix.hSpace * spaceY
+        return Pix.getYUpStartField() + Pix.hSpace * spaceY
     }
 
     private fun spaceYToPixYDown(spaceY : Int) : Int {
-        return Pix.yStartField + Pix.hSpace * (spaceY + 1)
+        return Pix.getYUpStartField() + Pix.hSpace * (spaceY + 1)
     }
 
 

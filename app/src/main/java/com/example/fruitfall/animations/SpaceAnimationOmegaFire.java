@@ -19,7 +19,7 @@ public class SpaceAnimationOmegaFire extends SpaceAnimation {
     protected void drawProtected(MyCanvasView view, Canvas canvas, Rect rectSource, Rect rectDestination, Paint paint) {
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(view.getColorAnimationFire());
-        rectDestination.set(Pix.xLeftMainSpace(x -1), Pix.yUpMainSpace(y-1), Pix.rightMainSpace(x +1), Pix.yDownMainSpace(y +1));
+        rectDestination.set(Pix.xLeftMainSpace(x -1), Pix.yUpMainSpace(y-1), Pix.xRightMainSpace(x +1), Pix.yDownMainSpace(y +1));
         canvas.drawRect(rectDestination, paint);
     }
 
