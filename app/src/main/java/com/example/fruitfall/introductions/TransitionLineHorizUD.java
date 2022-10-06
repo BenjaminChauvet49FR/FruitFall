@@ -7,7 +7,7 @@ public class TransitionLineHorizUD extends Transition {
     @Override
     protected boolean initialize() {
         int x, y;
-        SpatialTransformation transformation = TransitionManager.randomTransformationRotation(0, 0, LevelManager.currentLevelWidth()-1, LevelManager.currentLevelHeight()-1);
+        SpatialTransformation transformation = this.getSpatialTransformation(0, 0, LevelManager.currentLevelWidth()-1, LevelManager.currentLevelHeight()-1);
         final int totalSteps = (LevelManager.currentLevelHeight() + LevelManager.currentLevelWidth()) * 2;
         for (y = 0; y < LevelManager.currentLevelHeight(); y ++) {
             for (x = 0; x < LevelManager.currentLevelWidth(); x++) {

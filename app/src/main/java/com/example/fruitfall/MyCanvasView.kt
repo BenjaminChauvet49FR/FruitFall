@@ -22,10 +22,12 @@ class MyCanvasView(context: Context) : View(context) {
     private lateinit var extraBitmap: Bitmap
     private val colorBG = ResourcesCompat.getColor(resources, R.color.background, null)
     private val colorTextMain = ResourcesCompat.getColor(resources, R.color.textMain, null)
-    private val colorFrameRect = ResourcesCompat.getColor(resources, R.color.frameRect, null)
+    private val colorFrameSelectRect = ResourcesCompat.getColor(resources, R.color.frameSelectRect, null)
+    private val colorFrameHelpRect = ResourcesCompat.getColor(resources, R.color.frameHelpRect, null)
     private val colorScoreFallSpace = ResourcesCompat.getColor(resources, R.color.scoreFallSpace, null)
     private val colorBasketsSpaceFG = ResourcesCompat.getColor(resources, R.color.scoreBasketsSpaceFG, null)
-    private val colorNutDropsBG = ResourcesCompat.getColor(resources, R.color.scoreNutDropsSpaceBG, null)
+    private val colorNutDropsBG = ResourcesCompat.getColor(resources, R.color.colorNutDropsSpaceBG, null)
+    private val colorDownFruitDropsBG = ResourcesCompat.getColor(resources, R.color.colorDownFruitDropsSpaceBG, null)
     private val colorBasketsSpaceBG = ResourcesCompat.getColor(resources, R.color.scoreBasketsSpaceBG, null)
     private val colorEntranceWarps = ResourcesCompat.getColor(resources, R.color.entranceWarps, null)
     private val colorExitWarps = ResourcesCompat.getColor(resources, R.color.exitWarps, null)
@@ -90,6 +92,7 @@ class MyCanvasView(context: Context) : View(context) {
     val bitmapImageLocking : Bitmap = BitmapFactory.decodeResource(resources, R.drawable.locking) // TODO celui là a besoin d'uniformisations
     val bitmapImageBreakableBlock : Bitmap = BitmapFactory.decodeResource(resources, R.drawable.crushable)
     val bitmapImageNut : Bitmap = BitmapFactory.decodeResource(resources, R.drawable.f_noix)
+    val bitmapImageDownFruit : Bitmap = BitmapFactory.decodeResource(resources, R.drawable.f_down_fruit)
     val bitmapImageHostageLock : Bitmap = BitmapFactory.decodeResource(resources, R.drawable.hostage_locking)
     val bitmapImageStickyBomb = makeResizedImage(R.drawable.sticky_bomb, Pix.squareSide)
     val bitmapOrderAny : Bitmap = makeResizedImage(R.drawable.losange_any, Pix.squareSide)
@@ -199,6 +202,7 @@ class MyCanvasView(context: Context) : View(context) {
                 drawSpaceAnimations(canvas, gh.gth.animations1List)// TODO devrait être dessiné APRES les cases et AVANT les contenus dans l'idéal.
                 drawFallingSpaces(canvas)
                 drawCursor(canvas)
+                drawHelp(canvas)
                 drawSwap(canvas)
                 drawSpaceAnimations(canvas, gh.gth.animations2List)
             }
@@ -207,6 +211,9 @@ class MyCanvasView(context: Context) : View(context) {
             }
             if (gh.goalKind == GameEnums.GOAL_KIND.NUTS) {
                 drawNutDrops(canvas)
+            }
+            if (gh.goalKind == GameEnums.GOAL_KIND.DOWNFRUITS) {
+                drawDownFruitDrops(canvas)
             }
             if (!gh.gth.pause) {
                 drawScoresOnField(canvas)
@@ -236,6 +243,9 @@ class MyCanvasView(context: Context) : View(context) {
                     canvas.drawBitmap(bitmapImageNut, rectSource, rectDest, paint)
                     canvas.drawText(gh.listWaitingNutData.get(i).delay.toString(), Pix.xNutWaitingText(i), Pix.yNutText, paint)
                 }
+            }
+            GameEnums.GOAL_KIND.DOWNFRUITS -> {
+                canvas.drawText("Fruits restants : " + gh.getdownFruitsLeftForMission(), Pix.xCommands, Pix.yCommandsText, paint)
             }
             else -> {
                 var pixWRectShrink : Int
@@ -346,6 +356,20 @@ class MyCanvasView(context: Context) : View(context) {
         paint.alpha = formerAlpha
     }
 
+    private fun drawDownFruitDrops(canvas: Canvas) {
+        val formerAlpha = paint.alpha
+        paint.color = colorDownFruitDropsBG
+        paint.alpha = 127
+        paint.style = Paint.Style.FILL_AND_STROKE
+        for (coors in this.gh.coorsForDownFruitDrops) {
+            val x = coors.x
+            val y = coors.y
+            rectDest.set(Pix.xLeftMainSpace(x), Pix.yUpMainSpace(y), Pix.xRightMainSpace(x), Pix.yDownMainSpace(y))
+            canvas.drawRect(rectDest, paint)
+        }
+        paint.alpha = formerAlpha
+    }
+
     private fun drawBaskets(canvas: Canvas) {
         var baskets : Int
         var nbBasketsDown : Int // Number of baskets in the bottom part of the space
@@ -360,8 +384,8 @@ class MyCanvasView(context: Context) : View(context) {
         rectDest.bottom = rectDest.top + Pix.basketSpaceSide
         var pixXPip : Float
         var pixYPip : Float
-        for (y in 0 until Constants.FIELD_YLENGTH) {
-            for (x in 0 until Constants.FIELD_XLENGTH) {
+        for (y in 0 until gh.yFieldLength) {
+            for (x in 0 until gh.xFieldLength) {
                 baskets = gh.getBaskets(x, y)
                 if (baskets > 0) {
                     paint.color = colorBasketsSpaceBG
@@ -454,9 +478,23 @@ class MyCanvasView(context: Context) : View(context) {
             paint.strokeWidth = Pix.selectionFrame
             rectFrame.set(spaceXToPixXLeft(selectedSpaceX), spaceYToPixYUp(selectedSpaceY), spaceXToPixXRight(selectedSpaceX), spaceYToPixYDown(selectedSpaceY))
             paint.style = Paint.Style.STROKE
-            paint.color = colorFrameRect
+            paint.color = colorFrameSelectRect
             canvas.drawRect(rectFrame, paint)
             paint.strokeWidth = formerWidth
+        }
+    }
+
+    // Draw the help
+    private fun drawHelp(canvas: Canvas) {
+        if (gh.help) {
+            val formerWidth = paint.strokeWidth
+            paint.strokeWidth = Pix.helpFrame
+            rectFrame.set(spaceXToPixXLeft(gh.xHelp), spaceYToPixYUp(gh.yHelp), spaceXToPixXRight(gh.xHelp), spaceYToPixYDown(gh.yHelp))
+            paint.style = Paint.Style.STROKE
+            paint.color = colorFrameHelpRect
+            canvas.drawRect(rectFrame, paint)
+            paint.strokeWidth = formerWidth
+            // TODO Pas de représentation pour la case adjacente !
         }
     }
 
@@ -527,8 +565,8 @@ class MyCanvasView(context: Context) : View(context) {
         rectDest.bottom = rectDest.top+Pix.hSpace-1
         val rectVar = Rect(0, 0, 0, 0)
         var ghostSquare : Int
-        for (y in 0 until Constants.FIELD_YLENGTH) {
-            for (x in 0 until Constants.FIELD_XLENGTH) {
+        for (y in 0 until gh.yFieldLength) {
+            for (x in 0 until gh.xFieldLength) {
                 if (gh.isASpace(x, y)) {
                     desiredThreshold = introTransition.getProgressThreshold(x, y)
                     progressiveIntro = gh.gth.ratioProgressiveIntroSpaces(desiredThreshold)
@@ -569,8 +607,8 @@ class MyCanvasView(context: Context) : View(context) {
         val outsideTeleportersCoors = ArrayList<SpaceCoors>()
         rectDest.set(pixXStart1, pixYStart1, pixXStart1+Pix.wMainSpace, pixYStart1+Pix.hMainSpace)
         val rectDestSpace = Rect(pixXStart2, pixYStart2, pixXStart2+Pix.wSpace, pixYStart2+ Pix.hSpace)
-        for (y in 0 until Constants.FIELD_YLENGTH) {
-            for (x in 0 until Constants.FIELD_XLENGTH) {
+        for (y in 0 until gh.yFieldLength) {
+            for (x in 0 until gh.xFieldLength) {
                 if (gh.isASpace(x, y)) {
                     // Warning C/P : from draw checkerboard
                     paint.color = colorBGSpaces[(x + y) % 2]
@@ -732,7 +770,7 @@ class MyCanvasView(context: Context) : View(context) {
 
     // True if two different spaces are being selected
     private fun testActionSwap(spaceX : Int, spaceY : Int) {
-        if (spaceX >= 0 && spaceX < Constants.FIELD_XLENGTH && spaceY >= 0 && spaceY < Constants.FIELD_YLENGTH) {
+        if (spaceX >= 0 && spaceX < gh.xFieldLength && spaceY >= 0 && spaceY < gh.yFieldLength) {
             if (!gh.isClickable(spaceX, spaceY)) {
                 return
             }

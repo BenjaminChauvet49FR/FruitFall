@@ -9,14 +9,16 @@
     <color name="white">#FFFFFFFF</color>
 
     <color name="background">#FF00FFFF</color>
-    <color name="frameRect">#FF440088</color>
+    <color name="frameSelectRect">#FF440088</color>
+    <color name="frameHelpRect">#FF880044</color>
     <color name="spaceBG1">#FFF8FFFF</color>
     <color name="spaceBG2">#FFFCF8FF</color>
     <color name="spaceBGFrame">#FF440088</color>
     <color name="scoreFallSpace">#FF0000FF</color>
     <color name="scoreBasketsSpaceFG">#FF55AAFF</color>
     <color name="scoreBasketsSpaceBG">#FFE0F0FF</color>
-    <color name="scoreNutDropsSpaceBG">#FFC0F088</color>
+    <color name="colorNutDropsSpaceBG">#FFC0F088</color>
+    <color name="colorDownFruitDropsSpaceBG">#FFC080FF</color>
     <color name="scoreDestructionSpace">#FF440000</color>
     <color name="colorDotStickyBomb">#FF88CC33</color>
     <color name="colorVeilStickyBomb">#FF224400</color>

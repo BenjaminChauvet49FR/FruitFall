@@ -6,6 +6,7 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.example.fruitfall.animations.SpaceAnimation;
+import com.example.fruitfall.animations.SpaceAnimationDownFruitShrinking;
 import com.example.fruitfall.animations.SpaceAnimationFire;
 import com.example.fruitfall.animations.SpaceAnimationFruitShrinking;
 import com.example.fruitfall.animations.SpaceAnimationLightning;
@@ -139,6 +140,8 @@ public class GameTimingHandler {
                 this.tryToAddToAnimationsDestroy(x, y, new SpaceAnimationFruitShrinking(x, y, fruitId, !alignedFruits));
             } else if (this.gh.hasDisappearingNut(x, y)) {
                 this.tryToAddToAnimationsDestroy(x, y, new SpaceAnimationNutShrinking(x, y));
+            } else if (this.gh.hasDisappearingDownFruit(x, y)) {
+                this.tryToAddToAnimationsDestroy(x, y, new SpaceAnimationDownFruitShrinking(x, y));
             } else if (this.gh.hasOmegaSphere(x, y)) {
                 this.tryToAddToAnimations(x, y, new SpaceAnimationOmegaSphere(x, y));
             }

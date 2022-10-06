@@ -117,11 +117,12 @@ class MainActivity : AppCompatActivity() {
                 GameEnums.GOAL_KIND.BASKETS -> 0
                 GameEnums.GOAL_KIND.NUTS -> 1
                 GameEnums.GOAL_KIND.ORDERS -> 2
+                GameEnums.GOAL_KIND.DOWNFRUITS -> 3
                 else -> -1
             }
         }
         val levelToType : (LevelData) -> Int = { level: LevelData -> levelToTypeFunction(level)}
-        val menuType : PopupMenu = setMenu(listOf("Paniers", "Noix", "Commandes"), myView, levelToType )
+        val menuType : PopupMenu = setMenu(listOf("Paniers", "Noix", "Commandes", "Chutes"), myView, levelToType )
 
         fun levelToNumberColoursFunction(level : LevelData) : Int {
             val colBase = level.fruitColours

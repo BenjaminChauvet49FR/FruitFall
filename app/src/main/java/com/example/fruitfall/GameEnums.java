@@ -21,12 +21,14 @@ public class GameEnums {
     // Space as it is at start
     public enum SPACE_DATA {
         FRUIT,
+        DOWN_FRUIT,
         EMPTY,
         VOID,
         VOID_SPAWN,
         DELAYED_LOCK,
         BREAKABLE_BLOCK,
         STICKY_BOMB,
+        NUT
     }
 
     public enum FRUITS_POWER {
@@ -99,6 +101,13 @@ public class GameEnums {
     public enum GOAL_KIND {
         BASKETS,
         NUTS,
-        ORDERS
+        ORDERS,
+        DOWNFRUITS
+    }
+
+    public enum DIRECTIONS_SWAP {
+        RIGHT,
+        DOWN,
+        NONE
     }
 }

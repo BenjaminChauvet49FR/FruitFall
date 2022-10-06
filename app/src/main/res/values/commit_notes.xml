@@ -1,20 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--
-    Last spatial transformations
-    Spatial transformations of transitions (+ function to take account of spatial transformations)
-    New transitions : blooming, swirl, grid
-
-    Shrinking the area of play in case it fits in a box smaller than 10x10 (Pix methods)
-        ->Level data : Added F! to shorten the strings
-
-    Updated the selection of transitions to allow limited randomness of transformations
-
-    Added new menus to select levels easily, including one linked to the number of colours starting and final,
-    the final level of colours involving creating a one-dimensional checker
-
-    Bugs :
-    renamed rightMainSpace -> xRightMainSpace (int -> float)
-    Added sticky_bomb.png which was missing from the previous commit
+    Naively testing the presence of a valid swap when clicking on the tolerance button
+    Adding the "dropfruit" level type
+    Correcting some bugs on fruit collection
+    Changed implementation of nuts data in level data
+    Changed Constants.FIELD_XLENGTH and YLENGTH in GameHandler (not needed in timing)
+    Unstable check triggered when a level starts. Prior to this, falls didn't happen.
     -->
 </resources>

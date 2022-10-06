@@ -36,17 +36,15 @@ public class Nut extends SpaceFiller {
 
     @Override
     public void paintStill(MyCanvasView view, Canvas canvas, Rect rectSource, Rect rectDestination, Paint paint) {
-        if (view.getBitmapImages() != null) {
-            canvas.drawBitmap(view.getBitmapImageNut(), rectSource, rectDestination, paint);
-            paint.setColor(view.getColorLockDuration());
-            paint.setTextSize(Pix.hLockDuration);
-            paint.setStyle(Paint.Style.FILL_AND_STROKE);
-            // Remember : text has been centered !
-            canvas.drawText(String.valueOf(this.count),
-                    (float)(rectDestination.left + rectDestination.right)/2,
-                    (float)(rectDestination.top + rectDestination.bottom)/2, // rectDestination = where the space needs to be drawn
-                    paint);
-        }
+        canvas.drawBitmap(view.getBitmapImageNut(), rectSource, rectDestination, paint);
+        paint.setColor(view.getColorLockDuration());
+        paint.setTextSize(Pix.hLockDuration);
+        paint.setStyle(Paint.Style.FILL_AND_STROKE);
+        // Remember : text has been centered !
+        canvas.drawText(String.valueOf(this.count),
+                (float)(rectDestination.left + rectDestination.right)/2,
+                (float)(rectDestination.top + rectDestination.bottom)/2, // rectDestination = where the space needs to be drawn
+                paint);
     }
 
     @Override

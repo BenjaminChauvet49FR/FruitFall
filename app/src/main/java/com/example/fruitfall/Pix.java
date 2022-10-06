@@ -43,6 +43,7 @@ public class Pix {
     public static float pipPadding = 5;
 
     public static float selectionFrame = 4f;
+    public static float helpFrame = 4f;
     public static float backgroundFrame = 1f;
 
     public static int resourceSide = 128;
