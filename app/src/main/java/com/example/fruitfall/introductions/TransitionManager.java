@@ -28,7 +28,7 @@ public class TransitionManager {
                         listOfTransitions.add(new TransitionUpward12121());
                         break;
                     case 'h':
-                        listOfTransitions.add(new TransitionLineHorizUD());
+                        listOfTransitions.add(new TransitionLineCrossing());
                         break;
                     case 't':
                         listOfTransitions.add(new TransitionRandomFromLeft());
@@ -79,6 +79,7 @@ public class TransitionManager {
     }
 
     public static SpatialTransformation getSpatialTransformationFromChar(char c, int x1, int y1, int x2, int y2) {
+        System.out.println(c);
         switch (c) {
             case '|' : return (new SpatialTransformationHorizMirror(x1, y1, x2, y2));
             case '-' : return (new SpatialTransformationVertMirror(x1, y1, x2, y2));

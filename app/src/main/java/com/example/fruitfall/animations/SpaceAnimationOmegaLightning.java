@@ -34,17 +34,17 @@ public class SpaceAnimationOmegaLightning extends SpaceAnimation {
         float ratioSpeed = (float) Math.min(1.0, ratio * 1.4);
         if (this.isHorizontal) {
             rectDestination.set(
-                    Pix.xLeftMainSpace((float)(x-((x+0.25-extremeCoor1)*ratioSpeed))),
-                    Pix.yUpMainSpace((float) (y + 0.35 * ratio)),
-                    Pix.xRightMainSpace((float)(x+(extremeCoor2+0.25-x)*ratioSpeed)),
-                    Pix.yDownMainSpace((float) (y - 0.35 * ratio))
+                    Pix.xLeftSpace((float)(x-((x+0.25-extremeCoor1)*ratioSpeed))),
+                    Pix.yUpSpace((float) (y + 0.35 * ratio)),
+                    Pix.xRightSpace((float)(x+(extremeCoor2+0.25-x)*ratioSpeed)),
+                    Pix.yDownSpace((float) (y - 0.35 * ratio))
             );
         } else {
             rectDestination.set(
-                    Pix.xLeftMainSpace((float)(x + 0.35 * ratio)),
-                    Pix.yUpMainSpace((float)(y-((y+0.25-extremeCoor1)*ratioSpeed)) ),
-                    Pix.xRightMainSpace((float)(x - 0.35 * ratio)),
-                    Pix.yDownMainSpace((float)(y+(extremeCoor2+0.25-y)*ratioSpeed))
+                    Pix.xLeftSpace((float)(x + 0.35 * ratio)),
+                    Pix.yUpSpace((float)(y-((y+0.25-extremeCoor1)*ratioSpeed)) ),
+                    Pix.xRightSpace((float)(x - 0.35 * ratio)),
+                    Pix.yDownSpace((float)(y+(extremeCoor2+0.25-y)*ratioSpeed))
 
             );
         }

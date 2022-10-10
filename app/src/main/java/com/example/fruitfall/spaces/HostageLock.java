@@ -9,13 +9,13 @@ import com.example.fruitfall.MyCanvasView;
 public class HostageLock extends SpaceFiller {
 
     // The space mustn't be another hostage lock
-    private SpaceFiller space;
+    private final SpaceFiller space;
     private int count;
 
     public HostageLock(SpaceFiller space, int count) {
         super();
         this.space = space;
-        this.count = count;
+        this.count = count; // TODO change count to level or so ? Do some uniformism...
     }
 
     public SpaceFiller getHostage() {
@@ -24,10 +24,6 @@ public class HostageLock extends SpaceFiller {
 
     public int getCount() {
         return this.count;
-    }
-
-    public void downgrade() {
-        this.count--;
     }
 
     public int getIdFruit() {
@@ -45,14 +41,19 @@ public class HostageLock extends SpaceFiller {
     }
 
     @Override
-    public void paintStill(MyCanvasView view, Canvas canvas, Rect rectSource, Rect rectDestination, Paint paint) {
-        space.paintStill(view, canvas, rectSource, rectDestination, paint);
-        canvas.drawBitmap(view.getBitmapImageHostageLock(), rectSource, rectDestination, paint);
-        this.paintPips(view, canvas, rectDestination, paint, this.count, view.getColorLockHostage());
-    } // TODO change count to level ? Do some uniformism...
+    public void paint(MyCanvasView view, Canvas canvas, Rect rectSource, Rect rectDestination, Paint paint, boolean isInPause) {
+        space.paint(view, canvas, rectSource, rectDestination, paint, isInPause);
+        drawInLevels(canvas, view.getBitmapImageHostageLocks(), this.count, rectSource, rectDestination, paint, (float)0.25);
+        if (isInPause) {
+            this.paintPips(view, canvas, rectDestination, paint, this.count, view.getColorDotHostage());
+        }
+    }
 
     @Override
-    public SpaceFiller copy() {
-        return null;
+    public void downgrade() {
+        count--;
     }
+
+    @Override
+    public boolean outtaHere() {return count <= 0;}
 }

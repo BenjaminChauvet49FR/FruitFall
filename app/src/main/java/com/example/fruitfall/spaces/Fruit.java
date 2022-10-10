@@ -9,7 +9,7 @@ import com.example.fruitfall.MyCanvasView;
 
 public class Fruit extends SpaceFiller {
     private int value;
-    private GameEnums.FRUITS_POWER power;
+    private final GameEnums.FRUITS_POWER power;
 
     public Fruit(int value) {
         this(value, GameEnums.FRUITS_POWER.NONE);
@@ -43,19 +43,18 @@ public class Fruit extends SpaceFiller {
     public GameEnums.FRUITS_POWER getPower() {return this.power;}
 
     @Override
-    public void paintStill(MyCanvasView view, Canvas canvas, Rect rectSource, Rect rectDestination, Paint paint) {
-        canvas.drawBitmap(view.getBitmapFruitToDrawFromIndex(this.value), rectSource, rectDestination, paint);
-        if (this.power == GameEnums.FRUITS_POWER.HORIZONTAL_LIGHTNING) {
-            canvas.drawBitmap(view.getBitmapImageLightH(), rectSource, rectDestination, paint);
-        }
-        if (this.power == GameEnums.FRUITS_POWER.VERTICAL_LIGHTNING) {
-            canvas.drawBitmap(view.getBitmapImageLightV(), rectSource, rectDestination, paint);
-        }
-        if (this.power == GameEnums.FRUITS_POWER.FIRE) {
-            canvas.drawBitmap(view.getBitmapImageFire(), rectSource, rectDestination, paint);
+    public void paint(MyCanvasView view, Canvas canvas, Rect rectSource, Rect rectDestination, Paint paint, boolean isInPause) {
+        if (!isInPause) {
+            canvas.drawBitmap(view.getBitmapFruitToDrawFromIndex(this.value), rectSource, rectDestination, paint);
+            if (this.power == GameEnums.FRUITS_POWER.HORIZONTAL_LIGHTNING) {
+                canvas.drawBitmap(view.getBitmapImageLightH(), rectSource, rectDestination, paint);
+            }
+            if (this.power == GameEnums.FRUITS_POWER.VERTICAL_LIGHTNING) {
+                canvas.drawBitmap(view.getBitmapImageLightV(), rectSource, rectDestination, paint);
+            }
+            if (this.power == GameEnums.FRUITS_POWER.FIRE) {
+                canvas.drawBitmap(view.getBitmapImageFire(), rectSource, rectDestination, paint);
+            }
         }
     }
-
-    @Override
-    public SpaceFiller copy() { return new Fruit(this.value, this.power); }
 }

@@ -1,10 +1,8 @@
 package com.example.fruitfall.animations;
 
 import android.graphics.Bitmap;
-import android.view.View;
 
 import com.example.fruitfall.Constants;
-import com.example.fruitfall.GameHandler;
 import com.example.fruitfall.MyCanvasView;
 
 public class SpaceAnimationOmegaSphere extends SpaceAnimationFading {

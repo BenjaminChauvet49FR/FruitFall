@@ -1,19 +1,22 @@
 package com.example.fruitfall
 
+import android.os.Build
 import android.os.Bundle
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.PopupMenu
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.example.fruitfall.level.LevelData
 import com.example.fruitfall.level.LevelManager
+
 
 // Almost everything was taken from : https://developer.android.com/codelabs/advanced-android-kotlin-training-canvas#2
 // Main exception is "credits here".
 // Also, I wasted some time in MyCanvasView by putting Bitmap.createBitmap in the wrong place. I had to download the main code to realize my foul.
 class MainActivity : AppCompatActivity() {
+    @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate(savedInstanceState: Bundle?) {
-
 
         super.onCreate(savedInstanceState)
         LevelManager.init()
@@ -22,13 +25,16 @@ class MainActivity : AppCompatActivity() {
         //var linearLayout = findViewById<LinearLayout>(R.id.constraintLayoutMain)
         setContentView(R.layout.activity_main)
 
-
-
-
         // How to make a "custom view" into a layout :
         // https://stackoverflow.com/questions/10410616/how-to-add-custom-view-to-the-layout
         // Now I can separate views and layouts
+
+        // Pixel dimensions
+        // Credentials : https://stackoverflow.com/questions/1016896/how-to-get-screen-dimensions-as-pixels-in-android
+        // + non-deprecated update
         val c : LinearLayout = findViewById(R.id.canvasLayout)
+        Pix.updateScreenDimensions(resources.displayMetrics.widthPixels, resources.displayMetrics.heightPixels,
+            resources.displayMetrics.widthPixels, resources.displayMetrics.heightPixels*3/5) // Note : 3/5 because canvas height takes 3/5 out of the screen, but it should actually be something such as c.height
         val myView = MyCanvasView(this)
         c.addView(myView)
         myView.startLevel()
@@ -57,6 +63,14 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.buttonPause).setOnClickListener {
             myView.setPause()
+        }
+
+        findViewById<Button>(R.id.buttonOptions).setOnClickListener {
+            if (myView.getMode() == MyCanvasView.MODE.GAME) {
+                myView.enterOptionsMode()
+            } else {
+                myView.enterGameMode()
+            }
         }
 
         // Level menus

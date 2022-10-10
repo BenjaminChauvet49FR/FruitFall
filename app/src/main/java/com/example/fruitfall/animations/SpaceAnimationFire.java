@@ -3,7 +3,6 @@ package com.example.fruitfall.animations;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.view.View;
 
 import com.example.fruitfall.Constants;
 import com.example.fruitfall.MyCanvasView;
@@ -20,11 +19,11 @@ public class SpaceAnimationFire extends SpaceAnimation {
     protected void drawProtected(MyCanvasView view, Canvas canvas, Rect rectSource, Rect rectDestination, Paint paint) {
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(view.getColorAnimationFire());
-        rectDestination.set(Pix.xLeftMainSpace(x -2), Pix.yUpMainSpace(y), Pix.xRightMainSpace(x +2), Pix.yDownMainSpace(y ));
+        rectDestination.set(Pix.xLeftSpace(x -2), Pix.yUpSpace(y), Pix.xRightSpace(x +2), Pix.yDownSpace(y ));
         canvas.drawRect(rectDestination, paint);
-        rectDestination.set(Pix.xLeftMainSpace(x -1), Pix.yUpMainSpace(y-1), Pix.xRightMainSpace(x +1), Pix.yDownMainSpace(y +1));
+        rectDestination.set(Pix.xLeftSpace(x -1), Pix.yUpSpace(y-1), Pix.xRightSpace(x +1), Pix.yDownSpace(y +1));
         canvas.drawRect(rectDestination, paint);
-        rectDestination.set(Pix.xLeftMainSpace(x ), Pix.yUpMainSpace(y-2), Pix.xRightMainSpace(x ), Pix.yDownMainSpace(y +2));
+        rectDestination.set(Pix.xLeftSpace(x ), Pix.yUpSpace(y-2), Pix.xRightSpace(x ), Pix.yDownSpace(y +2));
         canvas.drawRect(rectDestination, paint);
     }// TODO animer plutôt que maintenir ?
 }

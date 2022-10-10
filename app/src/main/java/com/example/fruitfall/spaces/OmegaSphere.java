@@ -20,13 +20,12 @@ public class OmegaSphere extends SpaceFiller {
     }
 
     @Override
-    public void paintStill(MyCanvasView view, Canvas canvas, Rect rectSource, Rect rectDestination, Paint paint) {
-        canvas.drawBitmap(view.getBitmapImageSphereOmega(), rectSource, rectDestination, paint);
+    public void paint(MyCanvasView view, Canvas canvas, Rect rectSource, Rect rectDestination, Paint paint, boolean isInPause) {
+        if (!isInPause) {
+            canvas.drawBitmap(view.getBitmapImageSphereOmega(), rectSource, rectDestination, paint);
+        }
     }
 
     @Override
     public GameEnums.FRUITS_POWER getPower() {return GameEnums.FRUITS_POWER.OMEGA_SPHERE;}
-
-    @Override
-    public SpaceFiller copy() { return new OmegaSphere(); }
 }

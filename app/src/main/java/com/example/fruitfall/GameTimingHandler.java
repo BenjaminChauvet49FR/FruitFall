@@ -6,22 +6,27 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.example.fruitfall.animations.SpaceAnimation;
+import com.example.fruitfall.animations.torn.SpaceAnimationBreakableBlockTorn;
 import com.example.fruitfall.animations.SpaceAnimationDownFruitShrinking;
 import com.example.fruitfall.animations.SpaceAnimationFire;
 import com.example.fruitfall.animations.SpaceAnimationFruitShrinking;
-import com.example.fruitfall.animations.SpaceAnimationLightning;
 import com.example.fruitfall.animations.SpaceAnimationDelayedLock;
 import com.example.fruitfall.animations.SpaceAnimationNutShrinking;
 import com.example.fruitfall.animations.SpaceAnimationOmegaFire;
 import com.example.fruitfall.animations.SpaceAnimationOmegaFruit;
 import com.example.fruitfall.animations.SpaceAnimationOmegaLightning;
 import com.example.fruitfall.animations.SpaceAnimationOmegaSphere;
-import com.example.fruitfall.animations.SwapAnimationFireElectric;
+import com.example.fruitfall.animations.SpaceAnimationBlastUpTo8Directions;
 import com.example.fruitfall.animations.SwapAnimationFireFire;
+import com.example.fruitfall.animations.torn.SpaceAnimationHostageTorn;
+import com.example.fruitfall.animations.torn.SpaceAnimationNutTorn;
+import com.example.fruitfall.animations.torn.SpaceAnimationStickyBombTorn;
+import com.example.fruitfall.animations.torn.SpaceAnimationStopBlastTorn;
 import com.example.fruitfall.checkers.Checker;
+import com.example.fruitfall.structures.Pair;
+import com.example.fruitfall.structures.SpaceCoors;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class GameTimingHandler {
@@ -43,6 +48,15 @@ public class GameTimingHandler {
     private boolean debugShouldSwitchFallSpeed;
     private float relativeTransitionLength;
     private boolean pause;
+    
+    private final int[] directionalBlastRangesArray = {0, 0, 0, 0, 0, 0, 0, 0};
+    private final boolean[] directionalBlastBlocksArray = {true, true, true, true, true, true, true, true};
+    private void cleanDirectionalBlastInfos() {
+        for (int i = 0 ; i < 8 ; i++) {
+            directionalBlastRangesArray[i] = 0;
+            directionalBlastBlocksArray[i] = true;
+        }
+    }
 
     public GameTimingHandler(GameHandler gh) {
         this.gh = gh;
@@ -143,23 +157,48 @@ public class GameTimingHandler {
                 this.tryToAddToAnimationsDestroy(x, y, new SpaceAnimationNutShrinking(x, y));
             } else if (this.gh.hasDisappearingDownFruit(x, y)) {
                 this.tryToAddToAnimationsDestroy(x, y, new SpaceAnimationDownFruitShrinking(x, y));
+            } else if (this.gh.hasBrokenBreakableBlock(x, y)) {
+                this.tryToAddToAnimationsDestroy(x, y, new SpaceAnimationBreakableBlockTorn(x, y));
+            } else if (this.gh.hasBrokenNut(x, y)) {
+                this.tryToAddToAnimationsDestroy(x, y, new SpaceAnimationNutTorn(x, y));
+            } else if (this.gh.hasBrokenStickyBomb(x, y)) {
+                this.tryToAddToAnimationsDestroy(x, y, new SpaceAnimationStickyBombTorn(x, y));
+            } else if (this.gh.hasBrokenStopBlast(x, y)) {
+                this.tryToAddToAnimationsDestroy(x, y, new SpaceAnimationStopBlastTorn(x, y));
             } else if (this.gh.hasOmegaSphere(x, y)) {
                 this.tryToAddToAnimations(x, y, new SpaceAnimationOmegaSphere(x, y));
             }
+        }
+        for(SpaceCoors coors : this.gh.getBrokenHostagesCoors()) {
+            x = coors.x;
+            y = coors.y;
+            this.tryToAddToAnimationsDestroy(x, y, new SpaceAnimationHostageTorn(x, y));
         }
         GameEnums.WHICH_SWAP swap = this.gh.getLastSwap();
         x = this.gh.getXCenterAnimation();
         y = this.gh.getYCenterAnimation();
         if (swap == GameEnums.WHICH_SWAP.FIRE_ELECTRIC) {
-            this.tryToAddToAnimations(x, y, new SwapAnimationFireElectric(x, y));
+            cleanDirectionalBlastInfos();
+            setDirectionalBlast(x, y, GameEnums.DIRECTIONS_BLAST.U);
+            setDirectionalBlast(x, y, GameEnums.DIRECTIONS_BLAST.D);
+            setDirectionalBlast(x, y, GameEnums.DIRECTIONS_BLAST.L);
+            setDirectionalBlast(x, y, GameEnums.DIRECTIONS_BLAST.R);
+            setDirectionalBlast(x, y, GameEnums.DIRECTIONS_BLAST.LU);
+            setDirectionalBlast(x, y, GameEnums.DIRECTIONS_BLAST.UR);
+            setDirectionalBlast(x, y, GameEnums.DIRECTIONS_BLAST.RD);
+            setDirectionalBlast(x, y, GameEnums.DIRECTIONS_BLAST.DL);
+            this.tryToAddToAnimations(x, y, new SpaceAnimationBlastUpTo8Directions(x, y, directionalBlastRangesArray, directionalBlastBlocksArray));
         }
         if (swap == GameEnums.WHICH_SWAP.FIRE_FIRE) {
             this.tryToAddToAnimations(x, y, new SwapAnimationFireFire(x, y));
         }
         if (swap == GameEnums.WHICH_SWAP.ELECTRIC_ELECTRIC) {
-            this.tryToAddToAnimations(x, y,
-                    Arrays.asList(new SpaceAnimationLightning(x, y, true), new SpaceAnimationLightning(x, y, false))
-            );
+            cleanDirectionalBlastInfos();
+            setDirectionalBlast(x, y, GameEnums.DIRECTIONS_BLAST.U);
+            setDirectionalBlast(x, y, GameEnums.DIRECTIONS_BLAST.D);
+            setDirectionalBlast(x, y, GameEnums.DIRECTIONS_BLAST.L);
+            setDirectionalBlast(x, y, GameEnums.DIRECTIONS_BLAST.R);
+            this.tryToAddToAnimations(x, y, new SpaceAnimationBlastUpTo8Directions(x, y, directionalBlastRangesArray, directionalBlastBlocksArray));
         }
         GameEnums.FRUITS_POWER power;
         for (SpaceCoors coors : this.gh.getListToBeActivatedSpecialFruits()) {
@@ -170,10 +209,16 @@ public class GameTimingHandler {
                 this.tryToAddToAnimations(x, y, new SpaceAnimationFire(x, y));
             }
             if (power == GameEnums.FRUITS_POWER.HORIZONTAL_LIGHTNING) {
-                this.tryToAddToAnimations(x, y, new SpaceAnimationLightning(x, y, true));
+                cleanDirectionalBlastInfos();
+                setDirectionalBlast(x, y, GameEnums.DIRECTIONS_BLAST.L);
+                setDirectionalBlast(x, y, GameEnums.DIRECTIONS_BLAST.R);
+                this.tryToAddToAnimations(x, y, new SpaceAnimationBlastUpTo8Directions(x, y, directionalBlastRangesArray, directionalBlastBlocksArray));
             }
             if (power == GameEnums.FRUITS_POWER.VERTICAL_LIGHTNING) {
-                this.tryToAddToAnimations(x, y, new SpaceAnimationLightning(x, y, false));
+                cleanDirectionalBlastInfos();
+                setDirectionalBlast(x, y, GameEnums.DIRECTIONS_BLAST.U);
+                setDirectionalBlast(x, y, GameEnums.DIRECTIONS_BLAST.D);
+                this.tryToAddToAnimations(x, y, new SpaceAnimationBlastUpTo8Directions(x, y, directionalBlastRangesArray, directionalBlastBlocksArray));
             }
             if (power == GameEnums.FRUITS_POWER.VIRTUAL_OMEGA_HORIZ_LIGHTNING) {
                 this.tryToAddToAnimations(x, y, new SpaceAnimationOmegaLightning(x, y, true));
@@ -193,6 +238,12 @@ public class GameTimingHandler {
             this.gameState = GameEnums.GAME_STATE.DESTRUCTING_STASIS;
         }
     }
+    
+    private void setDirectionalBlast(int x, int y, GameEnums.DIRECTIONS_BLAST dir) {
+        Pair<Integer, Boolean> p = gh.getBlastRangeInfos(x, y, dir);
+        directionalBlastRangesArray[dir.index()] = p.t;
+        directionalBlastBlocksArray[dir.index()] = p.u;
+    }
 
     private void tryToAddToAnimationsDestroy(int x, int y, SpaceAnimation animation) {
         if (this.handledDestroyAnimationsChecker.add(x, y)) {
@@ -203,12 +254,6 @@ public class GameTimingHandler {
     private void tryToAddToAnimations(int x, int y, SpaceAnimation animation) {
         if (this.handledSpecialAnimationsChecker.add(x, y)) {
             this.spaceAnimationNextDestructionList.add(animation);
-        }
-    }
-
-    private void tryToAddToAnimations(int x, int y, List<SpaceAnimation> animations) {
-        if (this.handledSpecialAnimationsChecker.add(x, y)) {
-            this.spaceAnimationNextDestructionList.addAll(animations);
         }
     }
 
@@ -362,7 +407,7 @@ public class GameTimingHandler {
                 (frameScore < Constants.NUMBER_FRAMES_SCORE);
     }
 
-    public long getTimeToDisplay() {return this.frameTotalCount / 60;} // TODO handle time for real ! (with SecureDate ?)
+    public long getElapsedSeconds() {return this.frameTotalCount / 60;} // TODO handle time for real ! (with SecureDate ?)
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public List<SpaceAnimation> getAnimations2List() {

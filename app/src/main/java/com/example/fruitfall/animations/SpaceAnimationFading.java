@@ -4,9 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.view.View;
 
-import com.example.fruitfall.GameHandler;
 import com.example.fruitfall.MyCanvasView;
 
 public abstract class SpaceAnimationFading extends SpaceAnimation {

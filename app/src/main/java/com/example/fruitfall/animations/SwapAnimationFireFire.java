@@ -18,7 +18,7 @@ public class SwapAnimationFireFire extends SpaceAnimation {
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(view.getColorAnimationFire());
         for (int i = 0 ; i <= 3 ; i++) {
-            rectDestination.set(Pix.xLeftMainSpace(x -3+i), Pix.yUpMainSpace(y-i), Pix.xRightMainSpace(x +3-i), Pix.yDownMainSpace(y+i));
+            rectDestination.set(Pix.xLeftSpace(x -3+i), Pix.yUpSpace(y-i), Pix.xRightSpace(x +3-i), Pix.yDownSpace(y+i));
             canvas.drawRect(rectDestination, paint);
         }
     }// TODO animer plutôt que maintenir ? (cf. Fire)

@@ -22,6 +22,7 @@ public class Constants {
     public static final int FIELD_YLENGTH = 10;
     public static final int FIELD_XLENGTH = 10;
     public static final int MAX_MISSIONS = 3;
+    public static final int DEFAULT_VALUE_ADDITIONAL_DATA = -1; // Not 0 because of fruit indexes...
 
     public static final int MAX_ANGLE_IN_DEGREES = 480;
     public static final int MAX_ANIMATIONS = 480;

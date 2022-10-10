@@ -107,11 +107,11 @@
                     android:text="Choix niv. par catégorie" />
 
                 <Button
-                    android:id="@+id/buttonLevelChoice3"
+                    android:id="@+id/buttonOptions"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:text="(bouton inutilisé)" />
+                    android:text="Options" />
             </LinearLayout>
 
         </LinearLayout>

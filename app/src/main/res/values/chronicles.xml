@@ -15,5 +15,28 @@
     Mardi 5 : transfo aléatoire 2 + ajout d'un nouveau menu (enfin bref...) (bug de déploiement nécessaire + bug de tout déployer + revue de "hauteur / largeur current level")
     Mercredi 6 : dans l'aprèm, correction bug lié aux transitions aléatoires ; le soir, ajout menu voulu + menu de menus + SURTOUT nettoyage code.
     Jeudi 7 (matin) : test de la présence de swap valide en cliquant sur Tolérance. (naïve)
+
+    Lundi 10 (matin) : revue des downgrades (destructions)
+    Lundi 10 (midi) : retour imprévu sur l'appel à l'aide + limitation des blasts (manquent les animations)
+    Lundi 10 (soir) : menu options + glissage des fruits et sélection (sans l'aléatoire)
+    Mardi 11 (matin) : cadre autour de la zone de glissage des fruits + dimensions écrans en pixels
+    Mardi 11 (après-midi) : fruits forcés sur le terrain (j'ai dû revoir Space data) + fruits bloquants.
+    Mercredi 12 (matin) : ajouté des niveaux (+ ceux de la veille), rajouté une transformation de copie + des exceptions pour y voir plus clair
+    Jeudi 13 (matin) : J'ai fait les animations limitées des rayons !
+    Samedi 15 (matin) : ajout des conditions
+    Samedi 15 (soir) : 1 Adaptation des pixels à l'écran ; 2 dessin d'une bordure (sans la perfection pixelatoire ni la gestion de l'intérieur du damier)
+
+    Lundi 17 : Correction des pixels coupés
+    Mercredi 19 (nuit) : pixels pour le paysage + cadre coloré derrière le texte (début) + nouveaux pinceaux
+    Dimanche 23 (midi et métro) : vrai mode options
+    Mardi 25 (nuit) : icône et redéfinition fenêtre
+    Mercredi 26 (nuit) : factorisation dessin texte mais j'ai galere avec les dimensions
+    Jeudi 27 (nuit) : ménage dans les textes
+    Samedi 29 (matin) : pixel mania
+    Lundi 31 (nuit) : renommage de main en inner ("winner commit") + casser les breakable blocs en 4 + corriger le non-dessin d'un mur de droite (niveau d'une largeur inférieure à la constante FIELD_X_LENGTH - retour à cette constante) + remplissage de toute la taille des blocs uniquement
+    Mercredi 2 novembre : généralisation des objets cassés + retrait du temps en mode relax
+    Vendredi 4 novembre (matin et soir) : Menu options, affichage cadres + triangle pour le curseur
+    Dimanche 6 novembre (midi et soir) : grosse journée de redesign des cases à plusieurs couches (toute la soirée) + des paniers (midi uniquement) ; il faudra quand même trouver une solution pour ces fichues mains bloquantes...
+    Lundi 7 novembre : nettoyages de "5.5.1.5.5.1" et possibilité de copier une case unique + pose d'exceptions sur les mauvaises strings
     -->
 </resources>

@@ -1,4 +1,4 @@
-package com.example.fruitfall;
+package com.example.fruitfall.structures;
 
 public class SpaceCoors {
     public int x;

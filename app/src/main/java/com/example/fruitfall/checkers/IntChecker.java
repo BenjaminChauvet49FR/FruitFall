@@ -1,6 +1,6 @@
 package com.example.fruitfall.checkers;
 
-import com.example.fruitfall.SpaceCoors;
+import com.example.fruitfall.structures.SpaceCoors;
 
 import java.util.ArrayList;
 import java.util.List;

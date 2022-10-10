@@ -1,16 +1,15 @@
 package com.example.fruitfall.animations;
 
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 
 import com.example.fruitfall.Pix;
 
 public class ThreeBeam {
 
-    private int colourIn;
-    private int colourMid;
-    private int colourOut;
+    private final int colourIn;
+    private final int colourMid;
+    private final int colourOut;
 
     public ThreeBeam(int colourOut, int colourMid, int colourIn) {
         this.colourOut = colourOut;

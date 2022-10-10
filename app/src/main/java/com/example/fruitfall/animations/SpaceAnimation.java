@@ -3,9 +3,7 @@ package com.example.fruitfall.animations;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.view.View;
 
-import com.example.fruitfall.GameEnums;
 import com.example.fruitfall.MyCanvasView;
 import com.example.fruitfall.Pix;
 
@@ -39,7 +37,7 @@ public abstract class SpaceAnimation {
 
     public void draw(MyCanvasView view, Canvas canvas, Rect rectSource, Rect rectDestination, Paint paint) {
         if (this.needRecenter) {
-            rectDestination.set(Pix.xLeftMainSpace(x), Pix.yUpMainSpace(y), Pix.xRightMainSpace(x), Pix.yDownMainSpace(y) );
+            rectDestination.set(Pix.xLeftSpace(x), Pix.yUpSpace(y), Pix.xRightSpace(x), Pix.yDownSpace(y) );
         }
         drawProtected(view, canvas, rectSource, rectDestination, paint);
     }

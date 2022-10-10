@@ -3,17 +3,15 @@ package com.example.fruitfall.animations;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.view.View;
 
 import com.example.fruitfall.Constants;
-import com.example.fruitfall.GameTimingHandler;
 import com.example.fruitfall.MyCanvasView;
 import com.example.fruitfall.Pix;
 
 public class SpaceAnimationFruitShrinking extends SpaceAnimation {
 
-    private int imageFruit;
-    private boolean alsoRotating;
+    private final int imageFruit;
+    private final boolean alsoRotating;
 
     public SpaceAnimationFruitShrinking(int x, int y, int _imageFruit, boolean _alsoRotating) {
         super(x, y, Constants.NUMBER_FRAMES_DESTRUCTION_FORANIM);
@@ -38,10 +36,10 @@ public class SpaceAnimationFruitShrinking extends SpaceAnimation {
 
     private Rect rotatedShrinkedRect(Rect rectDest, float ratio) {
         return new Rect(
-                (int) (rectDest.left + Pix.wMainSpace*ratio/2),
-                (int) (rectDest.top + Pix.hMainSpace*ratio/2),
-                (int) (rectDest.right - Pix.wMainSpace*ratio/2),
-                (int) (rectDest.bottom - Pix.hMainSpace*ratio/2)
+                (int) (rectDest.left + Pix.wInnerSpace*ratio/2),
+                (int) (rectDest.top + Pix.hInnerSpace*ratio/2),
+                (int) (rectDest.right - Pix.wInnerSpace*ratio/2),
+                (int) (rectDest.bottom - Pix.hInnerSpace*ratio/2)
         );
     }
 }

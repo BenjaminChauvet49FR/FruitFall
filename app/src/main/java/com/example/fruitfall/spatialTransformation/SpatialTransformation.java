@@ -1,8 +1,6 @@
 package com.example.fruitfall.spatialTransformation;
 
-import com.example.fruitfall.SpaceCoors;
-
-import java.util.Random;
+import com.example.fruitfall.structures.SpaceCoors;
 
 public abstract class SpatialTransformation {
 

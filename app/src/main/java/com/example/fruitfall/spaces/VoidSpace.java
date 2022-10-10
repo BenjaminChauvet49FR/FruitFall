@@ -16,7 +16,7 @@ public class VoidSpace extends SpaceFiller {
     }
 
     @Override
-    public void paintStill(MyCanvasView view, Canvas canvas, Rect rectSource, Rect rectDestination, Paint paint) {
+    public void paint(MyCanvasView view, Canvas canvas, Rect rectSource, Rect rectDestination, Paint paint, boolean isInPause) {
 
     }
 
@@ -25,8 +25,4 @@ public class VoidSpace extends SpaceFiller {
 
     @Override
     public boolean mayDisappear() { return false; }
-
-    @Override
-    public SpaceFiller copy() { return new VoidSpace(); }
-
 }

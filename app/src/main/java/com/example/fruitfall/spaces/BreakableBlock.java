@@ -1,10 +1,12 @@
 package com.example.fruitfall.spaces;
 
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 
 import com.example.fruitfall.MyCanvasView;
+import com.example.fruitfall.Pix;
 
 public class BreakableBlock extends SpaceFiller {
 
@@ -14,12 +16,13 @@ public class BreakableBlock extends SpaceFiller {
         this.count = count;
     }
 
-    public int getCount() {
-        return count;
-    }
-
-    public void downgrade() {
-        count--;
+    public void paint(MyCanvasView view, Canvas canvas, Rect rectSource, Rect rectDestination, Paint paint, boolean inPause) {
+        Pix.adaptRectForFullSpace(rectDestination);
+        drawInLevels(canvas, view.getBitmapImageBreakableBlocks(), this.count, rectSource, rectDestination, paint, (float)0.4);
+        Pix.adaptRectForInnerSpace(rectDestination);
+        if (inPause) {
+            paintPips(view, canvas, rectDestination, paint, this.count, view.getColorDotDestroyableNearby());
+        }
     }
 
     @Override
@@ -33,11 +36,15 @@ public class BreakableBlock extends SpaceFiller {
     }
 
     @Override
-    public void paintStill(MyCanvasView view, Canvas canvas, Rect rectSource, Rect rectDestination, Paint paint) {
-        canvas.drawBitmap(view.getBitmapImageBreakableBlock(), rectSource, rectDestination, paint);
-        this.paintPips(view, canvas, rectDestination, paint, this.count, view.getColorLockDuration());
+    public boolean downgradableOnAdjAlignedOrBlast() {return true;}
+
+    @Override
+    public void downgrade() {
+        count--;
     }
 
     @Override
-    public SpaceFiller copy() { return new BreakableBlock(this.count); }
+    public boolean outtaHere() {return count <= 0;}
+
+
 }

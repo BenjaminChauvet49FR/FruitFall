@@ -24,10 +24,10 @@ public class SpaceAnimationDownFruitShrinking extends SpaceAnimation {
 
     private Rect rotatedShrinkedRect(Rect rectDest, float ratio) {
         return new Rect(
-                (int) (rectDest.left + Pix.wMainSpace*ratio/2),
-                (int) (rectDest.top + Pix.hMainSpace*ratio/2),
-                (int) (rectDest.right - Pix.wMainSpace*ratio/2),
-                (int) (rectDest.bottom - Pix.hMainSpace*ratio/2)
+                (int) (rectDest.left + Pix.wInnerSpace*ratio/2),
+                (int) (rectDest.top + Pix.hInnerSpace*ratio/2),
+                (int) (rectDest.right - Pix.wInnerSpace*ratio/2),
+                (int) (rectDest.bottom - Pix.hInnerSpace*ratio/2)
         );
     }
 

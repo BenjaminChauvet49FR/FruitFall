@@ -7,14 +7,14 @@ import android.graphics.Rect;
 import com.example.fruitfall.Constants;
 import com.example.fruitfall.MyCanvasView;
 import com.example.fruitfall.Pix;
-import com.example.fruitfall.SpaceCoors;
+import com.example.fruitfall.structures.SpaceCoors;
 
 import java.util.List;
 
 public class SpaceAnimationOmegaFruit extends SpaceAnimation {
 
-    private ThreeBeam beam;
-    private List<SpaceCoors> destinations;
+    private final ThreeBeam beam;
+    private final List<SpaceCoors> destinations;
 
     public SpaceAnimationOmegaFruit(int x, int y, List<SpaceCoors> destinations, int colourOut, int colourMid, int colourIn) {
         super(x, y, Constants.NUMBER_FRAMES_DESTRUCTION_FORANIM);

@@ -20,12 +20,7 @@ public class DownFruit extends SpaceFiller {
     }
 
     @Override
-    public void paintStill(MyCanvasView view, Canvas canvas, Rect rectSource, Rect rectDestination, Paint paint) {
+    public void paint(MyCanvasView view, Canvas canvas, Rect rectSource, Rect rectDestination, Paint paint, boolean isInPause) {
         canvas.drawBitmap(view.getBitmapImageDownFruit(), rectSource, rectDestination, paint);
-    }
-
-    @Override
-    public SpaceFiller copy() {
-        return null;
     }
 }

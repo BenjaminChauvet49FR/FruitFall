@@ -1,6 +1,6 @@
 package com.example.fruitfall.spatialTransformation;
 
-import com.example.fruitfall.SpaceCoors;
+import com.example.fruitfall.structures.SpaceCoors;
 
 public class SpatialTransformationUTurn extends SpatialTransformation {
 

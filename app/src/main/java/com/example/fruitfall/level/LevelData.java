@@ -2,16 +2,18 @@ package com.example.fruitfall.level;
 
 import com.example.fruitfall.Constants;
 import com.example.fruitfall.GameEnums;
-import com.example.fruitfall.SpaceCoors;
+import com.example.fruitfall.structures.SpaceCoors;
 import com.example.fruitfall.checkers.Checker;
 import com.example.fruitfall.checkers.CheckerOneDimension;
 import com.example.fruitfall.exceptions.IncorrectStringException;
+import com.example.fruitfall.exceptions.OutOfFieldException;
 import com.example.fruitfall.introductions.Transition;
 import com.example.fruitfall.introductions.TransitionManager;
 import com.example.fruitfall.spatialTransformation.SpatialTransformation;
 import com.example.fruitfall.spatialTransformation.SpatialTransformationHorizMirror;
 import com.example.fruitfall.spatialTransformation.SpatialTransformationNone;
 import com.example.fruitfall.spatialTransformation.SpatialTransformationUTurn;
+import com.example.fruitfall.spatialTransformation.SpatialTransformationVertMirror;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +21,6 @@ import java.util.List;
 public class LevelData {
 
     private int numberOfFruitKinds;
-    private List<Integer> forcedIndexes;
     private List<Integer> locksDuration;
     // IMPORTANT : coordinate in position (i) in inFallTeleporters must be at a base, otherwise it can be very confusing. And coordinate in position (i) in outFallTeleporters must be at a summit.
     private List<SpaceCoors> inFallTeleporters;
@@ -28,6 +29,7 @@ public class LevelData {
     private final CheckerOneDimension checkerReductibleColour = new CheckerOneDimension(Constants.RESOURCES_NUMBER_FRUITS);
     private GameEnums.SPACE_DATA[] topRowSpawn;
     private String charsForTransition;
+    private int fruitForcingIndex;
 
     private final String name;
     private final int category;
@@ -53,17 +55,17 @@ public class LevelData {
     private int[][] basketsSpaceData;
     private int[][] hostagesSpaceData;
     private GameEnums.SPACE_DATA[][] spaceData;
-    private int[][] additionalSpaceData;
-    private int[][] additionalSpaceData2;
+    private final int[][] additionalSpaceData = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
+    private final int[][] additionalSpaceData2 = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH]; // A bit too many modifications around to make a checker instead of an array worthwhile...
     private static final GameEnums.SPACE_DATA[][] clipBoard = new GameEnums.SPACE_DATA[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
     private static final int[][] additionalClipBoard = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
     private static final int[][] additionalClipBoard2 = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
     private static final int[][] basketsClipBoard = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
     private static final int[][] hostagesClipBoard = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
 
-    public List<Integer> getForcedIndexes() {
-        return this.forcedIndexes;
-    }
+    private int goalTimeActionLimit = 1000;
+    private int goalMovesActionLimit = 1000;
+    private int goalMovesRelaxLimit = 1000;
 
     public GameEnums.SPACE_DATA getData(int x, int y) {
         return this.spaceData[y][x];
@@ -98,6 +100,8 @@ public class LevelData {
         this.category = category;
     }
 
+    private String layersRequired = "1-9 value required for layer.";
+
     public void deploy() {
 
         // Setup
@@ -113,25 +117,23 @@ public class LevelData {
         }
 
         int x, y;
-        this.forcedIndexes = new ArrayList<>();
+        this.fruitForcingIndex = Constants.DEFAULT_VALUE_ADDITIONAL_DATA;
         this.topRowSpawn = new GameEnums.SPACE_DATA[Constants.FIELD_XLENGTH];
         for (x = 0; x < Constants.FIELD_XLENGTH; x++) {
             this.topRowSpawn[x] = GameEnums.SPACE_DATA.VOID_SPAWN;
         }
 
         this.spaceData = new GameEnums.SPACE_DATA[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
-        this.additionalSpaceData = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
-        this.additionalSpaceData2 = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
         this.basketsSpaceData = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
         this.hostagesSpaceData = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
         this.goalKind = GameEnums.GOAL_KIND.ORDERS;
         for (y = 0; y < Constants.FIELD_YLENGTH; y++) {
             for (x = 0; x < Constants.FIELD_XLENGTH; x++) {
                 this.spaceData[y][x] = GameEnums.SPACE_DATA.FRUIT;
-                this.additionalSpaceData = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
-                this.additionalSpaceData2 = new int[Constants.FIELD_YLENGTH][Constants.FIELD_XLENGTH];
                 this.basketsSpaceData[y][x] = 0;
                 this.hostagesSpaceData[y][x] = 0;
+                this.additionalSpaceData[y][x] = Constants.DEFAULT_VALUE_ADDITIONAL_DATA;
+                this.additionalSpaceData2[y][x] = Constants.DEFAULT_VALUE_ADDITIONAL_DATA;
             }
         }
 
@@ -159,6 +161,8 @@ public class LevelData {
                 case 'v' :
                     interpretStringPaste(token.substring(1));
                 break;
+                
+                case 'f' : interpretStringFruitForcing(token.substring(1)); break;
 
                 // Space data
                 case 'B' : interpretStringBaskets(token.substring(1));
@@ -182,7 +186,7 @@ public class LevelData {
             }
             switch(token.charAt(0)) {
                 // Level data
-                case 'f' : interpretStringFruits(token.substring(1));
+                case 'f' : interpretStringFruitsInfos(token.substring(1));
                     break;
                 case 'l' : interpretStringLockLength(token.substring(1));
                     break;
@@ -191,6 +195,8 @@ public class LevelData {
                 case 'm' : interpretStringMissions(token.substring(1));
                     break;
                 case 'd' : interpretStringDownFruits(token.substring(1));
+                    break;
+                case 'L' : interpretStringLimits(token.substring(1));
                     break;
             }
         }
@@ -292,6 +298,13 @@ public class LevelData {
         }
     }
 
+    private void interpretStringLimits(String tokenBody) {
+        String[] tokens = tokenBody.split("#");
+        this.goalMovesActionLimit = Integer.parseInt(tokens[0]);
+        this.goalTimeActionLimit = Integer.parseInt(tokens[1]);
+        this.goalMovesRelaxLimit = Integer.parseInt(tokens[2]);
+    }
+
     private boolean isNoSpace(int x, int y) {
         return this.spaceData[y][x] == GameEnums.SPACE_DATA.VOID || this.spaceData[y][x] == GameEnums.SPACE_DATA.VOID_SPAWN;
     }
@@ -312,6 +325,11 @@ public class LevelData {
                 yS = charToInt(tokenBody, 2);
                 transformation = new SpatialTransformationUTurn(xS, yS, xS + widthClipBoard - 1, yS + heightClipBoard - 1);
             break;
+            case 'v' :
+                xS = charToInt(tokenBody, 1);
+                yS = charToInt(tokenBody, 2);
+                transformation = new SpatialTransformationVertMirror(xS, yS, xS + widthClipBoard - 1, yS + heightClipBoard - 1);
+            break;
             default :
                 xS = charToInt(tokenBody, 0);
                 yS = charToInt(tokenBody, 1);
@@ -319,36 +337,44 @@ public class LevelData {
             break; // TODO : not all possible transformations have been added, notably, vertical one is missing
         }
         SpaceCoors transCoors;
-        int x, y;
-        for (y = yS; y < yS + heightClipBoard; y++) {
-            for (x = xS; x < xS + widthClipBoard; x++) {
-                transCoors = transformation.transform(x, y);
-                this.spaceData[transCoors.y][transCoors.x] = clipBoard[y-yS][x-xS];
-                this.additionalSpaceData[transCoors.y][transCoors.x] = additionalClipBoard[y-yS][x-xS];
-                this.additionalSpaceData2[transCoors.y][transCoors.x] = additionalClipBoard2[y-yS][x-xS];
-                this.basketsSpaceData[transCoors.y][transCoors.x] = basketsClipBoard[y-yS][x-xS];
-                this.hostagesSpaceData[transCoors.y][transCoors.x] = hostagesClipBoard[y-yS][x-xS];
+        int x = 0, y = 0;
+        try {
+            for (y = yS; y < yS + heightClipBoard; y++) {
+                for (x = xS; x < xS + widthClipBoard; x++) {
+                    transCoors = transformation.transform(x, y);
+                    this.spaceData[transCoors.y][transCoors.x] = clipBoard[y-yS][x-xS];
+                    this.additionalSpaceData[transCoors.y][transCoors.x] = additionalClipBoard[y-yS][x-xS];
+                    this.additionalSpaceData2[transCoors.y][transCoors.x] = additionalClipBoard2[y-yS][x-xS];
+                    this.basketsSpaceData[transCoors.y][transCoors.x] = basketsClipBoard[y-yS][x-xS];
+                    this.hostagesSpaceData[transCoors.y][transCoors.x] = hostagesClipBoard[y-yS][x-xS];
+                }
             }
-        }
+        } catch (Exception e) {
+            throw new OutOfFieldException(tokenBody, x, y);
+        } // TODO didn't add them everywhere !
     }
 
     private void interpretStringCopy(String tokenBody) {
         int x1 = charToInt(tokenBody, 0);
         int y1 = charToInt(tokenBody, 1);
-        int x2 = charToInt(tokenBody, 2);
-        int y2 = charToInt(tokenBody, 3);
-        int x, y;
-        for (y = y1; y <= y2; y++) {
-            for (x = x1; x <= x2; x++) {
-                clipBoard[y-y1][x-x1] = this.spaceData[y][x];
-                additionalClipBoard[y-y1][x-x1] = this.additionalSpaceData[y][x];
-                additionalClipBoard2[y-y1][x-x1] = this.additionalSpaceData2[y][x];
-                basketsClipBoard[y-y1][x-x1] = this.basketsSpaceData[y][x];
-                hostagesClipBoard[y-y1][x-x1] = this.hostagesSpaceData[y][x];
+        int x2 = charToInt(tokenBody, tokenBody.length() == 4 ? 2 : 0);
+        int y2 = charToInt(tokenBody, tokenBody.length() == 4 ? 3 : 1);
+        int x = 0, y = 0;
+        try {
+            for (y = y1; y <= y2; y++) {
+                for (x = x1; x <= x2; x++) {
+                    clipBoard[y-y1][x-x1] = this.spaceData[y][x];
+                    additionalClipBoard[y-y1][x-x1] = this.additionalSpaceData[y][x];
+                    additionalClipBoard2[y-y1][x-x1] = this.additionalSpaceData2[y][x];
+                    basketsClipBoard[y-y1][x-x1] = this.basketsSpaceData[y][x];
+                    hostagesClipBoard[y-y1][x-x1] = this.hostagesSpaceData[y][x];
+                }
             }
+            heightClipBoard = y2-y1+1;
+            widthClipBoard = x2-x1+1;
+        } catch (Exception e) {
+            throw new OutOfFieldException(tokenBody, x, y);
         }
-        heightClipBoard = y2-y1+1;
-        widthClipBoard = x2-x1+1;
     }
 
     private void interpretStringMissions(String tokenBody) {
@@ -388,6 +414,15 @@ public class LevelData {
         }
     }
 
+    private void interpretStringFruitForcing(String tokenBody) {
+        char c = tokenBody.charAt(0);
+        if (c == 'a') {
+            this.fruitForcingIndex = Constants.DEFAULT_VALUE_ADDITIONAL_DATA;
+        } else {
+            this.fruitForcingIndex = Integer.parseInt(""+c);
+        }
+    }
+
     private void interpretStringDownFruits(String tokenBody) {
         this.goalKind = GameEnums.GOAL_KIND.DOWNFRUITS;
         String[] tokens = tokenBody.split("#");
@@ -396,11 +431,8 @@ public class LevelData {
         this.delayDownFruits = Integer.parseInt(tokens[2]);
     }
 
-        private void interpretStringFruits(String tokenBody) {
+    private void interpretStringFruitsInfos(String tokenBody) {
         this.numberOfFruitKinds = charToInt(tokenBody, 0);
-        for ( int i = 1 ; i < tokenBody.length() ; i++) {
-            this.forcedIndexes.add(charToInt(tokenBody, i));
-        }
     }
 
     // Warning : this function totally exploits (but it isn't the only one) the fact that coordinates are labelled on one space !
@@ -489,6 +521,7 @@ public class LevelData {
                 position1stSizeChar++;
                 alternateMode = true;
             }
+            additionalData2 = this.fruitForcingIndex;
         }
         if (cType == 'E') {
             data = GameEnums.SPACE_DATA.EMPTY;
@@ -510,7 +543,7 @@ public class LevelData {
             data = GameEnums.SPACE_DATA.DELAYED_LOCK;
             additionalData = charToInt(tokenBody, 1)-1;
             if (additionalData < 0 || additionalData > 3) {
-                throw new IncorrectStringException(tokenBody);
+                throw new IncorrectStringException(tokenBody, "lock index between 1-4 required");
             }
         }
         if (cType == 'S') {
@@ -518,29 +551,43 @@ public class LevelData {
             data = GameEnums.SPACE_DATA.BREAKABLE_BLOCK;
             additionalData = charToInt(tokenBody, 1);
             if (additionalData <= 0) {
-                throw new IncorrectStringException(tokenBody);
+                throw new IncorrectStringException(tokenBody, layersRequired);
             }
         }
-        if (cType == 'K') { // First the number of layers, then the content
+        if (cType == 'T') {
+            position1stSizeChar = 2;
+            data = GameEnums.SPACE_DATA.STOP_BLAST;
+            additionalData = charToInt(tokenBody, 1);
+            if (additionalData <= 0) {
+                throw new IncorrectStringException(tokenBody, layersRequired);
+            }
+        }
+        if (cType == 'K') { // See exception message
             position1stSizeChar = 3;
             data = GameEnums.SPACE_DATA.STICKY_BOMB; // TODO un jour, on remplacera les "sticky bomb" par des "hostage fruits", qui bloquent simplement les fruits. Mais là je fais les sticky vides (qui donneront des cases vides) et les couleurs (qui exploseront) en bombes !
             additionalData = charToInt(tokenBody, 1);
-            if (additionalData <= 0) {
-                throw new IncorrectStringException(tokenBody);
-            }
             additionalData2 = charToInt(tokenBody, 2);
+            if (additionalData <= 0 || additionalData2 >= 8) {
+                throw new IncorrectStringException(tokenBody, "Required : first the number of layers, then fruit");
+            }
         }
         if (cType == 'k') { // The number of layers only
-            position1stSizeChar = 2;
-            data = GameEnums.SPACE_DATA.STICKY_BOMB;
-            additionalData = charToInt(tokenBody, 1);
+            if (tokenBody.charAt(1) == 'T') {
+                position1stSizeChar = 3;
+                data = GameEnums.SPACE_DATA.STICKY_STOP_BLAST;
+                additionalData = charToInt(tokenBody, 2);
+            } else {
+                position1stSizeChar = 2;
+                data = GameEnums.SPACE_DATA.STICKY_BOMB;
+                additionalData = charToInt(tokenBody, 1);
+            }
             if (additionalData <= 0) {
-                throw new IncorrectStringException(tokenBody);
+                throw new IncorrectStringException(tokenBody, "1-9 value required for layer.");
             }
             additionalData2 = Constants.NOT_A_FRUIT;
         }
         if (data == null) {
-            throw new IncorrectStringException(tokenBody);
+            throw new IncorrectStringException(tokenBody, "Unrecognized item");
         } else if (charactersWithAndAfterIndex(tokenBody, position1stSizeChar) == 4) {
             int x, y;
             int x1 = charToInt(tokenBody, position1stSizeChar);
@@ -580,7 +627,7 @@ public class LevelData {
         }
         int value = c-'0';
         if (value > 9 || value < 0) {
-            throw new IncorrectStringException(s);
+            throw new IncorrectStringException(s, "Not a digit");
         }
         return value;
     }
@@ -606,11 +653,7 @@ public class LevelData {
         return (this.locksDuration.get(this.additionalSpaceData[y][x]));
     }
 
-    public int getBreakableBlockLevel(int x, int y) {
-        return this.additionalSpaceData[y][x];
-    }
-
-    public int getStickyBombLevel(int x, int y) {
+    public int getBreakableItemLevel(int x, int y) {
         return this.additionalSpaceData[y][x];
     }
 
@@ -618,6 +661,9 @@ public class LevelData {
         return this.additionalSpaceData2[y][x];
     }
 
+    public int getFruitValue(int x, int y) {
+        return this.additionalSpaceData2[y][x];
+    }
 
     public int getBaskets(int x, int y) {
         return this.basketsSpaceData[y][x];
@@ -631,6 +677,10 @@ public class LevelData {
     public int getHostage(int x, int y) {return this.hostagesSpaceData[y][x];}
 
     public int getNutValue(int x, int y) {return this.additionalSpaceData[y][x];}
+
+    public int getGoalTimeActionLimit() {return this.goalTimeActionLimit;}
+    public int getGoalMovesActionLimit() {return this.goalMovesActionLimit;}
+    public int getGoalMovesRelaxLimit() {return this.goalMovesRelaxLimit;}
 
     // Getters for both level data and level sorting
     public GameEnums.GOAL_KIND getGoalKind() {

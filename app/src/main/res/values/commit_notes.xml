@@ -1,11 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--
-    Naively testing the presence of a valid swap when clicking on the tolerance button
-    Adding the "dropfruit" level type
-    Correcting some bugs on fruit collection
-    Changed implementation of nuts data in level data
-    Changed Constants.FIELD_XLENGTH and YLENGTH in GameHandler (not needed in timing)
-    Unstable check triggered when a level starts. Prior to this, falls didn't happen.
+    Gameplay :
+        -Temporal + moves limitation for some levels
+        -Icons for them
+        -Chill mode and relax mode
+        -Display in options
+
+    Pixel management !
+        -Background for the icons
+        -Layout attention
+        -Big pixel renaming
+            -"Winner commit" : "mainSpace" est devenu "innerSpace"
+        -Display of a panorama picture
+
+    Space contents :
+        -New animations for stuff disappearing
+        -New animations for last layers of multi-layers destroyed
+        -Colour code for multi-layer items
+
+    Misc :
+        -Some reuses of "Constants.FIELD_XLENGTH" and "Constants.FIELD_YLENGTH"
+        -Copying an unique space
+        -Exceptions on bad strings
+        -Failed attempt to resee position of drawing in texts
     -->
 </resources>
