@@ -771,7 +771,7 @@ public class GameHandler {
             readyDownFruits = 1;
         }
         readyDownFruits = Math.min(readyDownFruits, this.checkerSpawnFruits.getList().size()); // Must be <= this.listWaitingNutData.size
-        // 551551 Huge C/P of what is above !
+        // TODO a shameful copy/paste that should be lamba'd
         // Should use lambda that replaces numberSpawnSpaces with readyDownFruits and one function with one another
         if (readyDownFruits >= 2) {
             List<SpaceCoors> possibleSpaces = new ArrayList<>();
