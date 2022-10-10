@@ -56,6 +56,7 @@ public class GameEnums {
         FIRE_ELECTRIC,
         ELECTRIC_ELECTRIC,
         INVALID,
+        TOLERATED,
         NONE
     }
 

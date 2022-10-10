@@ -513,7 +513,7 @@ public class GameHandler {
                 nextSpaceY = this.arrayField[y+1][x];
                 if (thisSpace.canBeSwapped()) {
                     if (nextSpaceY.canBeSwapped()) {
-                        if (getSwapNature(x, y, x, y+1) != GameEnums.WHICH_SWAP.INVALID) {
+                        if (getSwapNature(x, y, x, y+1, false) != GameEnums.WHICH_SWAP.INVALID) {
                             this.xHelp = x;
                             this.yHelp = y;
                             this.activeHelp = true;
@@ -521,7 +521,7 @@ public class GameHandler {
                         }
                     }
                     if (nextSpaceX.canBeSwapped()) {
-                        if (getSwapNature(x, y, x, y+1) != GameEnums.WHICH_SWAP.INVALID) {
+                        if (getSwapNature(x, y, x+1, y, false) != GameEnums.WHICH_SWAP.INVALID) {
                             this.xHelp = x;
                             this.yHelp = y;
                             this.activeHelp = true;
@@ -551,9 +551,14 @@ public class GameHandler {
         SpaceFiller tmp = this.arrayField[y1][x1];
         this.arrayField[y1][x1] = this.arrayField[y2][x2];
         this.arrayField[y2][x2] = tmp;
-        this.lastSwap = this.getSwapNature(x1, y1, x2, y2);
+        this.lastSwap = this.getSwapNature(x1, y1, x2, y2, true);
+        if (this.lastSwap == GameEnums.WHICH_SWAP.INVALID && this.toleranceMode) {
+            this.lastSwap = GameEnums.WHICH_SWAP.TOLERATED;
+        }
+        this.toleranceMode = false;
         this.controlMissionsWithSwap(this.lastSwap);
         if (this.lastSwap != GameEnums.WHICH_SWAP.INVALID) {
+            this.numberElapsedMoves++;
             this.startAfterValidPlayerMove();
             this.performStableCheck(true);
         } else {
@@ -569,7 +574,7 @@ public class GameHandler {
         this.gth.endSwap();
     }
 
-    private GameEnums.WHICH_SWAP getSwapNature(int x1, int y1, int x2, int y2) {
+    private GameEnums.WHICH_SWAP getSwapNature(int x1, int y1, int x2, int y2, boolean swapMade) {
         this.xSwapSide = x2;
         this.ySwapSide = y2;
         this.xSwapCenter = x1;
@@ -583,7 +588,6 @@ public class GameHandler {
         boolean omega1 = (power1 == GameEnums.FRUITS_POWER.OMEGA_SPHERE);
         boolean omega2 = (power2 == GameEnums.FRUITS_POWER.OMEGA_SPHERE);
 
-        this.numberElapsedMoves++;
         if (light1 && light2) {
             return GameEnums.WHICH_SWAP.ELECTRIC_ELECTRIC;
         }
@@ -635,16 +639,18 @@ public class GameHandler {
             this.ySourceOmegaDestruction = y2;
             return GameEnums.WHICH_SWAP.FRUIT_OMEGA;
         }
-        if (validFruitAlignment(x1, y1) || validFruitAlignment(x2, y2)) {
-            return GameEnums.WHICH_SWAP.FRUIT_FRUIT;
+        if (!swapMade) {
+            SpaceFiller tmp = this.arrayField[y1][x1];
+            this.arrayField[y1][x1] = this.arrayField[y2][x2];
+            this.arrayField[y2][x2] = tmp;
         }
-        if (this.toleranceMode) {
-            this.toleranceMode = false;
-
-            return GameEnums.WHICH_SWAP.FRUIT_FRUIT;
+        boolean validAlignmentFruitFruit = (validFruitAlignment(x1, y1) || validFruitAlignment(x2, y2));
+        if (!swapMade) {
+            SpaceFiller tmp = this.arrayField[y1][x1];
+            this.arrayField[y1][x1] = this.arrayField[y2][x2];
+            this.arrayField[y2][x2] = tmp;
         }
-        this.numberElapsedMoves--;
-        return GameEnums.WHICH_SWAP.INVALID;
+        return validAlignmentFruitFruit ? GameEnums.WHICH_SWAP.FRUIT_FRUIT : GameEnums.WHICH_SWAP.INVALID;
     }
 
     private boolean validFruitAlignment(int x, int y) {
