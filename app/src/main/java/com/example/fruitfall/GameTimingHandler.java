@@ -78,6 +78,7 @@ public class GameTimingHandler {
     // Transitions : start
     public void startGame() {
         this.gameState = GameEnums.GAME_STATE.NORMAL;
+        this.gh.triggerUnstableCheck();
     }
 
     public void startSwap(int x1, int y1, int x2, int y2) {

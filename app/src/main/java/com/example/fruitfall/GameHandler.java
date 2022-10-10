@@ -454,7 +454,6 @@ public class GameHandler {
         }
 
         this.gth.init();
-        this.triggerUnstableCheck();
     }
 
     // In level initialization, tells whether fruits should be by default spawned up from this space or not
@@ -1469,6 +1468,7 @@ public class GameHandler {
     When a fall animation is ended.
     Chained with a stable check method or another fall animation.
     Also where arrayFruit is updated.
+    Note that the current game state in gth is absolutely uncertain !
     Update : also called when the level actually starts.
      */
     public void triggerUnstableCheck() {
