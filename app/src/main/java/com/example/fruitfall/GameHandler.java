@@ -108,8 +108,8 @@ public class GameHandler {
     private int xFieldLength;
     private int yFieldLength;
     private boolean notInStartingFall = false;
-    
-    private boolean isActionMode = true;
+
+    private boolean potentiallyGeneratedHiddenAlignments = false; // When a move generates a "hidden" alignment (non conventional), pass it to true ! It will be passed back to false before alignment check. Was created to solve the problem of generated special fruits in alignment of hostage fruits.
     private int timeLimit = 0;
     private int movesLimit = 0;
 
@@ -242,6 +242,7 @@ public class GameHandler {
         this.xHelp = 0;
         this.yHelp = 0; //this.directionHelp = GameEnums.DIRECTIONS_SWAP.NONE;
         this.activeHelp = false;
+        this.potentiallyGeneratedHiddenAlignments = false;
 
         ld.deploy();
         this.xFieldLength = ld.getWidthField();
@@ -895,13 +896,14 @@ public class GameHandler {
             this.removeSpecialFruit(this.xSourceOmegaDestruction, this.ySourceOmegaDestruction);
         } else {
             this.fallBeforeAlignmentCheck();
-            if (this.checkerToBeEmptiedSpaces.getList().isEmpty() || this.lastSwap == GameEnums.WHICH_SWAP.FRUIT_FRUIT) {
+            if (this.checkerToBeEmptiedSpaces.getList().isEmpty() || this.lastSwap == GameEnums.WHICH_SWAP.FRUIT_FRUIT || this.potentiallyGeneratedHiddenAlignments) {
+                this.potentiallyGeneratedHiddenAlignments = false;
                 this.alignmentDestructionCheck();
                 isAlignment = true;
             }
         }
 
-        if (this.checkerToBeEmptiedSpaces.getList().isEmpty()) {
+        if (this.checkerToBeEmptiedSpaces.getList().isEmpty() && !potentiallyGeneratedHiddenAlignments) {
             // Nothing new destroyed : move on.
             this.thisMoveFruitsDestroyedByFall = 0;
             this.triggerNextPhaseAfterStableCheck();
@@ -1010,6 +1012,7 @@ public class GameHandler {
             }
             this.listDestroyedHostagesForAnimations.add(new SpaceCoors(x, y));
         }
+        this.potentiallyGeneratedHiddenAlignments = true; // If a special fruit is created but the normal fruits remain in the cage, it's worth checking.
     }
 
     private void destroyByAlignment(int x, int y) {
@@ -1092,8 +1095,28 @@ public class GameHandler {
             }
         }
         if (numberAlign >= 5) {
+            int colour = this.getIdFruit(x, y);
+            boolean foundSpecial = false;
             for (xx = x ; xx < x + numberAlign ; xx++) {
                 if (this.isSpecialFruit(xx, y)) {return;}
+                yy = y-1;
+                while (yy >= 0 && this.getIdFruit(xx, yy) == colour) {
+                    foundSpecial |= this.isSpecialFruit(xx, yy);
+                    if (foundSpecial && y-yy >= 2) {
+                        return;
+                    }
+                    yy--;
+
+                }
+                foundSpecial = false;
+                yy = y+1;
+                while (yy < this.yFieldLength && this.getIdFruit(xx, yy) == colour) {
+                    foundSpecial |= this.isSpecialFruit(xx, yy);
+                    if (foundSpecial && yy-y >= 2) {
+                        return;
+                    }
+                    yy++;
+                }
             }
             this.createSpecialFruit(x+(numberAlign-1)/2, y, new OmegaSphere(), 5);
         }
@@ -1135,8 +1158,8 @@ public class GameHandler {
         }
     }
 
-    private void createSpecialFruit(int x, int y, SpaceFiller spaceFiller, int correspondingScoreAmount) {
-        this.arrayField[y][x] = spaceFiller;
+    private void createSpecialFruit(int x, int y, SpaceFiller specialFruit, int correspondingScoreAmount) {
+        this.arrayField[y][x] = specialFruit;
         this.checkerToBeEmptiedSpaces.remove(x, y);
         this.checkerScoreDestructionFall.add(x, y, correspondingScoreAmount); // TODO score pour "création fruit spécial ?"
         this.score += correspondingScoreAmount; // Score adding !
@@ -1328,12 +1351,10 @@ public class GameHandler {
                         }
                         break;
                     case VIRTUAL_LIGHTNING_LIGHTNING:
-                        for (xx = 0; xx < this.xFieldLength; xx++) {
-                            this.activateSpecialFruitBlast(xx, y, newListToBeActivated);
-                        }
-                        for (yy = 0; yy < this.yFieldLength; yy++) {
-                            this.activateSpecialFruitBlast(x, yy, newListToBeActivated);
-                        }
+                        this.blastInLineFrom(x, y, (xxx, yyy) -> xxx >= 0, GameEnums.DIRECTIONS_BLAST.L, newListToBeActivated);
+                        this.blastInLineFrom(x, y, (xxx, yyy) -> yyy >= 0, GameEnums.DIRECTIONS_BLAST.U, newListToBeActivated);
+                        this.blastInLineFrom(x, y, (xxx, yyy) -> xxx <= this.xFieldLength-1, GameEnums.DIRECTIONS_BLAST.R, newListToBeActivated);
+                        this.blastInLineFrom(x, y, (xxx, yyy) -> yyy <= this.yFieldLength-1, GameEnums.DIRECTIONS_BLAST.D, newListToBeActivated);
                         break;
                     case VIRTUAL_FIRE_LIGHTNING:
                         this.activateSpecialFruitBlast(x, y, newListToBeActivated);
@@ -1786,7 +1807,7 @@ public class GameHandler {
             case FIRE_FIRE:
                 if (!this.advanceSpecialMission(GameEnums.ORDER_KIND.FIRE_FIRE)) {
                     for (int i = 0 ; i < 2 ; i++) {
-                        if (this.advanceSpecialMission(GameEnums.ORDER_KIND.FIRE_WILD)) {
+                        if (!this.advanceSpecialMission(GameEnums.ORDER_KIND.FIRE_WILD)) {
                             this.advanceSpecialMission(GameEnums.ORDER_KIND.FIRE);
                         }
                     }
@@ -1796,7 +1817,7 @@ public class GameHandler {
             case ELECTRIC_ELECTRIC:
                 if (!this.advanceSpecialMission(GameEnums.ORDER_KIND.LIGHTNING_LIGHTNING)) {
                     for (int i = 0 ; i < 2 ; i++) {
-                        if (this.advanceSpecialMission(GameEnums.ORDER_KIND.LIGHTNING_WILD)) {
+                        if (!this.advanceSpecialMission(GameEnums.ORDER_KIND.LIGHTNING_WILD)) {
                             this.advanceSpecialMission(GameEnums.ORDER_KIND.LIGHTNING);
                         }
                     }
@@ -1805,7 +1826,7 @@ public class GameHandler {
             case OMEGA_OMEGA:
                 if (!this.advanceSpecialMission(GameEnums.ORDER_KIND.OMEGA_OMEGA)) {
                     for (int i = 0 ; i < 2 ; i++) {
-                        if (this.advanceSpecialMission(GameEnums.ORDER_KIND.OMEGA_WILD)) {
+                        if (!this.advanceSpecialMission(GameEnums.ORDER_KIND.OMEGA_WILD)) {
                             this.advanceSpecialMission(GameEnums.ORDER_KIND.OMEGA);
                         }
                     }
@@ -2014,7 +2035,7 @@ public class GameHandler {
     public int getMovesToDisplay() {return this.movesLimit - this.numberElapsedMoves;}
     
     public int getTimeToDisplay() {
-        if (this.isActionMode) {
+        if (OptionHandler.mode != GameEnums.GAME_MODE.CHILL) {
             return this.timeLimit - (int)this.gth.getElapsedSeconds();
         } else {
             return (int)this.gth.getElapsedSeconds();
@@ -2102,13 +2123,7 @@ public class GameHandler {
     }
 
     // Fruits are NOT YET destroyed !
-    public Pair getBlastRangeInfos(int x, int y, GameEnums.DIRECTIONS_BLAST dir) {
-        /*
-        // If animations have to be defined after field update
-        int answer = this.blastRangeForAnimations[y][x][dir.index()];
-        this.blastRangeForAnimations[y][x][dir.index()] = 0;
-        return answer;
-        */
+    public Pair<Integer, Boolean> getBlastRangeInfos(int x, int y, GameEnums.DIRECTIONS_BLAST dir) {
         int answer = 0;
         int xx = x+dir.getDeltaX();
         int yy = y+dir.getDeltaY();
@@ -2119,7 +2134,7 @@ public class GameHandler {
             xx += dir.getDeltaX();
             yy += dir.getDeltaY();
         }
-        return new Pair(answer, !dig);
+        return new Pair<>(answer, !dig);
     }
 }
 

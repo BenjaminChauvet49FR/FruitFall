@@ -1,28 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--
-    Gameplay :
-        -Temporal + moves limitation for some levels
-        -Icons for them
-        -Chill mode and relax mode
-        -Display in options
-
-    Pixel management !
-        -Background for the icons
-        -Layout attention
-        -Big pixel renaming
-            -"Winner commit" : "mainSpace" est devenu "innerSpace"
-        -Display of a panorama picture
-
-    Space contents :
-        -New animations for stuff disappearing
-        -New animations for last layers of multi-layers destroyed
-        -Colour code for multi-layer items
+    Bugs :
+        -Made blasting with L+L combos correct
+        -Corrected the problem of creation of special fruits + hostage alignments
+        -Corrected the 'LT problem' : Omega fruits created horizontally despite having a ready special fruit in a side alignment
 
     Misc :
-        -Some reuses of "Constants.FIELD_XLENGTH" and "Constants.FIELD_YLENGTH"
-        -Copying an unique space
-        -Exceptions on bad strings
-        -Failed attempt to resee position of drawing in texts
+        -Changed exception for 'K' in level data
+
     -->
 </resources>

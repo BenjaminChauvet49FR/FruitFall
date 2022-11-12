@@ -26,7 +26,13 @@ public class LevelManager {
         // 'L' in infos : moves action, time action, moves chill, time chill
         levelNumber = 0;
         levelLists = new ArrayList<>();
-        levelLists.add(new LevelData(DEBUG,"S118 S229 S338 S449 S558 S669 S778 S889 S998 k116 k227 k336 k447 k556 k667 k776 k887 k996 K1114 K2225 K3334 K4445 K5154 K6265 K7374 K8485 K9194 H112 H223 H332 H443 H552 H663 H772 H883 H992 T119 T228 T339 T448 T559 T668 T779 T888 T999", "f8", "Collection d'images, != niveaux 1-9"));
+        levelLists.add(new LevelData(DEBUG,"f0 F00 H100 c00 v01 v03 v05 v07 v09 K105356", "f5", "Debug - Otage et retrait d'une couleur"));
+        levelLists.add(new LevelData(DEBUG,"k40099 f0 F5357 F3575 f1 F55 f0 F2124 F0212 f1 F22 f0 F1848 F37 f1 F38", "f5", "Debug - Phénomene 'TL bout spécial', Activer sphère Oméga dans un croisement de L-T alors qu'on active un fruit enflammé dans le coin...")); // Horiz alignment of 5 fruits + vert alignment of 3 fruits including one special : used not to be problematic.
+        levelLists.add(new LevelData(DEBUG,"k40099 f0 F1213 H21213 F2131 H22131 F10 F01 kT368 T388 F4558 K3238 K3218 f1 F45 F56 F47 F48", "f6", "Debug - otages"));
+        levelLists.add(new LevelData(DEBUG,"", "f5 ml3 mL2 mA1", "Debug - missions Eclair"));
+        levelLists.add(new LevelData(DEBUG,"", "f5 mf3 mF2 mB1", "Debug - missions Feu"));
+        levelLists.add(new LevelData(DEBUG,"", "f5 mo3 mO3 mC1", "Debug - missions Oméga"));
+        levelLists.add(new LevelData(DEBUG,"S118 S229 S338 S449 S558 S669 S778 S889 S998 k116 k227 k336 k447 k556 k667 k776 k887 k996 K1114 K2225 K3334 K4445 K5154 K6265 K7374 K8485 K9194 H112 H223 H332 H443 H552 H663 H772 H883 H992 T119 T228 T339 T448 T559 T668 T779 T888 T999", "f8", "Collection d'images - != niveaux 1-9"));
         levelLists.add(new LevelData(LEVELS_TO_BE,"X!0009 B30099 B101 S301 c01 v05 v09 X!9099 f4 B291 F91 c91 v95 v99 T25084 k326 c26 v47 v68 v89 v13 v34 v55 v76 v21 v42 v63 v84 v18 v39 v50 v71", "f5  L65#75#55", "Paniers dans des alcoves et stopblasts au dessus"));
         levelLists.add(new LevelData(LEVELS_TO_BE,"B31188 K9311 c11 v14 v18 v41 v55 v48 v81 v84 v88", "f6 L45#65#40", "Tu vas pas tous les détruire quand même, si ?"));
         levelLists.add(new LevelData(LEVELS_TO_BE,"N036 K3004 N056 K3006 c0306 vv13 c0316 v23 v43 v63 v83 O0929 O7999", "f5 L60#60#50", "Noix en damier"));

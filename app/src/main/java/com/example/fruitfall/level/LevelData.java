@@ -562,13 +562,14 @@ public class LevelData {
                 throw new IncorrectStringException(tokenBody, layersRequired);
             }
         }
+        // Remember : cType = tokenBody.char(0)
         if (cType == 'K') { // See exception message
             position1stSizeChar = 3;
             data = GameEnums.SPACE_DATA.STICKY_BOMB; // TODO un jour, on remplacera les "sticky bomb" par des "hostage fruits", qui bloquent simplement les fruits. Mais là je fais les sticky vides (qui donneront des cases vides) et les couleurs (qui exploseront) en bombes !
             additionalData = charToInt(tokenBody, 1);
             additionalData2 = charToInt(tokenBody, 2);
-            if (additionalData <= 0 || additionalData2 >= 8) {
-                throw new IncorrectStringException(tokenBody, "Required : first the number of layers, then fruit");
+            if ((tokenBody.length() != 5 && tokenBody.length() != 7) || additionalData <= 0 || additionalData2 >= 8) {
+                throw new IncorrectStringException(tokenBody, "Required : first the number of layers, then fruit, then 2 or 4 coordinates");
             }
         }
         if (cType == 'k') { // The number of layers only
