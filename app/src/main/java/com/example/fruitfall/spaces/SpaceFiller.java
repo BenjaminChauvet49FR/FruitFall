@@ -73,7 +73,7 @@ public abstract class SpaceFiller {
     // Shrinkside : shrinking the total length of a side for ONE layer (so 2 layers to display : using it twice !)
     public void drawInLevels(Canvas canvas, Bitmap[] bitmaps, int level, Rect rectSource, Rect rectDestination, Paint paint, float shrinkSideRatio) {
         Bitmap theImage;
-        if (level == 1) {
+        if (level <= 1) {
             theImage = bitmaps[0];
         } else if (level == 2) {
             theImage = bitmaps[1];

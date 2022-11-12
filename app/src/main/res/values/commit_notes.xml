@@ -1,13 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--
-    Bugs :
-        -Made blasting with L+L combos correct
-        -Corrected the problem of creation of special fruits + hostage alignments
-        -Corrected the 'LT problem' : Omega fruits created horizontally despite having a ready special fruit in a side alignment
-
-    Misc :
-        -Changed exception for 'K' in level data
-
+    (see description)
     -->
 </resources>

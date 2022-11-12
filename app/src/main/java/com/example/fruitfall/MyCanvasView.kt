@@ -9,6 +9,7 @@ import android.view.View
 import androidx.annotation.RequiresApi
 import androidx.core.content.res.ResourcesCompat
 import com.example.fruitfall.animations.SpaceAnimation
+import com.example.fruitfall.animations.preservations.PreAnimation
 import com.example.fruitfall.introductions.Transition
 import com.example.fruitfall.introductions.TransitionRandom
 import com.example.fruitfall.level.LevelData
@@ -357,6 +358,7 @@ class MyCanvasView(context: Context) : View(context) {
         } else {
             drawAllSpaceContents(canvas)
             if (!gh.gth.pause) {
+                drawPreAnimations(canvas)
                 drawSpaceAnimations(canvas, gh.gth.animations1List)// TODO devrait être dessiné APRES les cases et AVANT les contenus dans l'idéal.
                 drawFallingSpaces(canvas)
                 drawCursor(canvas)
@@ -1114,6 +1116,16 @@ class MyCanvasView(context: Context) : View(context) {
                 sa.draw(this, canvas, rectSource, rectDest, paint)
                 sa.progress()
             }
+        }
+    }
+
+    private fun drawPreAnimations(canvas : Canvas) {
+        for (sa : PreAnimation in gh.gth.preAnimationsList) {
+            rectDest.left = Pix.xLeftSpace(sa.x)
+            rectDest.right = Pix.xRightSpace(sa.x)
+            rectDest.top = Pix.yUpSpace(sa.y)
+            rectDest.bottom = Pix.yDownSpace(sa.y)
+            sa.draw(this, canvas, rectSource, rectDest, paint)
         }
     }
 

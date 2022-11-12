@@ -721,8 +721,9 @@ public class GameHandler {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public void triggerAfterDestructionStasis(boolean afterOmegaStasis) {
-        // Destroy all animations, basically
+        // Remove all animations, basically
         this.listDestroyedHostagesForAnimations.clear();
+
         // Oh, and also restart score arrays :
         if (!afterOmegaStasis) {
             this.checkerScoreDestructionSpecial.clear();
@@ -1001,14 +1002,13 @@ public class GameHandler {
     }
 
     // Supposed goal : take down 1 level of the lock ; replace it if it is empty
-    private void attackHostage(int x, int y) {
+    private void attackHostageLock(int x, int y) {
         HostageLock h = (HostageLock) this.arrayField[y][x];
         h.downgrade();
         if (h.getCount() == 0) {
+            this.arrayField[y][x] = h.getHostage();
             if (this.isEmpty(x, y)) {
                 this.checkerToBeEmptiedSpaces.add(x, y);
-            } else {
-                this.arrayField[y][x] = h.getHostage();
             }
             this.listDestroyedHostagesForAnimations.add(new SpaceCoors(x, y));
         }
@@ -1017,7 +1017,7 @@ public class GameHandler {
 
     private void destroyByAlignment(int x, int y) {
         if (this.isHostage(x, y)) { // Instance of hostage lock
-            this.attackHostage(x, y);
+            this.attackHostageLock(x, y);
         } else if (this.checkerToBeEmptiedSpaces.add(x, y)) {
             if (!this.isSpecialFruit(x, y)) {
                 // Philosophie : Considérer que si on a un fruit spécial ici on ne doit pas faire tout ce qui suit...
@@ -1475,7 +1475,7 @@ public class GameHandler {
         }
 
         if (this.isHostage(x, y)) {
-            this.attackHostage(x, y);
+            this.attackHostageLock(x, y);
         } else {
             // Collect a basket even if no fruit is found there
             this.catchBasket(x, y);

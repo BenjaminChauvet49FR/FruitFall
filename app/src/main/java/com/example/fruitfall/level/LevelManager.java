@@ -26,7 +26,7 @@ public class LevelManager {
         // 'L' in infos : moves action, time action, moves chill, time chill
         levelNumber = 0;
         levelLists = new ArrayList<>();
-        levelLists.add(new LevelData(DEBUG,"f0 F00 H100 c00 v01 v03 v05 v07 v09 K105356", "f5", "Debug - Otage et retrait d'une couleur"));
+        levelLists.add(new LevelData(DEBUG,"k40338 f0 F00 H100 c00 v01 v03 v05 v06 v08 K1096 f1 F1314 F25 F16 F27 F36", "f5", "Debug - Otage et retrait d'une couleur"));
         levelLists.add(new LevelData(DEBUG,"k40099 f0 F5357 F3575 f1 F55 f0 F2124 F0212 f1 F22 f0 F1848 F37 f1 F38", "f5", "Debug - Phénomene 'TL bout spécial', Activer sphère Oméga dans un croisement de L-T alors qu'on active un fruit enflammé dans le coin...")); // Horiz alignment of 5 fruits + vert alignment of 3 fruits including one special : used not to be problematic.
         levelLists.add(new LevelData(DEBUG,"k40099 f0 F1213 H21213 F2131 H22131 F10 F01 kT368 T388 F4558 K3238 K3218 f1 F45 F56 F47 F48", "f6", "Debug - otages"));
         levelLists.add(new LevelData(DEBUG,"", "f5 ml3 mL2 mA1", "Debug - missions Eclair"));

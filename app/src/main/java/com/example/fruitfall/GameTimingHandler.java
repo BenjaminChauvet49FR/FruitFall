@@ -6,6 +6,7 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.example.fruitfall.animations.SpaceAnimation;
+import com.example.fruitfall.animations.preservations.PreAnimation;
 import com.example.fruitfall.animations.torn.SpaceAnimationBreakableBlockTorn;
 import com.example.fruitfall.animations.SpaceAnimationDownFruitShrinking;
 import com.example.fruitfall.animations.SpaceAnimationFire;
@@ -38,9 +39,10 @@ public class GameTimingHandler {
     private int frameScore;
     private final GameHandler gh;
     private long frameTotalCount;
-    private List<SpaceAnimation> spaceAnimationList;
-    private List<SpaceAnimation> spaceAnimationNextDestructionList;
-    private List<SpaceAnimation> spaceAnimationFruitDestroyedList;
+    private final List<PreAnimation> omegaStasisPreservedSpacesList = new ArrayList<>();
+    private final List<SpaceAnimation> spaceAnimationList = new ArrayList<>();
+    private final List<SpaceAnimation> spaceAnimationNextDestructionList = new ArrayList<>();
+    private final List<SpaceAnimation> spaceAnimationFruitDestroyedList = new ArrayList<>();
     private final Checker handledSpecialAnimationsChecker = new Checker(Constants.FIELD_XLENGTH, Constants.FIELD_YLENGTH);
     private final Checker handledDestroyAnimationsChecker = new Checker(Constants.FIELD_XLENGTH, Constants.FIELD_YLENGTH);
     private final Checker checkerSaveFruitsRayAnimations = new Checker(Constants.FIELD_XLENGTH, Constants.FIELD_YLENGTH); // Cause a fruit that should disappear to be drawn anyway, but only in a specific phase
@@ -73,10 +75,11 @@ public class GameTimingHandler {
         this.handledSpecialAnimationsChecker.clear();
         this.handledDestroyAnimationsChecker.clear();
         this.checkerSaveFruitsRayAnimations.clear();
-        this.spaceAnimationList = new ArrayList<>();
-        this.spaceAnimationFruitDestroyedList = new ArrayList<>();
+        this.spaceAnimationList.clear();
+        this.omegaStasisPreservedSpacesList.clear();
+        this.spaceAnimationFruitDestroyedList.clear();
         this.pause = false;
-        this.spaceAnimationNextDestructionList = new ArrayList<>();
+        this.spaceAnimationNextDestructionList.clear();
     }
 
     public void setRelativeTransitionLength(float rtl) {
@@ -126,10 +129,10 @@ public class GameTimingHandler {
         SpaceCoors source;
         List<SpaceCoors> targets;
         boolean shouldBeBeamPhase = false;
+        this.omegaStasisPreservedSpacesList.clear();
 
         // Consequences of the previous beam phase handled now ! (adding stocked animations, clearing "saved" fruits drawn)
         this.checkerSaveFruitsRayAnimations.clear();
-
         for (int colour = 0 ; colour < Constants.RESOURCES_NUMBER_FRUITS ; colour++) {
             source = this.gh.getCoorsSourceOmegaSphere(colour);
             if (source != null) {
@@ -137,7 +140,6 @@ public class GameTimingHandler {
                 shouldBeBeamPhase = true;
                 this.spaceAnimationList.add(new SpaceAnimationOmegaFruit(source.x, source.y, targets, Color.rgb(255, 255, 255), Color.rgb(255, 255, 192), Color.rgb(255, 192, 128)));
                 for (SpaceCoors coors : targets) {
-                    //this.removedByOmegaFrozenAnimationList.add(new SpaceAnimationFruitShrinking(coors.x, coors.y, colour, false));
                     this.checkerSaveFruitsRayAnimations.add(coors.x, coors.y);
                 }
             }
@@ -172,7 +174,9 @@ public class GameTimingHandler {
         for(SpaceCoors coors : this.gh.getBrokenHostagesCoors()) {
             x = coors.x;
             y = coors.y;
-            this.tryToAddToAnimationsDestroy(x, y, new SpaceAnimationHostageTorn(x, y));
+            if (this.tryToAddToAnimationsDestroy(x, y, new SpaceAnimationHostageTorn(x, y))) {
+                this.omegaStasisPreservedSpacesList.add(new PreAnimation(x, y));
+            }
         }
         GameEnums.WHICH_SWAP swap = this.gh.getLastSwap();
         x = this.gh.getXCenterAnimation();
@@ -245,10 +249,12 @@ public class GameTimingHandler {
         directionalBlastBlocksArray[dir.index()] = p.u;
     }
 
-    private void tryToAddToAnimationsDestroy(int x, int y, SpaceAnimation animation) {
+    private boolean tryToAddToAnimationsDestroy(int x, int y, SpaceAnimation animation) {
         if (this.handledDestroyAnimationsChecker.add(x, y)) {
             this.spaceAnimationNextDestructionList.add(animation);
+            return true;
         }
+        return false;
     }
     
     private void tryToAddToAnimations(int x, int y, SpaceAnimation animation) {
@@ -427,6 +433,14 @@ public class GameTimingHandler {
         }
         return this.spaceAnimationFruitDestroyedList;
 
+    }
+
+    public List<PreAnimation> getPreAnimationsList() {
+        if (this.gameState == GameEnums.GAME_STATE.BEAM_ANIMATIONS) {
+            return this.omegaStasisPreservedSpacesList;
+        } else {
+            return new ArrayList<>();
+        }
     }
 
     public void switchFallSpeed() {
